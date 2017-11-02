@@ -1,0 +1,22 @@
+id;tipo_indicador;nivel_educativo;valor
+1;Número de Centros;TOTAL;
+2;Número de Centros;Educación no Universitaria;6477.0
+3;Número de Centros;Educación Universitaria;144.0
+4;Número de Alumnos;TOTAL;2478366.0
+5;Número de Alumnos;Educación no Universitaria;2288630.0
+6;Número de Alumnos;Educación Universitaria;189736.0
+7;Personal remunerado con tareas docentes;TOTAL;181347.0
+8;Personal remunerado con tareas docentes;Educación no Universitaria;170919.0
+9;Personal remunerado con tareas docentes;Educación Universitaria;10428.0
+10;Personal remunerado con tareas no docentes;TOTAL;44702.0
+11;Personal remunerado con tareas no docentes;Educación no Universitaria;39962.0
+12;Personal remunerado con tareas no docentes;Educación Universitaria;4740.0
+13;Total de Personal Remunerado;TOTAL;225724.0
+14;Total de Personal Remunerado;Educación no Universitaria;210556.0
+15;Total de Personal Remunerado;Educación Universitaria;15168.0
+16;Total de Personal no Remunerado;TOTAL;6790.0
+17;Total de Personal no Remunerado;Educación no Universitaria;5949.0
+18;Total de Personal no Remunerado;Educación Universitaria;841.0
+19;Total de Personal;TOTAL;232708.0
+20;Total de Personal;Educación no Universitaria;216505.0
+21;Total de Personal;Educación Universitaria;16203.0
