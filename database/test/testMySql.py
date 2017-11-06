@@ -8,7 +8,7 @@ logging.basicConfig(level = logging.INFO)
 
 log = logging.getLogger(__name__)
 
-DATA_PATH = '/var/git/python/icane_etl/etl_stat/database/test/'
+DATA_PATH = '/var/git/python/icane_etl/etlstat/database/test/'
 
 MYSQL = {
     'SERVER'    : '127.0.0.1',
