@@ -17,15 +17,15 @@
 
 """
 
-import logging
-
 from utils.extractor.extractor import xml_in, csv_in
 from utils.text.config import *
 from utils.text.replace_in_xml import replace_in_xml
 
-# logging configuration
-logging.basicConfig(level=logging.INFO)
-LOGGER = logging.getLogger(__name__)
+from etlstat import log
+
+# log configuration
+log.basicConfig(level=log.INFO)
+LOGGER = log.getLogger(__name__)
 
 
 def main():

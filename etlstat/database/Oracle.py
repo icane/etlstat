@@ -3,19 +3,21 @@
 """
 
 import csv
-import sqlalchemy
-import logging
-from utils.database.Database import Database
-from config_global import LOG_LEVEL
-import pandas as pd
 import re
 
-if LOG_LEVEL == 'DEBUG':
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
+import pandas as pd
+import sqlalchemy
+from config_global import LOG_LEVEL
+from utils.database.Database import Database
 
-log = logging.getLogger(__name__)
+from etlstat import log
+
+if LOG_LEVEL == 'DEBUG':
+    log.basicConfig(level=log.DEBUG)
+else:
+    log.basicConfig(level=log.INFO)
+
+log = log.getLogger(__name__)
 
 
 class Oracle(Database):

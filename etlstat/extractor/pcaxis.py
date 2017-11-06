@@ -12,15 +12,17 @@
 
 import decimal
 import itertools
-import logging
+import re
+
 import numpy
 import pandas
-import re
 import requests
 from utils.logging.timing import timeit
 
-logging.basicConfig(level=logging.ERROR)
-logger = logging.getLogger(__name__)
+from etlstat import log
+
+log.basicConfig(level=log.ERROR)
+logger = log.getLogger(__name__)
 
 
 def uri_type(uri):

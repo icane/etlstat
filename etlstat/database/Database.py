@@ -1,21 +1,21 @@
 """
 
 """
-import logging
 import mysql.connector.errors
 import sqlalchemy
+from config_global import LOG_LEVEL
 from sqlalchemy import exc, create_engine
 
-from config_global import LOG_LEVEL
+from etlstat import log
 
 if LOG_LEVEL == 'DEBUG':
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s :: %(levelname)-7s %(message)s',
-                        datefmt='%m-%d %H:%M')
+    log.basicConfig(level=log.DEBUG,
+                    format='%(asctime)s :: %(levelname)-7s %(message)s',
+                    datefmt='%m-%d %H:%M')
 else:
-    logging.basicConfig(level=logging.INFO)
+    log.basicConfig(level=log.INFO)
 
-log = logging.getLogger(__name__)
+log = log.getLogger(__name__)
 
 
 class Database(object):

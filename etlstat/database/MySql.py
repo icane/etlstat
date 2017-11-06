@@ -1,19 +1,18 @@
 """
 
 """
-import logging
-
 import sqlalchemy
-
-from utils.database.Database import Database
 from config_global import LOG_LEVEL
+from utils.database.Database import Database
+
+from etlstat import log
 
 if LOG_LEVEL == 'DEBUG':
-    logging.basicConfig(level=logging.DEBUG)
+    log.basicConfig(level=log.DEBUG)
 else:
-    logging.basicConfig(level=logging.INFO)
+    log.basicConfig(level=log.INFO)
 
-log = logging.getLogger(__name__)
+log = log.getLogger(__name__)
 
 
 class MySql(Database):

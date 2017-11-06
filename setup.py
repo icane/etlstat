@@ -6,7 +6,7 @@ setup(
     version='0.1',
     author='Instituto Cántabro de Estadística',
     author_email='icane.datos@cantabria.es',
-    packages=['etlstat', 'etlstat.database', 'etlstat.extractor', 'etlstat.logging', 'etlstat.metadata',
+    packages=['etlstat', 'etlstat.database', 'etlstat.extractor', 'etlstat.log', 'etlstat.metadata',
               'etlstat.security', 'etlstat.text', 'etlstat.database.test', 'etlstat.extractor.test',
               'etlstat.metadata.test', 'etlstat.security.test'],
     url='https://gitlab.com/icane-tic/etlstat.git',
@@ -14,7 +14,7 @@ setup(
     description='Python package that contains extract-transform-load utils for statistical offices data processing',
     long_description=open('README.md').read(),
     install_requires=[ 'requests' ],
-    test_suite=['etlstat.database.test', 'etlstat.extractor.test', 'etlstat.metadata.test', 'etlstat.security.test'],
+    test_suite='etlstat.database.test',
     keywords=['etl', 'icane', 'statistics', 'utils'],
     classifiers=[
           'Development Status :: 4 - Beta',

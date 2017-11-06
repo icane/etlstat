@@ -1,12 +1,14 @@
 import unittest
-import logging
+
 import pandas as pd
 from config_user import *
 from utils.database.MySql import MySql
 
-logging.basicConfig(level = logging.INFO)
+from etlstat import log
 
-log = logging.getLogger(__name__)
+log.basicConfig(level = log.INFO)
+
+log = log.getLogger(__name__)
 
 DATA_PATH = '/var/git/python/icane_etl/etlstat/database/test/'
 

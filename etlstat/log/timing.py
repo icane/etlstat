@@ -15,10 +15,11 @@
 """
 
 import time
-import logging
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from etlstat import log
+
+log.basicConfig(level=log.INFO)
+logger = log.getLogger(__name__)
 
 
 def timeit(method):

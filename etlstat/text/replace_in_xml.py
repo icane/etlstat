@@ -14,15 +14,15 @@
 
 """
 
-import xml.etree.ElementTree as etree
-from utils.text.config import *
-import pandas as pd
 import re
-import logging
 
-# logging configuration
-logging.basicConfig(level=logging.INFO)
-LOGGER = logging.getLogger(__name__)
+from utils.text.config import *
+
+from etlstat import log
+
+# log configuration
+log.basicConfig(level=log.INFO)
+LOGGER = log.getLogger(__name__)
 
 
 def replace_in_xml(tree, urls_df, output_file):

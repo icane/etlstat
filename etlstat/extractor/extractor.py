@@ -1,16 +1,16 @@
-import  sys, os
-import glob
-import xml.etree.ElementTree as ET
-import logging
-
-from contextlib import ExitStack
-from Levenshtein import ratio
-import pandas as pd
-import numpy as np
-import xlrd
 import csv
+import glob
+import os
+import xml.etree.ElementTree as ET
+from contextlib import ExitStack
 
+import numpy as np
+import pandas as pd
+import xlrd
+from Levenshtein import ratio
 from utils.extractor.pcaxis import *
+
+from etlstat import log
 
 
 def similar(a, b):
@@ -87,9 +87,9 @@ def excel_in(dir_path, sheet_name, reg_ex='*', encoding='utf-8'):
     Returns:
         dict: Excel name as KEY and dataframe as VALUE
     """
-    # logging configuration
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
+    # log configuration
+    log.basicConfig(level=log.INFO)
+    logger = log.getLogger(__name__)
     os.chdir(dir_path)
     excels = [f for f in glob.glob(reg_ex) if ".xls" in f or ".XLS" in f]
     # In order to have unique keys
@@ -161,9 +161,9 @@ def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
     Returns:
         dict: Name of data file as KEY and dataframe as VALUE
     """
-    # logging configuration
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
+    # log configuration
+    log.basicConfig(level=log.INFO)
+    logger = log.getLogger(__name__)
     conversion_map = {
         'STRING': str,
         'NUMBER': np.float32,
