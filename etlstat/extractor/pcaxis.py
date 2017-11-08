@@ -17,13 +17,12 @@ import re
 import numpy
 import pandas
 import requests
-from utils.logging.timing import timeit
 
+from etlstat.log.timing import timeit
 from etlstat import log
 
 log.basicConfig(level=log.ERROR)
 logger = log.getLogger(__name__)
-
 
 def uri_type(uri):
     """

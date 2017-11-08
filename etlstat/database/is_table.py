@@ -1,5 +1,5 @@
 # coding: utf-8
-from utils.database.MySql import MySql
+from etlstat.database.MySql import MySql
 
 def is_table(conn_string):
     """

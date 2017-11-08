@@ -3,11 +3,11 @@
 """
 import mysql.connector.errors
 import sqlalchemy
-from config_global import LOG_LEVEL
 from sqlalchemy import exc, create_engine
 
-from etlstat import log
+from etlstat.log.timing import log
 
+LOG_LEVEL = 'INFO'
 if LOG_LEVEL == 'DEBUG':
     log.basicConfig(level=log.DEBUG,
                     format='%(asctime)s :: %(levelname)-7s %(message)s',

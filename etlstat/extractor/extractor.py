@@ -8,10 +8,9 @@ import numpy as np
 import pandas as pd
 import xlrd
 from Levenshtein import ratio
-from utils.extractor.pcaxis import *
 
+from etlstat.extractor.pcaxis import *
 from etlstat import log
-
 
 def similar(a, b):
     """

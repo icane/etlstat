@@ -15,8 +15,7 @@
 """
 
 import time
-
-from etlstat import log
+import logging as log
 
 log.basicConfig(level=log.INFO)
 logger = log.getLogger(__name__)

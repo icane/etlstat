@@ -19,8 +19,8 @@
 """
 import sqlalchemy
 
-from utils.logging.log import log
-from utils.database.MySql import MySql
+from etlstat.log.timing import log
+from etlstat.database.MySql import MySql
 
 def update_date(config):
     """

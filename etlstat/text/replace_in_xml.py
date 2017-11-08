@@ -16,9 +16,9 @@
 
 import re
 
-from utils.text.config import *
+from etlstat.text.config import *
 
-from etlstat import log
+from etlstat.log.timing import log
 
 # log configuration
 log.basicConfig(level=log.INFO)

@@ -7,10 +7,12 @@ import re
 
 import pandas as pd
 import sqlalchemy
-from config_global import LOG_LEVEL
-from utils.database.Database import Database
 
-from etlstat import log
+from etlstat.database.Database import Database
+
+from etlstat.log.timing import log
+
+LOG_LEVEL = 'INFO'
 
 if LOG_LEVEL == 'DEBUG':
     log.basicConfig(level=log.DEBUG)
