@@ -18,8 +18,7 @@ import numpy
 import pandas
 import requests
 
-from etlstat.log.timing import timeit
-from etlstat import log
+from etlstat.log.timing import timeit, log
 
 log.basicConfig(level=log.ERROR)
 logger = log.getLogger(__name__)

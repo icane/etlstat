@@ -1,0 +1,1 @@
+from etlstat.metadata.update_date import update_date

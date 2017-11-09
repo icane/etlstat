@@ -22,7 +22,8 @@ import pandas
 
 from etlstat.log.timing import log
 
-LOG_LEVEL='INFO'
+# from config_global import LOG_LEVEL
+LOG_LEVEL = 'INFO'
 if LOG_LEVEL == 'DEBUG':
     log.basicConfig(level=log.DEBUG)
 else:

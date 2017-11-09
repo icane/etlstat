@@ -15,8 +15,7 @@
 """
 
 import re
-
-from etlstat.log.timing import log
+import logging as log
 
 # log configuration
 log.basicConfig(level=log.INFO)

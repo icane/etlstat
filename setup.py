@@ -15,7 +15,7 @@ setup(
     description='Python package that contains extract-transform-load utils for statistical offices data processing',
     long_description=open('README.md').read(),
     install_requires=[ 'requests' ],
-    test_suite='etlstat.database.test',
+    # test_suite='etlstat.database.test',
     keywords=['etl', 'icane', 'statistics', 'utils'],
     classifiers=[
           'Development Status :: 4 - Beta',
