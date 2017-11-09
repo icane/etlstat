@@ -16,8 +16,6 @@
 
 import re
 
-from etlstat.text.config import *
-
 from etlstat.log.timing import log
 
 # log configuration
