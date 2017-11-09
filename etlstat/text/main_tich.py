@@ -18,8 +18,8 @@
 """
 
 from etlstat.extractor.extractor import xml_in, csv_in
-from etlstat.text.config import *
 from etlstat.text.replace_in_xml import replace_in_xml
+import os
 
 from etlstat import log
 
@@ -29,6 +29,7 @@ LOGGER = log.getLogger(__name__)
 
 
 def main():
+    #TODO: Sacar como parámetro INPUT_DATA_PATH
     job_dirs = [directory[0] + '/' for directory in os.walk(INPUT_DATA_PATH)][1:]
     for job_dir in job_dirs:
         output_dir = job_dir.replace('input', 'output')
