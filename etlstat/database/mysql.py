@@ -68,6 +68,7 @@ class MySQL():
             sql += " {0} (".format(table.name)
 
             for label in table:
+                print(table[label].dtype)
                 sql += "{0} {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
             sql = sql[:-2] + ')'
 
@@ -95,13 +96,13 @@ class MySQL():
 
         sql = "SELECT"
         if isinstance(table, str):
-            sql += " {0} FROM {1}".format('*', table)
+            sql += " {0} FROM `{1}`".format('*', table)
         elif isinstance(table, DataFrame):
             for label in list(table):
                 sql += " {0},".format(label)
 
             sql = sql[:-1]
-            sql += " FROM {0}".format(table.name)
+            sql += " FROM `{0}`".format(table.name)
         else:
             raise TypeError("table must be a string or DataFrame.")
 

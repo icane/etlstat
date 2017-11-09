@@ -16,12 +16,11 @@
     Notes:
 
 """
+import logging as log
 
 from etlstat.extractor.extractor import xml_in, csv_in
 from etlstat.text.replace_in_xml import replace_in_xml
 import os
-
-from etlstat import log
 
 # log configuration
 log.basicConfig(level=log.INFO)
