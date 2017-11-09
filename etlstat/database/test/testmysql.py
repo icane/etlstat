@@ -1,17 +1,13 @@
 import unittest
 
-from odo import odo
+from odo import odo, drop
 import numpy as np
 import pandas as pd
 import icaneconfig as ic
 
 from config_test import *
-# from config_user import *
+from config_user import *
 from etlstat.database.mysql import MySQL
-
-MYSQL_USER_LOCAL = 'ign'
-MYSQL_PASSWD_LOCAL = 'icane'
-MYSQL_PORT_LOCAL = '3333'
 
 CONFIG_GLOBAL = {
     'metadata': {
@@ -51,8 +47,7 @@ class TestMySql(unittest.TestCase):
             table['column_one'] = table['column_one'].astype(int)
             table['car_name'] = table['car_name'].astype(str)
             table['minutes_spent'] = table['minutes_spent'].astype(float)
-            # Probar el método de pandas para asignar el tipo automáticamente
-            # table = table.infer_objects()
+
             table.name = config.test.table
 
             MySQL.create(table)
@@ -66,13 +61,42 @@ class TestMySql(unittest.TestCase):
 
         path = config.root_dir + "/etlstat/database/test/"
 
-        if(not MySQL.check_for_table('01002', conn)):
+        if MySQL.check_for_table('01002', conn):
+            MySQL.delete('01002')
+
+        if(not MySQL.check_for_table('01002')):
             df = pd.read_csv(path + '01002.csv', sep=';')
             odo(df, conn_odo)
 
         data = MySQL.select('01002')
 
-        odo(data, path + '01002_selected.csv')
+        if data != None:
+            odo(data, path + '01002_selected.csv')
+
+    def test_insert(self):
+        conn = '{0}{1}'.format(config.store.conn_string, config.test.database)
+        conn_odo = '{0}{1}::{2}'.format(config.store.conn_string,
+                                        config.test.database, '01002')
+
+        path = config.root_dir + "/etlstat/database/test/"
+
+        if (MySQL.check_for_table('01002', conn)):
+            drop(conn_odo)
+
+        table = pd.read_csv(path + '01002.csv', sep=';')
+        table.name = '01002'
+
+        assert(MySQL.insert(table) == 21)
+
+        if (MySQL.check_for_table('01002', conn)):
+            MySQL.delete('01002')
+
+        assert (MySQL.insert(table, rows=[0, 1]) == 2)
+
+        if (MySQL.check_for_table('01002', conn)):
+            MySQL.delete('01002')
+
+        # assert(MySQL.bulk_insert(table) == 21)
 
 if __name__ == '__main__':
     unittest.main()

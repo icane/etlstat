@@ -63,16 +63,16 @@ class MySQL():
         """
         cls._connect(conn_string)
 
-        sql = "CREATE TABLE"
-        if isinstance(table, DataFrame):
-            sql += " {0} (".format(table.name)
+        if(not cls.check_for_table(table.name)):
+            sql = "CREATE TABLE"
+            if isinstance(table, DataFrame):
+                sql += " `{0}` (".format(table.name)
 
-            for label in table:
-                print(table[label].dtype)
-                sql += "{0} {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
-            sql = sql[:-2] + ')'
+                for label in table:
+                    sql += "{0} {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
+                sql = sql[:-2] + ')'
 
-        cls.engine.execute(sql)
+            cls.engine.execute(sql)
 
     @classmethod
     def select(cls, table, conn_string='', conditions=''):
@@ -94,6 +94,7 @@ class MySQL():
         """
         cls._connect(conn_string)
 
+        df = None
         sql = "SELECT"
         if isinstance(table, str):
             sql += " {0} FROM `{1}`".format('*', table)
@@ -116,8 +117,9 @@ class MySQL():
 
         rts = cls.engine.execute(sql)   # ResultProxy
 
-        df = DataFrame(rts.fetchall())
-        df.columns = rts.keys()
+        if rts.rowcount > 0:
+            df = DataFrame(rts.fetchall())
+            df.columns = rts.keys()
 
         rts.close()
 
@@ -149,7 +151,7 @@ class MySQL():
                 cls.create(table)
 
             sql = "INSERT INTO"
-            sql += " {0}".format(table.name)
+            sql += " `{0}`".format(table.name)
             sql += ' ('
             for label in list(table):
                 sql += "{0}, ".format(label)
@@ -157,6 +159,7 @@ class MySQL():
             sql += ')'
 
             for index, row in table.iterrows():
+
                 if rows is None or index in rows:
                     sql_insert = sql
                     sql_insert += " VALUES ("
@@ -284,7 +287,7 @@ class MySQL():
         """
         cls._connect(conn_string)
 
-        sql = "DELETE FROM {0}".format(table)
+        sql = "DELETE FROM `{0}`".format(table)
 
         if isinstance(conditions, str) and conditions is not '':
             sql += ' WHERE ' + conditions
