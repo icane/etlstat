@@ -56,7 +56,9 @@ class MySQL():
         Create a new table in database from DataFrame format.
 
         Args:
-            table (:obj:`DataFrame`):
+            table (:obj:`DataFrame`): DataFrame which name and column's label
+                    match with database table's name and columns that you wish
+                    create.
             conn_string (:obj:`str`, optional): String with sqlalchemy connection
                     format. Opcional if you have used before an operation with
                     the same engine.
@@ -80,14 +82,16 @@ class MySQL():
         Select data from table.
 
         Args:
-            table (:obj:`str` or :obj:`DataFrame`): Table's name in database or
-                    a DataFrame which name and column's label match with table's
-                    name and columns in database.
+            table (:obj:`str` or :obj:`DataFrame`): Table's name in database if
+                    you want read all fields in database table or a DataFrame
+                    which name and column's label match with table's name and
+                    columns table that you want read from database.
             conn_string (:obj:`str`, optional): String with sqlalchemy connection
                     format. Opcional if you have used before an operation with
                     the same engine.
             conditions (:obj:`str` or :obj:`list` of :obj:`str`, optional):
-                    A select condition or list of conditions with sql syntax.
+                    A select condition or list of select conditions with sql
+                    syntax.
         Returns:
             :obj:`DataFrame`: A DataFrame with data from database.
 
@@ -128,16 +132,16 @@ class MySQL():
     @classmethod
     def insert(cls, table, conn_string='', rows=None):
         """
-        Insert rows in a database table.
+        Insert DataFrame's rows in a database table.
 
         Args:
             table (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and columns in database and filled
-                    with data rows.
+                    match with table's name and column's name in database. It
+                    must filled with data rows.
             conn_string (:obj:`str`, optional): String with sqlalchemy connection
                     format. Opcional if you have used before an operation with
                     the same engine.
-            rows (:obj:`list` of int, optional): A list of row's index that you
+            rows (:obj:`list` of int, optional): A list of row's indexes that you
                     want insert to database.
         Returns:
             int: number of rows matched.
@@ -187,12 +191,14 @@ class MySQL():
 
         Args:
             table (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and columns in database and filled
-                    with data rows.
+                    match with table's name and columns name in database. It must
+                    filled with data rows.
             conn_string (:obj:`str`, optional): String with sqlalchemy connection
                     format. Opcional if you have used before an operation with
                     the same engine.
-            rows (:obj:`list` of int, optional):
+            index (:obj:`list` of name columns): list of DataFrame's columns names
+                    use as index in the update search. Other columns will be
+                    updated in database.
         Returns:
             int: number of rows matched.
         """
@@ -203,7 +209,7 @@ class MySQL():
         if isinstance(table, DataFrame):
             if isinstance(index, list):
                 for row in table.values:
-                    sql = "UPDATE {0} SET".format(table.name)
+                    sql = "UPDATE `{0}` SET".format(table.name)
                     sql_conditions = ''
                     sql_updates = ''
                     for id, label in enumerate(table):
@@ -221,6 +227,8 @@ class MySQL():
 
                     if len(sql_conditions) > 1:
                         sql += ' WHERE' + sql_conditions[:-4]
+
+                    print(sql)
                     rts = cls.engine.execute(sql)  # ResultProxy
 
                     rows_matched += rts.rowcount
@@ -238,8 +246,8 @@ class MySQL():
 
         Args:
             table (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and columns in database and filled
-                    with data rows.
+                    match with table's name and columns in database. It must
+                    filled with data rows.
             conn_string (:obj:`str`, optional): String with sqlalchemy connection
                     format. Opcional if you have used before an operation with
                     the same engine.
@@ -259,7 +267,7 @@ class MySQL():
         if not cls.check_for_table(table.name):
             cls.create(table)
 
-        sql = "LOAD DATA LOCAL INFILE '{0}' INTO TABLE {1} FIELDS TERMINATED BY ';'"\
+        sql = "LOAD DATA LOCAL INFILE '{0}' INTO TABLE `{1}` FIELDS TERMINATED BY ';'"\
               .format(csv_path, table.name)
 
         rts = cls.engine.execute(sql)
@@ -277,11 +285,12 @@ class MySQL():
         Delete data from table.
 
         Args:
-            table (:obj:`str`):
+            table (:obj:`str`): Database table name that you wish delete rows.
             conn_string (:obj:`str`, optional): String with sqlalchemy connection
                     format. Opcional if you have used before an operation with
                     the same engine.
-            conditions (:obj:`str`, optional):
+            conditions (:obj:`str`, optional): A string of select conditions
+            with sql syntax.
         Returns:
             int: number of rows matched.
         """
@@ -306,7 +315,7 @@ class MySQL():
         Check if table exists in database.
 
         Args:
-            table (:obj:`str`): Table's name.
+            table (:obj:`str`): Database table's name.
             conn_string (:obj:`str`, optional): String with sqlalchemy connection
                         format. Opcional if you have used before an operation with
                         the same engine.
