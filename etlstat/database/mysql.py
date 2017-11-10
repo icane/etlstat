@@ -227,8 +227,6 @@ class MySQL():
 
                     if len(sql_conditions) > 1:
                         sql += ' WHERE' + sql_conditions[:-4]
-
-                    print(sql)
                     rts = cls.engine.execute(sql)  # ResultProxy
 
                     rows_matched += rts.rowcount

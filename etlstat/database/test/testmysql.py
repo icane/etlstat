@@ -102,7 +102,7 @@ class TestMySql(unittest.TestCase):
         table.loc[0, 'valor'] = 4.0
 
         # print(table)
-        print(MySQL.update(table, index=['id']))
+        assert(MySQL.update(table, index=['id']) == 21)
 
     def test_update(self):
         pass
