@@ -16,11 +16,14 @@
 
 """
 import os
+from string import ascii_lowercase
 
-from sqlalchemy import exc, create_engine
-from pandas import DataFrame
+import numpy as np
+from pandas import DataFrame, notnull
+from sqlalchemy import create_engine
 
-class MySQL():
+
+class MySQL:
     connected=False
     engine = None
     conversion_map = {
@@ -171,7 +174,10 @@ class MySQL():
                         if isinstance(value, str):
                             sql_insert += "'{0}', ".format(value)
                         else:
-                            sql_insert += "{0}, ".format(value)
+                            if np.isnan(value):
+                                sql_insert += "{0}, ".format('NULL')
+                            else:
+                                sql_insert += "{0}, ".format(value)
                     sql_insert = sql_insert[:-2] + ')'
 
                     rts = cls.engine.execute(sql_insert)  # ResultProxy
@@ -257,13 +263,14 @@ class MySQL():
 
         cls._connect(conn_string)
 
-        if isinstance(table, DataFrame):
-            table.to_csv(csv_path, sep=';', header=False, index=False)
-        else:
-            raise TypeError("table must be a DataFrame.")
-
         if not cls.check_for_table(table.name):
             cls.create(table)
+
+        if isinstance(table, DataFrame):
+            aux = table.replace(np.NaN,"\\N")
+            aux.to_csv(csv_path, sep=';', header=False, index=False)
+        else:
+            raise TypeError("table must be a DataFrame.")
 
         sql = "LOAD DATA LOCAL INFILE '{0}' INTO TABLE `{1}` FIELDS TERMINATED BY ';'"\
               .format(csv_path, table.name)

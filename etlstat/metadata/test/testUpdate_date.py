@@ -19,9 +19,8 @@
 import unittest
 
 from config_user import *
-from config_global import *
-from utils.metadata.update_date import *
-from utils.config.Configuration import *
+import icaneconfig as ic
+from etlstat.metadata.update_date import *
 
 CONFIG_GLOBAL = {
     'metadata': {
@@ -88,8 +87,8 @@ CONFIG_GLOBAL = {
 class TestUpdate_date(unittest.TestCase):
 
     def setUp(self):
-        self.config = Configuration(CONFIG_GLOBAL)
-        self.config.environment = Env.LOCAL
+        self.config = ic.Configuration(CONFIG_GLOBAL)
+        self.config.environment = ic.Env.LOCAL
 
     def test_errors(self):
         # Test 1 : Sin configuración

@@ -1,4 +1,5 @@
 import unittest
+import webbrowser
 
 from odo import odo, drop
 import numpy as np
@@ -40,17 +41,21 @@ config.environment = ic.Env.LOCAL
 class TestMySql(unittest.TestCase):
 
     def test_check(self):
+        # (*) Añadir database al conn_string de Configuration??
         conn = '{0}{1}'.format(config.store.conn_string, config.test.database)
 
         if not MySQL.check_for_table(config.test.table, conn):
+            # Create dataframe
             data_columns = ['column_one', 'car_name', 'minutes_spent']
             table = pd.DataFrame(columns=data_columns)
+            # Assign columns data types
             table['column_one'] = table['column_one'].astype(int)
             table['car_name'] = table['car_name'].astype(str)
             table['minutes_spent'] = table['minutes_spent'].astype(float)
-
+            # Rename dataframe
             table.name = config.test.table
 
+            # Create database table
             MySQL.create(table)
 
         self.assertTrue(MySQL.check_for_table(config.test.table))
@@ -104,9 +109,17 @@ class TestMySql(unittest.TestCase):
         # print(table)
         assert(MySQL.update(table, index=['id']) == 21)
 
-    def test_update(self):
-        pass
+        # uri_tag = "labour-market-collective-labor-agreements-year-economic-effects"
+        # url = "http://icane.es/data/" + uri_tag
+        # webbrowser.open(url, new=2)
 
+    def test_update(self):
+        conn = '{0}{1}'.format(config.store.conn_string, config.test.database)
+        path = config.root_dir + "/etlstat/database/test/"
+
+        df = pd.read_csv(path + '01001.csv', sep=';')
+        df.name='01001'
+        MySQL.insert(df, conn)
 
 if __name__ == '__main__':
     unittest.main()
