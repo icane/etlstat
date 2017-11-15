@@ -29,7 +29,7 @@ class MySQL:
     conversion_map = {
         'object': 'VARCHAR(255)',
         'int64': 'INT',
-        'float64': 'DECIMAL'
+        'float64': 'DECIMAL(20,6)'
     }
 
     @classmethod
