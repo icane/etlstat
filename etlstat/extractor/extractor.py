@@ -1,5 +1,6 @@
 import csv
 import glob
+import fnmatch
 import os
 import xml.etree.ElementTree as ET
 from contextlib import ExitStack
@@ -73,7 +74,7 @@ def excel_processing(dir_path, excel):
     return xls_map
 
 
-def excel_in(dir_path, sheet_name, reg_ex='*', encoding='utf-8'):
+def excel_in(dir_path, sheet_name, pattern='*.xls', encoding='utf-8'):
     """
     Function that reads files in a directory filtered by regEx and generates a
     map with xls names. This method also calls excel_processing in order to generate
@@ -89,10 +90,13 @@ def excel_in(dir_path, sheet_name, reg_ex='*', encoding='utf-8'):
     # log configuration
     log.basicConfig(level=log.INFO)
     logger = log.getLogger(__name__)
+    excel_files = []
     os.chdir(dir_path)
-    excels = [f for f in glob.glob(reg_ex) if ".xls" in f or ".XLS" in f]
+    for file in os.listdir('.'):
+        if fnmatch.fnmatch(file, pattern):
+            excel_files.append(file)
     # In order to have unique keys
-    keys = set(excels)
+    keys = set(excel_files)
     keys = list(keys)
     df_dict = dict.fromkeys(keys,'')
     for j in range(len(keys)):
@@ -105,7 +109,7 @@ def excel_in(dir_path, sheet_name, reg_ex='*', encoding='utf-8'):
     return df_dict
 
 
-def csv_in(dir_path, reg_ex='*', sep=';', encoding='utf-8' ):
+def csv_in(dir_path, pattern='*.csv', sep=',', encoding='utf-8' ):
     """
     Function that reads files in a directory filtered by regEx and generates a
     dict with csv names.
@@ -117,9 +121,12 @@ def csv_in(dir_path, reg_ex='*', sep=';', encoding='utf-8' ):
     Returns:
         dict: Csv name as KEY and dataframe as VALUE
     """
+    csv_files = []
     os.chdir(dir_path)
-    csv_s = [f for f in glob.glob(reg_ex) if ".csv" in f or ".CSV" in f]
-    keys = set(csv_s)
+    for file in os.listdir('.'):
+        if fnmatch.fnmatch(file, pattern):
+            csv_files.append(file)
+    keys = set(csv_files)
     keys = list(keys)
     df_dict = dict.fromkeys(keys,'')
     for i in range(len(keys)):
@@ -213,6 +220,8 @@ def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
 
 
 def xml_in(dir_path,reg_ex='*'):
+
+    # TODO: refactorizar con pattern y fnmatch
     """
     Function that reads files in a directory filtered by regEx and generates a
     dict with xml names.
