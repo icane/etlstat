@@ -16,7 +16,6 @@
 
 """
 import os
-from string import ascii_lowercase
 
 import numpy as np
 from pandas import DataFrame, notnull
@@ -30,6 +29,7 @@ class MySQL:
     conversion_map = {
         'object': 'VARCHAR(255)',
         'int64': 'INT',
+        'float32': 'DECIMAL(20,6)',
         'float64': 'DECIMAL(20,6)'
     }
 
