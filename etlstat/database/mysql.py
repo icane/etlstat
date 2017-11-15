@@ -74,7 +74,7 @@ class MySQL:
                 sql += " `{0}` (".format(table.name)
 
                 for label in table:
-                    sql += "{0} {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
+                    sql += "`{0}` {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
                 sql = sql[:-2] + ')'
 
             cls.engine.execute(sql)
