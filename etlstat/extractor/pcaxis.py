@@ -1,6 +1,6 @@
 """
     Obtains a pandas DataFrame of tabular data from a PC-Axis file or URL.
-    Read all metadata from PC-Axis and stores it into a public dictionary.
+    Read all metadata from PC-Axis and returns a dictionary containing it.
 
     Date:
         25/09/2017
@@ -22,6 +22,7 @@ from etlstat.log.timing import timeit, log
 
 log.basicConfig(level=log.ERROR)
 logger = log.getLogger(__name__)
+
 
 def uri_type(uri):
     """
