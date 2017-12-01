@@ -121,5 +121,8 @@ class TestMySql(unittest.TestCase):
         df.name='01001'
         MySQL.insert(df, conn)
 
+        conn = '{0}{1}'.format(config.store.conn_string, 'banco')
+        MySQL.insert(df, conn)
+
 if __name__ == '__main__':
     unittest.main()

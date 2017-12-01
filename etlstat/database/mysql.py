@@ -16,7 +16,6 @@
 
 """
 import os
-from string import ascii_lowercase
 
 import numpy as np
 from pandas import DataFrame, notnull
@@ -24,34 +23,38 @@ from sqlalchemy import create_engine
 
 
 class MySQL:
-    connected=False
+    connected = False
     engine = None
+    conn_string = ''
     conversion_map = {
         'object': 'VARCHAR(255)',
         'int64': 'INT',
-        'float64': 'DECIMAL'
+        'float32': 'DECIMAL(20,6)',
+        'float64': 'DECIMAL(20,6)'
     }
 
     @classmethod
     def _connect(cls, conn_string):
-        if cls.connected == False:
-            if isinstance(conn_string, str) and conn_string is not '':
+        if isinstance(conn_string, str):
+            if cls.connected == False or (cls.conn_string is not conn_string and conn_string is not ''):
                 connector, conn_data = conn_string.split('://')
                 username, link, port_db = conn_data.split(':')
                 port, db = port_db.split('/')
                 password, ip = link.split('@')
-            else:
-                raise TypeError("conn_string must be a string connector.")
 
-            if connector != 'mysql+mysqlconnector':
-                raise NotImplementedError("Engine type not supported.")
+                if connector != 'mysql+mysqlconnector':
+                    raise NotImplementedError("Engine type not supported.")
 
-            url = "{0}://{1}:{2}@{3}:{5}/{4}"
+                url = "{0}://{1}:{2}@{3}:{5}/{4}"
 
-            url_str = url.format(connector, username, password, ip, db, port)
+                url_str = url.format(connector, username, password, ip, db, port)
 
-            cls.engine = create_engine(conn_string)
-            cls.connected = True
+                cls.engine = create_engine(conn_string)
+
+                cls.connected = True
+                cls.conn_string = conn_string
+        else:
+            raise TypeError("conn_string must be a string connector.")
 
     @classmethod
     def create(cls, table, conn_string=''):
@@ -74,7 +77,7 @@ class MySQL:
                 sql += " `{0}` (".format(table.name)
 
                 for label in table:
-                    sql += "{0} {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
+                    sql += "`{0}` {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
                 sql = sql[:-2] + ')'
 
             cls.engine.execute(sql)
