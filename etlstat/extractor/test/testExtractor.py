@@ -1,13 +1,13 @@
 import unittest
 
-from utils.extractor.extractor import pc_axis_in
+from etlstat.extractor.extractor import pc_axis_in
 
 
-class TestPcAxisIn(unittest.TestCase):
+class TestExtractor(unittest.TestCase):
 
     def testPcAxisIn(self):
 
-        pcaxis_dict = pc_axis_in('/var/git/python/icane_etl/etlstat/extractor/test/pcaxis_urls.csv')
+        pcaxis_dict = pc_axis_in('pcaxis_urls.csv')
         print(pcaxis_dict['px_3280'].info())
         print(pcaxis_dict['px_3281'].info())
         print(pcaxis_dict['px_22350'].info())

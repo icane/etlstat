@@ -8,3 +8,5 @@ python-Levenshtein
 xlrd
 datashape
 unidecode
+numpy
+requests

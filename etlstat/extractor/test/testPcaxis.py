@@ -1,14 +1,13 @@
 import csv
-from utils.extractor.pcaxis import *
+from etlstat.extractor.pcaxis import *
 import unittest
 
 
-class TestPcAxisParser(unittest.TestCase):
+class TestPcaxis(unittest.TestCase):
 
     def testUriType(self):
         self.assertEqual(uri_type('22350.px'), 'FILE', 'Uri type differs!')
-        self.assertEqual(uri_type('http://www.ine.es/jaxiT3/files/t/es/px/22350.px'), 'URL',
-                         'Uri type differs!')
+        self.assertEqual(uri_type('http://www.ine.es/jaxiT3/files/t/es/px/22350.px'), 'URL', 'Uri type differs!')
 
     def testMetaDataSplit(self):
         pc_axis = """AXIS-VERSION="2006";
@@ -58,7 +57,8 @@ class TestPcAxisParser(unittest.TestCase):
         "2004M03","2004M02","2004M01","2003M12","2003M11","2003M10","2003M09","2003M08","2003M07",
         "2003M06","2003M05","2003M04","2003M03","2003M02","2003M01","2002M12","2002M11","2002M10",
         "2002M09","2002M08","2002M07","2002M06","2002M05","2002M04","2002M03","2002M02","2002M01";
-        CODES("Comunidades y Ciudades Autónomas")="null","CA01","CA02","CA03","CA04","CA05","CA06","CA07","CA08","CA09","CA10","CA11","CA12","CA13",
+        CODES("Comunidades y Ciudades Autónomas")="null","CA01","CA02","CA03","CA04","CA05","CA06","CA07","CA08","CA09",
+        "CA10","CA11","CA12","CA13",
         "CA14","CA15","CA16","CA17","CA18","CA19";
         MAP("Comunidades y Ciudades Autónomas")="spain_regions_img_ind";
         PRECISION("Tipo de dato","Índice")=3;
@@ -111,13 +111,13 @@ class TestPcAxisParser(unittest.TestCase):
         self.assertEqual(dimension_members[0][0], 'Número de Centros', 'Dimension member differs!')
         self.assertEqual(dimension_members[0][1], 'Número de Alumnos', 'Dimension member differs!')
 
-    def testFromPcAxis(self):
+    def testFromPcaxis(self):
         meta_dict, data_frame = from_pc_axis('22350.px', encoding='ISO-8859-2')
-        self.assertEqual(meta_dict['VALUES(Grupos ECOICOP)'].index('00 Índice general'), 0,
-                         'Dictionary index differs!')
+        self.assertEqual(meta_dict['VALUES(Grupos ECOICOP)'].index('00 Índice general'), 0, 'Dictionary index differs!')
         self.assertEqual(len(data_frame), 195520)
 
     def testToCsv(self):
+        # fichero 1
         meta_dict, df = from_pc_axis('http://www.ine.es/jaxiT3/files/es/3284.px', encoding='windows-1252')
         df.to_csv(
             path_or_buf='3284.csv',
@@ -128,11 +128,46 @@ class TestPcAxisParser(unittest.TestCase):
             quoting=csv.QUOTE_NONNUMERIC,
             encoding='utf-8')
         fd = open('3284.csv', 'r')
-        i = 0
-        while fd.readline():
-            i += 1
+        for line in fd:
+            pass
+        last = line
         fd.close()
-        self.assertEqual(i, 258553)
+        self.assertEqual(last, '"17 Rioja, La","Energía","Variación en lo que va de año","1975M01",""\n')
+        # fichero 2
+        meta_dict, df = from_pc_axis('http://www.ine.es/jaxiT3/files/es/3280.px', encoding='windows-1252')
+        df.to_csv(
+            path_or_buf='3280.csv',
+            sep=',',
+            header=True,
+            index=False,
+            doublequote=True,
+            quoting=csv.QUOTE_NONNUMERIC,
+            encoding='utf-8')
+        fd = open('3280.csv', 'r')
+        for line in fd:
+            pass
+        last = line
+        fd.close()
+        self.assertEqual(last,
+                         '"17 Rioja, La","B Industrias extractivas","Variación en lo que va de año","1975M01",""\n')
+        # fichero 3
+        meta_dict, df = from_pc_axis('http://www.ine.es/jaxiT3/files/es/3281.px', encoding='windows-1252')
+        df.to_csv(
+            path_or_buf='3281.csv',
+            sep=',',
+            header=True,
+            index=False,
+            doublequote=True,
+            quoting=csv.QUOTE_NONNUMERIC,
+            encoding='utf-8')
+        fd = open('3281.csv', 'r')
+        for line in fd:
+            pass
+        last = line
+        fd.close()
+        self.assertEqual(last,
+                         '"17 Rioja, La","36 Captación, depuración y distribución de agua",'
+                         '"Variación en lo que va de año","1975M01",""\n')
 
     def testHTTPError(self):
         # returns status code 404

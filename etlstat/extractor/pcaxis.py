@@ -1,6 +1,8 @@
 """
     Obtains a pandas DataFrame of tabular data from a PC-Axis file or URL.
     Read all metadata from PC-Axis and returns a dictionary containing it.
+    Reference: https://www.scb.se/Upload/PC-Axis/Support/Documents/PX-file_format_specification_2013.pdf
+    Regex debugging: https://pythex.org/
 
     Date:
         25/09/2017
@@ -91,12 +93,12 @@ def meta_data_split(pc_axis):
 
     # split file into metadata and data sections
     meta_data, data = pc_axis.split('DATA=')
-
     # meta: list of strings that conforms to pattern ATTRIBUTE=VALUES
-    meta = re.findall('[ ]*([^;=]*=[^;=]*);+?', meta_data)
-
-    # remove trailing blanks and final semicolon from data section
+    meta = re.findall('([^=]+=[^=]+)(?:;|$)', meta_data)
+    # remove trailing blanks and final semicolon
     data = data.strip().rstrip(';')
+    for i, item in enumerate(meta):
+        meta[i] = item.strip().rstrip(';')
 
     return meta, data
 
