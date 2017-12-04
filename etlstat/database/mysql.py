@@ -275,7 +275,7 @@ class MySQL:
         else:
             raise TypeError("table must be a DataFrame.")
 
-        sql = "LOAD DATA LOCAL INFILE '{0}' INTO TABLE `{1}` FIELDS TERMINATED BY ';'"\
+        sql = """LOAD DATA LOCAL INFILE '{0}' INTO TABLE `{1}` FIELDS TERMINATED BY ';' ENCLOSED BY '"' """\
               .format(csv_path, table.name)
 
         rts = cls.engine.execute(sql)
