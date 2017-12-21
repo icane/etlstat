@@ -11,7 +11,7 @@ import xlrd
 from Levenshtein import ratio
 
 from etlstat.extractor.pcaxis import *
-from etlstat import log
+
 
 def similar(a, b):
     """
@@ -22,7 +22,7 @@ def similar(a, b):
     Returns:
         int: Value of similarity between two strings.
     """
-    return ratio(a,b)
+    return ratio(a, b)
 
 
 def excel_processing(dir_path, excel):
@@ -32,12 +32,11 @@ def excel_processing(dir_path, excel):
      Note: If a data column has a txt note in the same row this method will fail.
 
     Args:
-        dir_path (str): Path of excel readed.
-        excel (str): Excel name.
-        sheet_name (str): sheetname that contains the data to be processed.
+        dir_path (str): directory containing Excel file.
+        excel (str): Excel file name.
 
     Returns:
-        dict: information (ini and end rows) about sheets of an excel
+        dict: information (ini and end rows) about sheets of an excel.
     """
     xls_map = {}
     workbook = xlrd.open_workbook(dir_path + excel)
@@ -78,18 +77,17 @@ def excel_in(dir_path, sheet_name, pattern='*.xls', encoding='utf-8'):
     """
     Function that reads files in a directory filtered by regEx and generates a
     map with xls names. This method also calls excel_processing in order to generate
-    the dataframe in a proper way.
+    the data frame in a proper way.
 
     Args:
-        dir_path (str): Path of DIR readed.
-        reg_ex (str): regEx to filter data names (Avoid adding format extension to regEx)
+        dir_path (str): directory containing Excel files.
+        sheet_name (str):
+        pattern (str): regEx to filter data names (Avoid adding format extension to regEx)
+        encoding (str): file encoding
 
     Returns:
         dict: Excel name as KEY and dataframe as VALUE
     """
-    # log configuration
-    log.basicConfig(level=log.INFO)
-    logger = log.getLogger(__name__)
     excel_files = []
     os.chdir(dir_path)
     for file in os.listdir('.'):
@@ -98,28 +96,33 @@ def excel_in(dir_path, sheet_name, pattern='*.xls', encoding='utf-8'):
     # In order to have unique keys
     keys = set(excel_files)
     keys = list(keys)
-    df_dict = dict.fromkeys(keys,'')
+    df_dict = dict.fromkeys(keys, '')
     for j in range(len(keys)):
         aux = excel_processing(dir_path, keys[j])
         ini = aux[sheet_name]['skip_rows']
         fin = aux[sheet_name]['footer_rows']
         logger.info('Reading file: ' + keys[j] + ' with skip_rows = ' + str(ini))
-        df_dict[keys[j]] = pd.read_excel(open(dir_path + keys[j], 'rb'), sheetname=sheet_name,
-                                            skiprows=ini, encoding=encoding, skip_footer=fin)
+        df_dict[keys[j]] = pd.read_excel(open(dir_path + keys[j], 'rb'),
+                                         sheetname=sheet_name,
+                                         skiprows=ini,
+                                         encoding=encoding,
+                                         skip_footer=fin)
     return df_dict
 
 
-def csv_in(dir_path, pattern='*.csv', sep=',', encoding='utf-8' ):
+def csv_in(dir_path, pattern='*.csv', sep=',', encoding='utf-8'):
     """
     Function that reads files in a directory filtered by regEx and generates a
     dict with csv names.
 
     Args:
-        dir_path (str): Path of DIR readed.
-        reg_ex (str): regEx to filter data names (Avoid adding format extension to regEx)
+        dir_path (str): directory containing Excel files.
+        pattern (str): regEx to filter data names (Avoid adding format extension to regEx)
+        sep (str): field separator character
+        encoding (str): file encoding
 
     Returns:
-        dict: Csv name as KEY and dataframe as VALUE
+        dict: Csv name as KEY and data frame as VALUE
     """
     csv_files = []
     os.chdir(dir_path)
@@ -141,18 +144,20 @@ def pc_axis_in(file_path, sep=",", encoding='windows-1252'):
 
     Args:
         file_path (str): extractor with uris file path (including file name).
+        sep (str): field separator
+        encoding (str): file encoding
     Returns:
         dict: URL as KEY and dataframe as VALUE
     """
-    pcaxis_dict = {}
+    pc_axis_dict = {}
     with open(file_path, "rt") as f:
         reader = csv.reader(f, delimiter=sep)
 
         for row in reader:
             md, df = from_pc_axis(row[1], encoding)
-            pcaxis_dict[row[0]] = df
+            pc_axis_dict[row[0]] = df
 
-    return pcaxis_dict
+    return pc_axis_dict
 
 
 def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
@@ -167,16 +172,13 @@ def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
     Returns:
         dict: Name of data file as KEY and dataframe as VALUE
     """
-    # log configuration
-    log.basicConfig(level=log.INFO)
-    logger = log.getLogger(__name__)
     conversion_map = {
         'STRING': str,
         'NUMBER': np.float32,
         'DOUBLE': np.float32,
         'INTEGER': np.int32
     }
-    fieldname = 'Nombre del Campo'
+    field_name = 'Nombre del Campo'
     data_type = 'Tipo de dato'
     longitud = 'Longitud'
     asignation_map = {}
@@ -204,12 +206,12 @@ def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
                                               encoding=encoding)
     for l in range(len(asignation_map)):
         for m in range(len(asignation_map[keys[l]])):
-            correspondence_map[keys[l]][asignation_map[keys[l]][fieldname][m]] = \
+            correspondence_map[keys[l]][asignation_map[keys[l]][field_name][m]] = \
                 conversion_map[asignation_map[keys[l]][data_type][m]]
     for j in range(len(asignation_map)):
         aux = pd.read_fwf(dir_path + keys[j],
                           widths=asignation_map[keys[j]][longitud].tolist(),
-                          names=asignation_map[keys[j]][fieldname].tolist(),
+                          names=asignation_map[keys[j]][field_name].tolist(),
                           dtype=correspondence_map[keys[j]],
                           nwords=0)
         aux.name = keys[j]
@@ -218,8 +220,7 @@ def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
     return asignation_map
 
 
-
-def xml_in(dir_path,reg_ex='*'):
+def xml_in(dir_path, reg_ex='*'):
 
     # TODO: refactorizar con pattern y fnmatch
     """
@@ -243,6 +244,7 @@ def xml_in(dir_path,reg_ex='*'):
         df_dict[keys[i]] = ET.parse(dir_path + keys[i])
 
     return df_dict
+
 
 def sql_in(dir_path):
     """
