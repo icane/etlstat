@@ -175,11 +175,11 @@ def to_data_frame(dimension_names, dimension_members, data_list):
     data_frame = pandas.DataFrame(data=dim_exploded, columns=dimension_names)
 
     # convert data values from string to float
-    for i in range(len(data_list)):
-        if re.match('"[.]+"', data_list[i]):
-            data_list[i] = numpy.nan
-        else:
-            data_list[i] = decimal.Decimal(data_list[i])
+    for index, value in enumerate(data_list):
+        try:
+            data_list[index] = float(value)
+        except ValueError:
+            data_list[index] = numpy.nan
 
     # column of data values
     data_frame['DATA'] = pandas.Series(data_list)
@@ -206,7 +206,7 @@ def from_pc_axis(uri, encoding, timeout=10):
     # stores raw metadata into a dictionary
     meta_dict = meta_split(meta)
 
-    # explode raw data into a list of values
+    # explode raw data into a list of float values
     data_list = data.split()
 
     # extract dimension names and members from 'meta_dict' STUB and HEADING keys
