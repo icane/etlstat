@@ -167,9 +167,6 @@ def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
     Returns:
         dict: Name of data file as KEY and dataframe as VALUE
     """
-    # log configuration
-    log.basicConfig(level=log.INFO)
-    logger = log.getLogger(__name__)
     conversion_map = {
         'STRING': str,
         'NUMBER': np.float32,
@@ -206,12 +203,14 @@ def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
         for m in range(len(asignation_map[keys[l]])):
             correspondence_map[keys[l]][asignation_map[keys[l]][fieldname][m]] = \
                 conversion_map[asignation_map[keys[l]][data_type][m]]
+
     for j in range(len(asignation_map)):
         aux = pd.read_fwf(dir_path + keys[j],
                           widths=asignation_map[keys[j]][longitud].tolist(),
                           names=asignation_map[keys[j]][fieldname].tolist(),
                           dtype=correspondence_map[keys[j]],
                           nwords=0)
+
         aux.name = keys[j]
         asignation_map[keys[j]] = aux
 
