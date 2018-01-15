@@ -9,22 +9,22 @@ class TestExtractor(unittest.TestCase):
         string1 = "HOLA"
         string2 = "ADIOS"
         string3 = "HOLA MUNDO"
-        assert similar(string1, string2) < similar(string1, string3)
+        self.assertGreater(similar(string1, string3), similar(string1, string2))
 
         string1 = "IPI_JUNIO_2017.txt"
         string2 = "JUNIO_IPI_2017.csv"
         string3 = "IPI_Junio_2016.csv"
-        assert similar(string1, string2) > similar(string1, string3)
+        self.assertGreater(similar(string1, string2), similar(string1, string3))
 
         string1 = "EEE_2015_TERRI_IND_06.txt"
         string2 = "EEE_TERRI.csv"
         string3 = "EEE_UA.csv"
-        assert similar(string1, string2) > similar(string1, string3)
+        self.assertGreater(similar(string1, string2), similar(string1, string3))
 
         string1 = 'EEE_2015_IDENT_IND_06.TXT'
         string2 = 'EEE_FINAL.csv'
         string3 = 'EEE_IDENT.csv'
-        assert similar(string1, string2) < similar(string1, string3)
+        self.assertGreater(similar(string1, string3), similar(string1, string2))
 
     def testExcelProcessing(self):
         dir_path = '/mnt/gobcan/datos/series actualizadas/CA_MT_mercado_trabajo/Afiliados Seguridad Social/' + \
