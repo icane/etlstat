@@ -20,11 +20,10 @@ import MySQLdb
 
 import numpy as np
 from pandas import DataFrame, notnull
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, MetaData, Table
 
 
 class MySQL:
-    connected = False
     engine = None
     conn_string = ''
     conversion_map = {
@@ -37,7 +36,7 @@ class MySQL:
     @classmethod
     def _connect(cls, conn_string):
         if isinstance(conn_string, str):
-            if cls.connected == False or (cls.conn_string is not conn_string and conn_string is not ''):
+            if (cls.conn_string is not conn_string and conn_string is not ''):
                 connector, conn_data = conn_string.split('://')
                 username, link, port_db = conn_data.split(':')
                 port, db = port_db.split('/')
@@ -52,7 +51,6 @@ class MySQL:
 
                 cls.engine = create_engine(conn_string)
 
-                cls.connected = True
                 cls.conn_string = conn_string
         else:
             raise TypeError("conn_string must be a string connector.")
@@ -74,6 +72,7 @@ class MySQL:
 
         if(not cls.check_for_table(table.name)):
             sql = "CREATE TABLE"
+            print(cls.engine)
             if isinstance(table, DataFrame):
                 sql += " `{0}` (".format(table.name)
 
@@ -81,7 +80,21 @@ class MySQL:
                     sql += "`{0}` {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
                 sql = sql[:-2] + ')'
 
-            cls.engine.execute(sql)
+                rts = cls.engine.execute(sql)
+                rts.close()
+
+                meta = MetaData()
+                messages = Table(table.name, meta, autoload=True, autoload_with=cls.engine)
+                rts_columns = [c.name for c in messages.columns]
+
+                if len(set(list(table.columns.values)) & set(rts_columns)) == len(table.columns):
+                    return True
+
+                #print(rts.keys())
+                if rts.returns_rows:
+                    print(rts.rowcount)
+
+        return False
 
     @classmethod
     def select(cls, table, conn_string='', conditions=''):
