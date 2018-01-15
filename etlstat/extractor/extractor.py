@@ -208,12 +208,14 @@ def positional_in(dir_path, reg_ex='*', sep=';', encoding='utf-8'):
         for m in range(len(asignation_map[keys[l]])):
             correspondence_map[keys[l]][asignation_map[keys[l]][field_name][m]] = \
                 conversion_map[asignation_map[keys[l]][data_type][m]]
+
     for j in range(len(asignation_map)):
         aux = pd.read_fwf(dir_path + keys[j],
                           widths=asignation_map[keys[j]][longitud].tolist(),
                           names=asignation_map[keys[j]][field_name].tolist(),
                           dtype=correspondence_map[keys[j]],
                           nwords=0)
+
         aux.name = keys[j]
         asignation_map[keys[j]] = aux
 
