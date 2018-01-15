@@ -113,6 +113,7 @@ class TestPcaxis(unittest.TestCase):
 
     def testFromPcaxis(self):
         meta_dict, data_frame = from_pc_axis('22350.px', encoding='ISO-8859-2')
+        self.assertEqual(data_frame.dtypes['DATA'], 'float64')
         self.assertEqual(meta_dict['VALUES(Grupos ECOICOP)'].index('00 Índice general'), 0, 'Dictionary index differs!')
         self.assertEqual(len(data_frame), 195520)
 

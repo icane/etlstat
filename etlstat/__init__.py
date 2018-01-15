@@ -18,8 +18,8 @@ from etlstat.log.timing import timeit
 from etlstat.metadata.update_date import update_date
 
 # text
-# from etlstat.text.main_tich import *
-# from etlstat.text.replace_in_xml import *
+from etlstat.text.replace_in_xml import replace_in_xml
+from etlstat.text.parsed_columns import parsed_columns
 
 # from etlstat import extractor
 # from etlstat import metadata
