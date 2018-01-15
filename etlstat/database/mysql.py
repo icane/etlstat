@@ -16,6 +16,7 @@
 
 """
 import os
+import MySQLdb
 
 import numpy as np
 from pandas import DataFrame, notnull
@@ -125,7 +126,7 @@ class MySQL:
                 sql += " {0},".format(condition)
             sql = sql[:-1]
 
-        rts = cls.engine.execute(sql)   # ResultProxy
+        rts = cls.engine.execute(MySQLdb.escape_string(sql))   # ResultProxy
 
         if rts.rowcount > 0:
             df = DataFrame(rts.fetchall())
@@ -224,19 +225,19 @@ class MySQL:
                     for id, label in enumerate(table):
                         if label not in index:
                             if isinstance(row[id], str):
-                                sql_updates += " {0}='{1}',".format(label, row[id])
+                                sql_updates += " {0}={1},".format(label, row[id])
                             else:
                                 sql_updates += " {0}={1},".format(label, row[id])
                         else:
                             if isinstance(row[id], str):
-                                sql_conditions += " {0}='{1}' and".format(label, row[id])
+                                sql_conditions += " {0}={1} and".format(label, row[id])
                             else:
                                 sql_conditions += " {0}={1} and".format(label, row[id])
                     sql += sql_updates[:-1]
 
                     if len(sql_conditions) > 1:
                         sql += ' WHERE' + sql_conditions[:-4]
-                    rts = cls.engine.execute(sql)  # ResultProxy
+                    rts = cls.engine.execute(MySQLdb.escape_string(sql))  # ResultProxy
 
                     rows_matched += rts.rowcount
 
@@ -309,7 +310,7 @@ class MySQL:
         if isinstance(conditions, str) and conditions is not '':
             sql += ' WHERE ' + conditions
 
-        rts = cls.engine.execute(sql)
+        rts = cls.engine.execute(MySQLdb.escape_string(sql))
 
         rows_matched = rts.rowcount
 

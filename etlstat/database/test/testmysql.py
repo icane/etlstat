@@ -116,11 +116,10 @@ class TestMySql(unittest.TestCase):
     def test_update(self):
         conn = '{0}{1}'.format(config.store.conn_string, config.test.database)
         path = config.root_dir + "/etlstat/database/test/"
-
+        print(conn)
         df = pd.read_csv(path + '01001.csv', sep=';')
         df.name='01001'
         MySQL.insert(df, conn)
-
         conn = '{0}{1}'.format(config.store.conn_string, 'banco')
         MySQL.insert(df, conn)
 
