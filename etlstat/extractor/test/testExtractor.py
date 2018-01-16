@@ -2,7 +2,6 @@ import unittest
 
 from etlstat.extractor.extractor import *
 
-
 class TestExtractor(unittest.TestCase):
 
     def testSimilar(self):
@@ -66,7 +65,7 @@ class TestExtractor(unittest.TestCase):
         print(dict['Comprobación'])
         assert (dict['regulacion empleo'] == {'skip_rows': 4, 'footer_rows': 3})
         # Algoritmo no pensado para hojas de comprobación
-        assert (dict['Comprobación'] == {'skip_rows': 9, 'footer_rows': 435})
+        assert (dict['Comprobación'] == {'skip_rows': 9, 'footer_rows': 436})
         assert (len(dict) == 2)
 
         excel = 'CA_MT_106.xls'
@@ -109,31 +108,31 @@ class TestExtractor(unittest.TestCase):
         assert (len(dict) == 1)
 
     def testExcelIn(self):
+
         dir_path = '/mnt/gobcan/datos/series actualizadas/CA_MT_mercado_trabajo/' + \
                    'Afiliados Seguridad Social/Nueva tablas/Afiliados medios/'
 
-        df_dict = excel_in(dir_path, 'Hoja1')
-        assert ('CA_MT_327.xls' in df_dict)
-        assert ('CA_MT_328.xls' in df_dict)
-        assert ('CA_MT_329.xls' in df_dict)
+        df_dict = excel_in(dir_path, 'Hoja1', pattern="CA_*.xls")
+        print(df_dict.keys())
+        log.debug(df_dict.keys())
         assert (len(df_dict) == 3)
         assert (isinstance(df_dict['CA_MT_327.xls'], pd.DataFrame))
         assert (isinstance(df_dict['CA_MT_328.xls'], pd.DataFrame))
         assert (isinstance(df_dict['CA_MT_329.xls'], pd.DataFrame))
-        assert (len(df_dict['CA_MT_327.xls']) == 104)
-        assert (len(df_dict['CA_MT_328.xls']) == 104)
-        assert (len(df_dict['CA_MT_329.xls']) == 104)
-
+        assert (df_dict['CA_MT_327.xls'].shape[0] ==108)
+        assert (df_dict['CA_MT_327.xls'].shape[1] ==24)
+        assert (df_dict['CA_MT_328.xls'].shape[0] ==108)
+        assert (df_dict['CA_MT_328.xls'].shape[1] ==24)
+        assert (df_dict['CA_MT_329.xls'].shape[0] ==108)
+        assert (df_dict['CA_MT_329.xls'].shape[1] ==70)
         dir_path = '/mnt/gobcan/datos/series actualizadas/CA_SP_sector primario/AGRICULTURA/' + \
                    'Consejo Regulador Agricultura Ecologica (CRAE)/'
         df_dict = excel_in(dir_path, 'Hoja5')
         assert ('CA_SP_063.xls' in df_dict)
         assert (isinstance(df_dict['CA_SP_063.xls'], pd.DataFrame))
         assert (len(df_dict['CA_SP_063.xls']) == 19)
-
         dir_path = '/mnt/gobcan/datos/series actualizadas/CA_MT_mercado_trabajo/'
         self.assertRaises(KeyError, excel_in, dir_path, 'regulacion empleo')
-
         dir_path = '/mnt/gobcan/datos/series actualizadas/CA_DE_Deportes/'
         df_dict = excel_in(dir_path, 'Hoja1')
         assert ('CA_DE_01.xls' in df_dict)
@@ -143,12 +142,47 @@ class TestExtractor(unittest.TestCase):
         assert (len(df_dict['CA_DE_01.xls']) == 67)
         assert (len(df_dict['CA_DE_02.xls']) == 67)
 
-    def testPcAxisIn(self):
+    def testCsvIn(self):
+        dir_path = '/mnt/gobcan/datos/microdatos/EEE/'
+        df = csv_in(dir_path, sep = ";")
+        log.debug(df.keys())
+        assert (len(df)==21)
+        assert (df['AUDIOV_SER_06_15.csv'].shape[0] == 22)
+        assert (df['AUDIOV_SER_06_15.csv'].shape[1] == 24)
+        assert (df['POST_SER_06_15.csv'].shape[0] == 12)
+        assert (df['POST_SER_06_15.csv'].shape[1] == 74)
 
-        pc_axis_dict = pc_axis_in('pcaxis_urls.csv')
-        print(pc_axis_dict['px_3280'].info())
-        print(pc_axis_dict['px_3281'].info())
-        print(pc_axis_dict['px_22350'].info())
-        print(pc_axis_dict['px_9681'].info())
-        print(pc_axis_dict['px_3284'].info())
+
+    def testPositionalIn(self):
+        dir_path = '/mnt/gobcan/datos/icane_etl/economia/industria/eie/data/input/'
+        dataf = positional_in(dir_path)
+        assert (len(dataf)==21)
+        assert (dataf['POST_SER_06_15.TXT'].shape[0] == 12)
+        assert (dataf['POST_SER_06_15.TXT'].shape[1] == 74)
+        assert (dataf['AUDIOV_SER_06_15.TXT'].shape[0] == 22)
+        assert (dataf['AUDIOV_SER_06_15.TXT'].shape[1] == 24)
+
+    def testPcAxisIn(self):
+        pc_axis_dict = pc_axis_in('/var/git/python/etlstat/etlstat/extractor/test/pcaxis_urls.csv')
+        assert (isinstance(pc_axis_dict['px_3280'], pd.DataFrame))
+        assert (isinstance(pc_axis_dict['px_3281'], pd.DataFrame))
+        assert (isinstance(pc_axis_dict['px_22350'], pd.DataFrame))
+        assert (isinstance(pc_axis_dict['px_9681'], pd.DataFrame))
+        assert (isinstance(pc_axis_dict['px_3284'], pd.DataFrame))
+
+
+    def testXmlIn(self):
+        xml_dict = xml_in('/var/git/xml/pdi-series/Definitivo/Economía/Sector exterior/Comercio Exterior/')
+        assert (len(xml_dict) == 11)
+        root = xml_dict['Comex.kjb'].getroot()
+        assert (root.tag == 'job')
+        root = xml_dict['Ec_SE_IEFAZ.ktr'].getroot()
+        assert (root.tag == 'transformation')
+
+
+    def testSqlIn(self):
+        sqldata = sql_in('/var/git/python/icanetl/economia/mercado-trabajo/formacion-empleo/sql/query/')
+        assert (len(sqldata['afiliados']) == 1584)
+        assert (len(sqldata['contratos']) == 3026)
+        assert (len(sqldata['ratios']) == 13735)
 

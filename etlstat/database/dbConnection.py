@@ -1,5 +1,5 @@
 import mysql.connector
-import cx_Oracle
+#import cx_Oracle
 
 
 class DbConnection(object):
