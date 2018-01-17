@@ -16,7 +16,6 @@
 
 """
 import os
-import MySQLdb
 
 import numpy as np
 from pandas import DataFrame, notnull
@@ -139,7 +138,7 @@ class MySQL:
                 sql += " {0},".format(condition)
             sql = sql[:-1]
 
-        rts = cls.engine.execute(MySQLdb.escape_string(sql))   # ResultProxy
+        rts = cls.engine.execute(sql)   # ResultProxy
 
         if rts.rowcount > 0:
             df = DataFrame(rts.fetchall())
@@ -250,7 +249,7 @@ class MySQL:
 
                     if len(sql_conditions) > 1:
                         sql += ' WHERE' + sql_conditions[:-4]
-                    rts = cls.engine.execute(MySQLdb.escape_string(sql))  # ResultProxy
+                    rts = cls.engine.execute(sql)  # ResultProxy
 
                     rows_matched += rts.rowcount
 
@@ -323,7 +322,7 @@ class MySQL:
         if isinstance(conditions, str) and conditions is not '':
             sql += ' WHERE ' + conditions
 
-        rts = cls.engine.execute(MySQLdb.escape_string(sql))
+        rts = cls.engine.execute(sql)
 
         rows_matched = rts.rowcount
 
