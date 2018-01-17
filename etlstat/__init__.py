@@ -1,7 +1,6 @@
 # database
 from etlstat.database.Oracle import Oracle
 from etlstat.database.is_table import is_table
-from etlstat.database.dbConnection import DbConnection
 from etlstat.database.MySql import MySql
 from etlstat.database.CxOracle import CxOracle
 from etlstat.database.mysql import MySQL
