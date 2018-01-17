@@ -5,9 +5,10 @@ from odo import odo, drop
 import numpy as np
 import pandas as pd
 import icaneconfig as ic
+from mock import Mock
+from sqlalchemy import Table
+import sqlalchemy
 
-from config_test import *
-from config_user import *
 from etlstat.database.mysql import MySQL
 from unittest.mock import MagicMock, patch, Mock, PropertyMock
 
@@ -21,7 +22,6 @@ class TestResultProxy:
     def close(self):
         return True
 
-
 class TestEngine:
 
     def execute(self, sql):
@@ -33,41 +33,67 @@ class TestEngine:
 #def test_execute(sql):
 #    return
 
+
+
+class TestTable:
+    def __init__(self):
+        print("Hey")
+    def __new__(cls):
+        print("heeey")
+
+fake_response = MagicMock()
+
 class TestMySql(unittest.TestCase):
 
-    #def test_connect(self):
+    @patch('sqlalchemy.engine.create_engine', return_value=fake_response)
+    def test_connect(self, fake_response):
 
-        # with self.assertRaises(NotImplementedError):
-        #     MySQL._connect("oracle+cx_oracle://username:password@127.0.0.1:3306/database")
-        #
-        # try:
-        #     MySQL._connect("mysql+mysqlconnector://username:password@127.0.0.1:3306/database")
-        # except TypeError:
-        #     self.fail("string_connector filter failed")
+        with patch('sqlalchemy.engine.create_engine', return_value=None):
+            MySQL._connect("mysql+mysqlconnector://ign:icane@127.0.0.1:3333/test")
+            print(MySQL.engine)
 
-        #with patch('sqlalchemy.create_engine', return_value=TestEngine()):
-        #    MySQL._connect("mysql+mysqlconnector://ign:icane@127.0.0.1:3333/test")
+    # def test_connect(self):
+    #
+    #     with self.assertRaises(NotImplementedError):
+    #          MySQL._connect("oracle+cx_oracle://username:password@127.0.0.1:3306/database")
+    #
+    #     try:
+    #         MySQL._connect("mysql+mysqlconnector://username:password@127.0.0.1:3306/database")
+    #     except TypeError:
+    #         self.fail("string_connector filter failed")
+    #
+    #     with patch('sqlalchemy.engine.create_engine', return_value=None):
+    #         MySQL._connect("mysql+mysqlconnector://ign:icane@127.0.0.1:3333/test")
+    #         print(MySQL.engine)
 
-    def test_create(self):
-        conn_string = "mysql+mysqlconnector://ign:icane@127.0.0.1:3333/test"
+    # def test_create(self):
+    #
+    #     conn_string = "mysql+mysqlconnector://ign:icane@127.0.0.1:3333/test"
+    #
+    #     # Create dataframe
+    #     data_columns = ['column_one', 'car_name', 'minutes_spent']
+    #     table = pd.DataFrame(columns=data_columns)
+    #
+    #     # Assign columns data types
+    #     table['column_one'] = table['column_one'].astype(int)
+    #     table['car_name'] = table['car_name'].astype(str)
+    #     table['minutes_spent'] = table['minutes_spent'].astype(float)
+    #
+    #     # Rename dataframe
+    #     table.name = "hola"
+    #
+    #     with patch('etlstat.database.mysql.MySQL.check_for_table',
+    #                return_value=False):
+    #         with patch('sqlalchemy.engine.base.Engine.execute', return_value=TestResultProxy()):
+    #             with patch('sqlalchemy.Table', return_value=TestTable()):
+    #                 with patch('mysql.connector.errors.InterfaceError', return_value=None):
+    #                     MySQL.create(table, conn_string)
 
-        # Create dataframe
-        data_columns = ['column_one', 'car_name', 'minutes_spent']
-        table = pd.DataFrame(columns=data_columns)
-
-        # Assign columns data types
-        table['column_one'] = table['column_one'].astype(int)
-        table['car_name'] = table['car_name'].astype(str)
-        table['minutes_spent'] = table['minutes_spent'].astype(float)
-
-        # Rename dataframe
-        table.name = "hola"
-
-        with patch('etlstat.database.mysql.MySQL.check_for_table', return_value=False):
+        #with patch('etlstat.database.mysql.MySQL.check_for_table', return_value=False):
             #with patch('etlstat.database.mysql.MySQL.engine', return_value=TestEngine()):
-            with patch('etlstat.database.mysql.MySQL.engine', new_callable=PropertyMock, return_value=TestEngine()):
+        #    with patch('etlstat.database.mysql.MySQL.engine', spec=engineFoo):
             #    with patch('etlstat.database.mysql.MySQL.engine.execute', return_value=False):
-                MySQL.create(table, conn_string)
+        #        MySQL.create(table, conn_string)
 
 
         #with patch('etlstat.database.mysql.MySQL.check_for_table', return_value=False):
@@ -157,6 +183,6 @@ class TestMySql(unittest.TestCase):
     #     MySQL.insert(df, conn)
     #     conn = '{0}{1}'.format(config.store.conn_string, 'banco')
     #     MySQL.insert(df, conn)
-
-if __name__ == '__main__':
-    unittest.main()
+#
+# if __name__ == '__main__':
+#     unittest.main()

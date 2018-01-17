@@ -48,6 +48,8 @@ class MySQL:
 
                 url_str = url.format(connector, username, password, ip, db, port)
 
+                print(type(create_engine(conn_string)))
+
                 cls.engine = create_engine(conn_string)
 
                 cls.conn_string = conn_string
@@ -71,7 +73,7 @@ class MySQL:
 
         if(not cls.check_for_table(table.name)):
             sql = "CREATE TABLE"
-            print(cls.engine)
+
             if isinstance(table, DataFrame):
                 sql += " `{0}` (".format(table.name)
 
@@ -81,17 +83,18 @@ class MySQL:
 
                 rts = cls.engine.execute(sql)
                 rts.close()
-
+                print(cls.engine)
                 meta = MetaData()
+
                 messages = Table(table.name, meta, autoload=True, autoload_with=cls.engine)
-                rts_columns = [c.name for c in messages.columns]
-
-                if len(set(list(table.columns.values)) & set(rts_columns)) == len(table.columns):
-                    return True
-
-                #print(rts.keys())
-                if rts.returns_rows:
-                    print(rts.rowcount)
+                # rts_columns = [c.name for c in messages.columns]
+                #
+                # if len(set(list(table.columns.values)) & set(rts_columns)) == len(table.columns):
+                #     return True
+                #
+                # #print(rts.keys())
+                # if rts.returns_rows:
+                #     print(rts.rowcount)
 
         return False
 
