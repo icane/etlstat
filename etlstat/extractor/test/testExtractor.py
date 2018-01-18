@@ -185,4 +185,3 @@ class TestExtractor(unittest.TestCase):
         assert (len(sqldata['afiliados']) == 1584)
         assert (len(sqldata['contratos']) == 3026)
         assert (len(sqldata['ratios']) == 13735)
-

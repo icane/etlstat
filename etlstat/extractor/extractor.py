@@ -225,7 +225,7 @@ def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX
     return asignation_map
 
 
-def xml_in(dir_path, pattern='*.[xXkK][mMjJtT][lLrRbB]'):
+def xml_in(dir_path, pattern=('.xml','.ktr','.kjb','.XML','.KTR','.KJB')):
 
     # TODO: refactorizar con pattern y fnmatch
     """
@@ -242,7 +242,7 @@ def xml_in(dir_path, pattern='*.[xXkK][mMjJtT][lLrRbB]'):
     xmls = []
     os.chdir(dir_path)
     for file in os.listdir('.'):
-        if fnmatch.fnmatch(file, pattern):
+        if file.endswith(pattern):
             xmls.append(file)
     keys = set(xmls)
     keys = list(keys)
