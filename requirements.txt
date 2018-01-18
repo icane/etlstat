@@ -1,6 +1,5 @@
 mysql-connector==2.1.4
 pyparsing
-pygit2
 pandas
 sqlalchemy
 odo
