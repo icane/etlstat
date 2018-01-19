@@ -1,5 +1,18 @@
+sudo: required
+
 language: python
+
 python:
   - "3.5"
+
+services:
+  - docker
+
+before_install:
+  - docker pull sath89/oracle-xe-11g
+  - docker run --name orcldb -d -p 1521:1521 sath89/oracle-xe-11g
+  - docker ps -a
+
 install: "pip install -r requirements.txt"
+
 script: nosetests
