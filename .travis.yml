@@ -7,8 +7,11 @@ python:
 
 services:
   - docker
+  - mysql
 
 before_install:
+  - docker pull mysql
+  - docker run -e MYSQL_ROOT_PASSWORD=password -d mysql:5.7
   - docker pull sath89/oracle-xe-11g
   - docker run --name orcldb -d -p 1521:1521 sath89/oracle-xe-11g
   - docker ps -a
