@@ -11,7 +11,7 @@ services:
 
 before_install:
   - docker pull mysql
-  - docker run --name mysqldb -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password mysql
+  - docker run --name mysqldb -d -e MYSQL_ROOT_PASSWORD=password mysql
   - docker pull sath89/oracle-xe-11g
   - docker run --name orcldb -d -p 1521:1521 sath89/oracle-xe-11g
   - docker ps -a
