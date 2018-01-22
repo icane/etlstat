@@ -3,7 +3,6 @@
 """
 import sqlalchemy
 from etlstat.database.Database import Database
-
 from etlstat.log.timing import log
 
 LOG_LEVEL = 'INFO'
@@ -22,12 +21,11 @@ class MySql(Database):
         """ Constructor.
 
             Args:
-                param1  (str):          Host
-                param2  (str):          Port
-                param3  (str):          Database
-
-                param4  (str):          User
-                param5  (str):          Password
+                host (str):     Host
+                port (str):     Port
+                database (str): Database
+                user (str):     User
+                password (str): Password
         """
         super().__init__('mysql+mysqlconnector', host, port, database, user, password)
 

@@ -4,12 +4,9 @@
 
 import csv
 import re
-
 import pandas as pd
 import sqlalchemy
-
 from etlstat.database.Database import Database
-
 from etlstat.log.timing import log
 
 LOG_LEVEL = 'INFO'
@@ -24,9 +21,17 @@ log = log.getLogger(__name__)
 
 class Oracle(Database):
 
-    def __init__(self, connector, host, port, service_name, user, password):
+    def __init__(self, host, port, service_name, user, password):
+        """ Constructor.
 
-        super().__init__(connector, host, port, service_name, user, password)
+            Args:
+                host (str):     Host
+                port (str):     Port
+                service_name (str): Oracle instance service name
+                user (str):     User
+                password (str): Password
+        """
+        super().__init__('oracle+cx_oracle', host, port, service_name, user, password)
 
     @staticmethod
     def merge_field_map(field_map):
