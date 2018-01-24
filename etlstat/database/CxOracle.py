@@ -1,5 +1,5 @@
 """
-    Class to handle Oracle database connections
+    CxOracle class: handle Oracle database connections
 
     Date:
         17/10/2017
@@ -8,7 +8,7 @@
         lla11358
 
     Version:
-        Beta release
+        Alpha
 
     Notes:
 
@@ -16,7 +16,6 @@
 
 import csv
 import re
-
 import cx_Oracle
 import pandas
 

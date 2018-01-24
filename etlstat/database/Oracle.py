@@ -1,13 +1,26 @@
+# coding: utf-8
 """
+    Oracle class: implementation of CRUD operations against Oracle data bases.
+
+    Date:
+        31/10/2017
+
+    Author:
+        lla11358
+
+    Version:
+        Alpha
+
+    Notes:
 
 """
 
-import csv
-import re
-import pandas as pd
 import sqlalchemy
 from etlstat.database.Database import Database
 from etlstat.log.timing import log
+import csv
+import re
+import pandas as pd
 
 LOG_LEVEL = 'INFO'
 
@@ -22,16 +35,18 @@ log = log.getLogger(__name__)
 class Oracle(Database):
 
     def __init__(self, host, port, service_name, user, password):
-        """ Constructor.
+        """
+        Constructor.
 
             Args:
-                host (str):     Host
-                port (str):     Port
+                host (str):         Host
+                port (str):         Port
                 service_name (str): Oracle instance service name
-                user (str):     User
-                password (str): Password
+                user (str):         User
+                password (str):     Password
         """
-        super().__init__('oracle+cx_oracle', host, port, service_name, user, password)
+        engine_type = 'oracle+cx_oracle'
+        super().__init__(engine_type, host, port, service_name, user, password)
 
     @staticmethod
     def merge_field_map(field_map):
@@ -89,27 +104,6 @@ class Oracle(Database):
         except sqlalchemy.exc.DatabaseError as error:
             log.error(" Cannot execute select operation. " + str(error))
             return None
-
-    def insert(self, table_name, field_map):
-        """
-        :param table_name: <table> or <schema>.<table>
-        :param field_map: dictionary of field_name:value
-        :return: True (success) or False (fail)
-        """
-        sql = """INSERT INTO {0} """.format(table_name)
-        sql += self.split_field_map(field_map)
-
-        try:
-            log.debug(" Running SQL: [ %s ]", sql)
-            self.query(sql)
-            log.debug("INSERT executed successfully")
-            return True
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            log.error(" Cannot execute insert operation on " + table_name + " table: " + str(error))
-            return False
-        except sqlalchemy.exc.DatabaseError as error:
-            log.error(" Cannot execute insert operation. " + str(error))
-            return False
 
     def update(self, table_name, rowid, field_map):
         """

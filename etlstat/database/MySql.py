@@ -1,6 +1,21 @@
+# coding: utf-8
 """
+    MySQL class: implementation of CRUD operations against MySQL data bases.
+
+    Date:
+        31/10/2017
+
+    Author:
+        goi9999
+
+    Version:
+        Alpha
+
+    Notes:
+
 
 """
+
 import sqlalchemy
 from etlstat.database.Database import Database
 from etlstat.log.timing import log
@@ -23,11 +38,12 @@ class MySql(Database):
             Args:
                 host (str):     Host
                 port (str):     Port
-                database (str): Database
+                database (str): Database name
                 user (str):     User
                 password (str): Password
         """
-        super().__init__('mysql+mysqlconnector', host, port, database, user, password)
+        engine_type = 'mysql+mysqlconnector'
+        super().__init__(engine_type, host, port, database, user, password)
 
     def insert(self, table, row):
         """

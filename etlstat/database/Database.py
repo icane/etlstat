@@ -32,15 +32,16 @@ class Database(object):
     state = False
 
     def __init__(self, engine_type, host, port, database, user, password):
-        """ Constructor.
+        """
+        Constructor.
 
             Args:
-                param1  (str)   Engine type
-                param2  (str)   host
-                param3  (str)   port
-                param4  (str)   database or service name (Oracle)
-                param5  (str)   user
-                param6  (str)   password
+                engine_type  (str)   Engine type
+                host  (str)   host
+                port  (str)   port
+                database  (str)   database name (MySQL) or service name (Oracle)
+                user  (str)   user
+                password  (str)   password
         """
 
         self._engine_type = engine_type

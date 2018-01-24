@@ -15,12 +15,6 @@ before_install:
   - docker pull sath89/oracle-xe-11g
   - docker run --name orcldb -d -p 1521:1521 sath89/oracle-xe-11g
   - docker ps -a
-  - docker exec -it orcldb "sqlplus"
-  - docker exec -it orcldb "system"
-  - docker exec -it orcldb "oracle"
-  - docker exec -it orcldb "create user test quota unlimited on system identified by test;"
-  - docker exec -it orcldb "create table test.table2 (id integer, column1 varchar2(100), column2 number);"
-  - docker exec -it orcldb "exit"
 
 install: "pip install -r requirements.txt"
 
