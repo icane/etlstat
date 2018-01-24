@@ -3,10 +3,10 @@
     MySQL
 
     Date:
-        31/10/2017
+        24/01/2018
 
     Author:
-        goi9999
+        slave110
 
     Version:
         Alpha
@@ -23,6 +23,7 @@ from sqlalchemy import create_engine, inspect, MetaData, Table
 
 
 class MySQL:
+
     engine = None
     conn_string = ''
     conversion_map = {
@@ -33,13 +34,16 @@ class MySQL:
     }
 
     @classmethod
-    def _connect(cls, conn_string):
+    def _create_engine(cls, conn_string):
         if isinstance(conn_string, str):
             if (cls.conn_string is not conn_string and conn_string is not ''):
-                connector, conn_data = conn_string.split('://')
-                username, link, port_db = conn_data.split(':')
-                port, db = port_db.split('/')
-                password, ip = link.split('@')
+                try:
+                    connector, conn_data = conn_string.split('://')
+                    username, link, port_db = conn_data.split(':')
+                    port, db = port_db.split('/')
+                    password, ip = link.split('@')
+                except:
+                    raise TypeError("conn_string don't perform standard format.")
 
                 if connector != 'mysql+mysqlconnector':
                     raise NotImplementedError("Engine type not supported.")
@@ -48,13 +52,14 @@ class MySQL:
 
                 url_str = url.format(connector, username, password, ip, db, port)
 
-                print(type(create_engine(conn_string)))
-
-                cls.engine = create_engine(conn_string)
+                engine = create_engine(conn_string)
 
                 cls.conn_string = conn_string
-        else:
-            raise TypeError("conn_string must be a string connector.")
+
+                return engine
+
+        raise TypeError("conn_string must be a string connector.")
+
 
     @classmethod
     def create(cls, table, conn_string=''):
@@ -69,7 +74,7 @@ class MySQL:
                     format. Opcional if you have used before an operation with
                     the same engine.
         """
-        cls._connect(conn_string)
+        engine = cls._create_engine(conn_string)
 
         if(not cls.check_for_table(table.name)):
             sql = "CREATE TABLE"
@@ -81,12 +86,12 @@ class MySQL:
                     sql += "`{0}` {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
                 sql = sql[:-2] + ')'
 
-                rts = cls.engine.execute(sql)
+                rts = engine.execute(sql)
                 rts.close()
-                print(cls.engine)
+
                 meta = MetaData()
 
-                messages = Table(table.name, meta, autoload=True, autoload_with=cls.engine)
+                #messages = Table(table.name, meta, autoload=True, autoload_with=cls.engine)
                 # rts_columns = [c.name for c in messages.columns]
                 #
                 # if len(set(list(table.columns.values)) & set(rts_columns)) == len(table.columns):
@@ -118,7 +123,7 @@ class MySQL:
             :obj:`DataFrame`: A DataFrame with data from database.
 
         """
-        cls._connect(conn_string)
+        engine = cls._create_engine(conn_string)
 
         df = None
         sql = "SELECT"
@@ -141,7 +146,7 @@ class MySQL:
                 sql += " {0},".format(condition)
             sql = sql[:-1]
 
-        rts = cls.engine.execute(sql)   # ResultProxy
+        rts = engine.execute(sql)   # ResultProxy
 
         if rts.rowcount > 0:
             df = DataFrame(rts.fetchall())
@@ -346,8 +351,6 @@ class MySQL:
         Returns:
             bool: True if table exists, False in otherwise.
         """
-        cls._connect(conn_string)
+        engine = cls._create_engine(conn_string)
 
-        return cls.engine.dialect.has_table(cls.engine, table)
-
-
+        return engine.dialect.has_table(cls.engine, table)
