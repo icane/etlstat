@@ -8,18 +8,15 @@
         25/09/2017
 
     Authors:
-        goi9999
+        slave110
         lla11358
 """
 
-import decimal
 import itertools
-import re
-
 import numpy
 import pandas
+import re
 import requests
-
 from etlstat.log.timing import timeit, log
 
 log.basicConfig(level=log.ERROR)

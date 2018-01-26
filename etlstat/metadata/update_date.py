@@ -20,7 +20,7 @@
 import sqlalchemy
 
 from etlstat.log.timing import log
-from etlstat.database.MySql import MySql
+from etlstat.database.mysql import MySQL
 
 def update_date(config):
     """

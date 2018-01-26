@@ -1,9 +1,8 @@
+# -*- coding: utf-8 -*-
+
 # database
-from etlstat.database.Oracle import Oracle
-from etlstat.database.is_table import is_table
-from etlstat.database.MySql import MySql
-# from etlstat.database.CxOracle import CxOracle
 from etlstat.database.mysql import MySQL
+from etlstat.database.oracle import Oracle
 
 # extractor
 from etlstat.extractor.extractor import excel_in, csv_in, pc_axis_in, \
@@ -20,6 +19,3 @@ from etlstat.metadata.update_date import update_date
 from etlstat.text.replace_in_xml import replace_in_xml
 from etlstat.text.parsed_columns import parsed_columns
 
-# from etlstat import extractor
-# from etlstat import metadata
-# from etlstat import database

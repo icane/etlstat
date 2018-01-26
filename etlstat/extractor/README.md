@@ -5,11 +5,8 @@ stores it into a Pandas data frame.
 
 ## Required modules
 
-+ chardet
-+ decimal
 + itertools
-+ utils.logging.timing
 + numpy
 + pandas
 + re
-+ urllib
++ requests

@@ -5,6 +5,7 @@ import pandas
 
 
 class TestOracle(unittest.TestCase):
+
     user = 'system'
     password = 'oracle'
     host = '127.0.0.1'

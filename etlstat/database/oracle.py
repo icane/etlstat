@@ -24,8 +24,9 @@ from sqlalchemy.exc import DatabaseError
 
 
 class Oracle:
+
     engine = None
-    conn_string = ''
+    # TODO: check this conversion map
     conversion_map = {
         'object': 'VARCHAR2',
         'int': 'INTEGER',

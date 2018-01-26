@@ -15,17 +15,19 @@
 
 
 """
-import os
 
 import numpy as np
+import os
 from pandas import DataFrame, notnull
+import re
 from sqlalchemy import create_engine, inspect, MetaData, Table
+from sqlalchemy.exc import DatabaseError
 
 
 class MySQL:
 
     engine = None
-    conn_string = ''
+    # TODO: check this conversion map
     conversion_map = {
         'object': 'VARCHAR(255)',
         'int64': 'INT',
@@ -34,48 +36,59 @@ class MySQL:
     }
 
     @classmethod
-    def _create_engine(cls, conn_string):
-        if isinstance(conn_string, str):
-            if cls.conn_string is not conn_string and conn_string is not '':
-                try:
-                    connector, conn_data = conn_string.split('://')
-                    username, link, port_db = conn_data.split(':')
-                    port, db = port_db.split('/')
-                    password, ip = link.split('@')
-                except:
-                    raise TypeError("conn_string don't perform standard format.")
-
-                if connector != 'mysql+mysqlconnector':
-                    raise NotImplementedError("Engine type not supported.")
-
-                url = "{0}://{1}:{2}@{3}:{5}/{4}"
-
-                url_str = url.format(connector, username, password, ip, db, port)
-
-                engine = create_engine(conn_string)
-
-                cls.conn_string = conn_string
-
-                return engine
-
-        raise TypeError("conn_string must be a string connector.")
+    def _connect(cls, user, password, host, port, database):
+        cls.conn_string = "mysql+mysqlconnector://{0}:{1}@{2}:{3}/{4}".format(
+            user,
+            password,
+            host,
+            port,
+            database)
+        cls.engine = create_engine(cls.conn_string)
 
     @classmethod
-    def create(cls, table, conn_string=''):
+    def execute_sql(cls, sql, user, password, host, port, database):
+        """
+        Executes a DDL or DML SQL statement
+        :param sql: SQL statement
+        :param user: database user
+        :param password: database password
+        :param host: host name or IP address
+        :param port: database connection port
+        :param database: database name
+        :return: status (True | False); result (str or data frame)
+        """
+        cls._connect(user, password, host, port, database)
+        connection = cls.engine.connect()
+        try:
+            result = connection.execute(sql)
+            status = True
+            if re.match('^[ ]*SELECT .*', sql, re.IGNORECASE):
+                rows = result.fetchall()
+                result = DataFrame(rows, columns=result.keys())
+        except DatabaseError as e:
+            result = e
+            status = False
+        finally:
+            connection.close()
+        return status, result
+
+    @classmethod
+    def create(cls, table, user, password, host, port, database):
         """
         Create a new table in database from DataFrame format.
 
-        Args:
-            table (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with database table's name and columns that you wish
-                    create.
-            conn_string (:obj:`str`, optional): String with sqlalchemy connection
-                    format. Optional if you have used before an operation with
-                    the same engine.
+        :param table: DataFrame which name and column's label match with database
+        table's name and columns that you wish to create.
+        :param user: database user
+        :param password: database password
+        :param host: host name or IP address
+        :param port: database connection port
+        :param database: database name
         """
-        engine = cls._create_engine(conn_string)
+        cls._connect(user, password, host, port, database)
+        connection = cls.engine.connect()
 
-        if not cls.check_for_table(table.name):
+        if not cls.check_for_table(table.name, user, password, host, port, database):
             sql = "CREATE TABLE"
 
             if isinstance(table, DataFrame):
@@ -85,12 +98,13 @@ class MySQL:
                     sql += "`{0}` {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
                 sql = sql[:-2] + ')'
 
-                rts = engine.execute(sql)
+                rts = connection.execute(sql)
                 rts.close()
+                connection.close()
 
-                meta = MetaData()
+                # meta = MetaData()
 
-                #messages = Table(table.name, meta, autoload=True, autoload_with=cls.engine)
+                # messages = Table(table.name, meta, autoload=True, autoload_with=cls.engine)
                 # rts_columns = [c.name for c in messages.columns]
                 #
                 # if len(set(list(table.columns.values)) & set(rts_columns)) == len(table.columns):
@@ -103,26 +117,28 @@ class MySQL:
         return False
 
     @classmethod
-    def select(cls, table, conn_string='', conditions=''):
+    def select(cls, table, user, password, host, port, database, conditions=''):
         """
         Select data from table.
 
-        Args:
-            table (:obj:`str` or :obj:`DataFrame`): Table's name in database if
+        :param table: (:obj:`str` or :obj:`DataFrame`): Table's name in database if
                     you want read all fields in database table or a DataFrame
                     which name and column's label match with table's name and
                     columns table that you want read from database.
-            conn_string (:obj:`str`, optional): String with sqlalchemy connection
-                    format. Opcional if you have used before an operation with
-                    the same engine.
-            conditions (:obj:`str` or :obj:`list` of :obj:`str`, optional):
+        :param user: database user
+        :param password: database password
+        :param host: host name or IP address
+        :param port: database connection port
+        :param database: database name
+        :param conditions: (:obj:`str` or :obj:`list` of :obj:`str`, optional):
                     A select condition or list of select conditions with sql
                     syntax.
         Returns:
             :obj:`DataFrame`: A DataFrame with data from database.
 
         """
-        engine = cls._create_engine(conn_string)
+        cls._connect(user, password, host, port, database)
+        connection = cls.engine.connect()
 
         df = None
         sql = "SELECT"
@@ -145,36 +161,39 @@ class MySQL:
                 sql += " {0},".format(condition)
             sql = sql[:-1]
 
-        rts = engine.execute(sql)   # ResultProxy
+        rts = connection.execute(sql)   # ResultProxy
 
         if rts.rowcount > 0:
             df = DataFrame(rts.fetchall())
             df.columns = rts.keys()
 
         rts.close()
+        connection.close()
 
         return df
 
     @classmethod
-    def insert(cls, table, conn_string='', rows=None):
+    def insert(cls, table, user, password, host, port, database, rows=None):
         """
         Insert DataFrame's rows in a database table.
 
-        Args:
-            table (:obj:`DataFrame`): DataFrame which name and column's label
+        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and column's name in database. It
                     must filled with data rows.
-            conn_string (:obj:`str`, optional): String with sqlalchemy connection
-                    format. Opcional if you have used before an operation with
-                    the same engine.
-            rows (:obj:`list` of int, optional): A list of row's indexes that you
+        :param user: database user
+        :param password: database password
+        :param host: host name or IP address
+        :param port: database connection port
+        :param database: database name
+        :param rows: (:obj:`list` of int, optional): A list of row's indexes that you
                     want insert to database.
         Returns:
             int: number of rows matched.
         """
         rows_matched = 0
 
-        cls._create_engine(conn_string)
+        cls._connect(user, password, host, port, database)
+        connection = cls.engine.connect()
 
         if isinstance(table, DataFrame):
             if not cls.check_for_table(table.name):
@@ -203,29 +222,31 @@ class MySQL:
                                 sql_insert += "{0}, ".format(value)
                     sql_insert = sql_insert[:-2] + ')'
 
-                    rts = cls.engine.execute(sql_insert)  # ResultProxy
+                    rts = connection.execute(sql_insert)  # ResultProxy
 
                     rows_matched += rts.rowcount
 
                     rts.close()
+                    connection.close()
         else:
             raise TypeError("table must be a DataFrame.")
 
         return rows_matched
 
     @classmethod
-    def update(cls, table, conn_string='', index=None):
+    def update(cls, table, user, password, host, port, database, index=None):
         """
         Update rows in a database table.
 
-        Args:
-            table (:obj:`DataFrame`): DataFrame which name and column's label
+        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and columns name in database. It must
                     filled with data rows.
-            conn_string (:obj:`str`, optional): String with sqlalchemy connection
-                    format. Opcional if you have used before an operation with
-                    the same engine.
-            index (:obj:`list` of name columns): list of DataFrame's columns names
+        :param user: database user
+        :param password: database password
+        :param host: host name or IP address
+        :param port: database connection port
+        :param database: database name
+        :param index: (:obj:`list` of name columns): list of DataFrame's columns names
                     use as index in the update search. Other columns will be
                     updated in database.
         Returns:
@@ -233,7 +254,8 @@ class MySQL:
         """
         rows_matched = 0
 
-        cls._create_engine(conn_string)
+        cls._connect(user, password, host, port, database)
+        connection = cls.engine.connect()
 
         if isinstance(table, DataFrame):
             if isinstance(index, list):
@@ -256,41 +278,44 @@ class MySQL:
 
                     if len(sql_conditions) > 1:
                         sql += ' WHERE' + sql_conditions[:-4]
-                    rts = cls.engine.execute(sql)  # ResultProxy
+                    rts = connection.execute(sql)  # ResultProxy
 
                     rows_matched += rts.rowcount
 
                     rts.close()
+                    connection.close()
         else:
             raise TypeError("table must be a DataFrame.")
 
         return rows_matched
 
     @classmethod
-    def bulk_insert(cls, table, conn_string=''):
+    def bulk_insert(cls, table, user, password, host, port, database):
         """
         Make a bulk insert in database.
 
-        Args:
-            table (:obj:`DataFrame`): DataFrame which name and column's label
+        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and columns in database. It must
                     filled with data rows.
-            conn_string (:obj:`str`, optional): String with sqlalchemy connection
-                    format. Opcional if you have used before an operation with
-                    the same engine.
+        :param user: database user
+        :param password: database password
+        :param host: host name or IP address
+        :param port: database connection port
+        :param database: database name
         Returns:
             int: number of rows matched.
         """
         rows_matched = 0
         csv_path = 'temp.csv'
 
-        cls._create_engine(conn_string)
+        cls._connect(user, password, host, port, database)
+        connection = cls.engine.connect()
 
         if not cls.check_for_table(table.name):
             cls.create(table)
 
         if isinstance(table, DataFrame):
-            aux = table.replace(np.NaN,"\\N")
+            aux = table.replace(np.NaN, "\\N")
             aux.to_csv(csv_path, sep=';', header=False, index=False)
         else:
             raise TypeError("table must be a DataFrame.")
@@ -298,58 +323,64 @@ class MySQL:
         sql = """LOAD DATA LOCAL INFILE '{0}' INTO TABLE `{1}` FIELDS TERMINATED BY ';' ENCLOSED BY '"' """\
               .format(csv_path, table.name)
 
-        rts = cls.engine.execute(sql)
+        rts = connection.execute(sql)
 
         rows_matched = rts.rowcount
         rts.close()
+        connection.close()
 
         os.remove(csv_path)
 
         return rows_matched
 
     @classmethod
-    def delete(cls, table, conn_string='', conditions=''):
+    def delete(cls, table, user, password, host, port, database, conditions=''):
         """
         Delete data from table.
 
         Args:
-            table (:obj:`str`): Database table name that you wish delete rows.
-            conn_string (:obj:`str`, optional): String with sqlalchemy connection
-                    format. Opcional if you have used before an operation with
-                    the same engine.
-            conditions (:obj:`str`, optional): A string of select conditions
+        :param table: (:obj:`str`): Database table name that you wish delete rows.
+        :param user: database user
+        :param password: database password
+        :param host: host name or IP address
+        :param port: database connection port
+        :param database: database name
+        :param conditions: (:obj:`str`, optional): A string of select conditions
             with sql syntax.
         Returns:
             int: number of rows matched.
         """
-        cls._create_engine(conn_string)
+        cls._connect(user, password, host, port, database)
+        connection = cls.engine.connect()
 
         sql = "DELETE FROM `{0}`".format(table)
 
         if isinstance(conditions, str) and conditions is not '':
             sql += ' WHERE ' + conditions
 
-        rts = cls.engine.execute(sql)
+        rts = connection.execute(sql)
 
         rows_matched = rts.rowcount
 
         rts.close()
+        connection.close()
 
         return rows_matched
 
     @classmethod
-    def check_for_table(cls, table, conn_string=''):
+    def check_for_table(cls, table, user, password, host, port, database):
         """
         Check if table exists in database.
 
-        Args:
-            table (:obj:`str`): Database table's name.
-            conn_string (:obj:`str`, optional): String with sqlalchemy connection
-                        format. Opcional if you have used before an operation with
-                        the same engine.
+        :param table: (:obj:`str`): Database table's name.
+        :param user: database user
+        :param password: database password
+        :param host: host name or IP address
+        :param port: database connection port
+        :param database: database name
         Returns:
             bool: True if table exists, False in otherwise.
         """
-        engine = cls._create_engine(conn_string)
+        cls._connect(user, password, host, port, database)
 
-        return engine.dialect.has_table(cls.engine, table)
+        return cls.engine.dialect.has_table(cls.engine, table)
