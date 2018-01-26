@@ -1,6 +1,6 @@
 import unittest
-
 from etlstat.extractor.extractor import *
+
 
 class TestExtractor(unittest.TestCase):
 
@@ -152,7 +152,6 @@ class TestExtractor(unittest.TestCase):
         assert (df['POST_SER_06_15.csv'].shape[0] == 12)
         assert (df['POST_SER_06_15.csv'].shape[1] == 74)
 
-
     def testPositionalIn(self):
         dir_path = '/mnt/gobcan/datos/icane_etl/economia/industria/eie/data/input/'
         dataf = positional_in(dir_path)
@@ -164,12 +163,9 @@ class TestExtractor(unittest.TestCase):
 
     def testPcAxisIn(self):
         pc_axis_dict = pc_axis_in('/var/git/python/etlstat/etlstat/extractor/test/pcaxis_urls.csv')
-        assert (isinstance(pc_axis_dict['px_3280'], pd.DataFrame))
-        assert (isinstance(pc_axis_dict['px_3281'], pd.DataFrame))
-        assert (isinstance(pc_axis_dict['px_22350'], pd.DataFrame))
-        assert (isinstance(pc_axis_dict['px_9681'], pd.DataFrame))
-        assert (isinstance(pc_axis_dict['px_3284'], pd.DataFrame))
-
+        assert (isinstance(pc_axis_dict['px_01001'], pd.DataFrame))
+        assert (isinstance(pc_axis_dict['px_01002'], pd.DataFrame))
+        assert (isinstance(pc_axis_dict['px_01006'], pd.DataFrame))
 
     def testXmlIn(self):
         xml_dict = xml_in('/var/git/xml/pdi-series/Definitivo/Economía/Sector exterior/Comercio Exterior/')
@@ -178,7 +174,6 @@ class TestExtractor(unittest.TestCase):
         assert (root.tag == 'job')
         root = xml_dict['Ec_SE_IEFAZ.ktr'].getroot()
         assert (root.tag == 'transformation')
-
 
     def testSqlIn(self):
         sqldata = sql_in('/var/git/python/icanetl/economia/mercado-trabajo/formacion-empleo/sql/query/')
