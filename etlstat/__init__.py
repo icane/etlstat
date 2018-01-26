@@ -12,9 +12,6 @@ from etlstat.extractor.pcaxis import read, from_pc_axis
 # log
 from etlstat.log.timing import timeit
 
-# metadata
-from etlstat.metadata.update_date import update_date
-
 # text
 from etlstat.text.replace_in_xml import replace_in_xml
 from etlstat.text.parsed_columns import parsed_columns

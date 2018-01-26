@@ -1,16 +1,17 @@
 import unittest
 
-from common.security import password
+from etlstat.security import password
 
-minlength = 8
-maxlength = 16
+min_length = 8
+max_length = 16
+
 
 class TestPassword(unittest.TestCase):
 
     def testDatabasePassword(self):
-        pwd = password.database_password(minlength, maxlength)
-        self.assertTrue(len(pwd) >= minlength)
-        self.assertTrue(len(pwd) <= maxlength)
+        pwd = password.database_password(min_length, max_length)
+        self.assertTrue(len(pwd) >= min_length)
+        self.assertTrue(len(pwd) <= max_length)
         self.assertTrue(pwd[:1].isalpha())
 
 if __name__ == '__main__':
