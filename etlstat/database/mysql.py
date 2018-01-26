@@ -36,7 +36,7 @@ class MySQL:
     @classmethod
     def _create_engine(cls, conn_string):
         if isinstance(conn_string, str):
-            if (cls.conn_string is not conn_string and conn_string is not ''):
+            if cls.conn_string is not conn_string and conn_string is not '':
                 try:
                     connector, conn_data = conn_string.split('://')
                     username, link, port_db = conn_data.split(':')
@@ -60,7 +60,6 @@ class MySQL:
 
         raise TypeError("conn_string must be a string connector.")
 
-
     @classmethod
     def create(cls, table, conn_string=''):
         """
@@ -71,12 +70,12 @@ class MySQL:
                     match with database table's name and columns that you wish
                     create.
             conn_string (:obj:`str`, optional): String with sqlalchemy connection
-                    format. Opcional if you have used before an operation with
+                    format. Optional if you have used before an operation with
                     the same engine.
         """
         engine = cls._create_engine(conn_string)
 
-        if(not cls.check_for_table(table.name)):
+        if not cls.check_for_table(table.name):
             sql = "CREATE TABLE"
 
             if isinstance(table, DataFrame):
@@ -175,7 +174,7 @@ class MySQL:
         """
         rows_matched = 0
 
-        cls._connect(conn_string)
+        cls._create_engine(conn_string)
 
         if isinstance(table, DataFrame):
             if not cls.check_for_table(table.name):
@@ -234,7 +233,7 @@ class MySQL:
         """
         rows_matched = 0
 
-        cls._connect(conn_string)
+        cls._create_engine(conn_string)
 
         if isinstance(table, DataFrame):
             if isinstance(index, list):
@@ -285,7 +284,7 @@ class MySQL:
         rows_matched = 0
         csv_path = 'temp.csv'
 
-        cls._connect(conn_string)
+        cls._create_engine(conn_string)
 
         if not cls.check_for_table(table.name):
             cls.create(table)
@@ -323,7 +322,7 @@ class MySQL:
         Returns:
             int: number of rows matched.
         """
-        cls._connect(conn_string)
+        cls._create_engine(conn_string)
 
         sql = "DELETE FROM `{0}`".format(table)
 

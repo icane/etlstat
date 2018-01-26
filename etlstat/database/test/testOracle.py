@@ -1,6 +1,7 @@
-import pandas
 import unittest
 from etlstat.database.oracle import Oracle
+import os.path
+import pandas
 
 
 class TestOracle(unittest.TestCase):
@@ -20,18 +21,21 @@ class TestOracle(unittest.TestCase):
         port = '1521'
         service_name = 'xe'
         conn_params = [user, password, host, port, service_name]
+        ddl = "DROP USER TEST CASCADE"
+        status, result = Oracle.execute_sql(ddl, *conn_params)
+        print(result)
         ddl = "CREATE USER test IDENTIFIED BY test " \
               "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
-        status, result = Oracle.execute_ddl(ddl, *conn_params)
+        status, result = Oracle.execute_sql(ddl, *conn_params)
         print(result)
         ddl = "ALTER USER test QUOTA UNLIMITED ON USERS"
-        status, result = Oracle.execute_ddl(ddl, *conn_params)
+        status, result = Oracle.execute_sql(ddl, *conn_params)
         print(result)
         ddl = "GRANT CONNECT, RESOURCE TO test"
-        status, result = Oracle.execute_ddl(ddl, *conn_params)
+        status, result = Oracle.execute_sql(ddl, *conn_params)
         print(result)
         ddl = "CREATE TABLE test.table1 (id integer, column1 varchar2(100), column2 number)"
-        status, result = Oracle.execute_ddl(ddl, *conn_params)
+        status, result = Oracle.execute_sql(ddl, *conn_params)
         print(result)
 
     def testConnect(self):
@@ -41,27 +45,35 @@ class TestOracle(unittest.TestCase):
         self.assertTrue(ora.engine.has_table('HELP', 'SYSTEM'))
         self.assertTrue(ora.engine.has_table('help', 'system'))
 
-    def testExecuteDdl(self):
+    def testExecuteSqlDdl(self):
         ddl = "CREATE TABLE test.table2 (id integer, column1 varchar2(100), column2 number)"
-        status, result = Oracle.execute_ddl(ddl, *self.conn_params_test)
+        status, result = Oracle.execute_sql(ddl, *self.conn_params_test)
         self.assertTrue(status)
 
-    def testSelect(self):
-        sql = 'select * from system.help'
-        df = Oracle.select(sql, *self.conn_params)
-        self.assertEqual(df.columns.values[0], 'topic')
-        self.assertEqual(df.columns.values[1], 'seq')
-        self.assertEqual(df.columns.values[2], 'info')
-        self.assertEqual(len(df), 919)
+    def testExecuteSqlSelect(self):
+        dml = 'select * from system.help'
+        status, result = Oracle.execute_sql(dml, *self.conn_params)
+        self.assertEqual(result.columns.values[0], 'topic')
+        self.assertEqual(result.columns.values[1], 'seq')
+        self.assertEqual(result.columns.values[2], 'info')
+        self.assertEqual(len(result), 919)
 
-    def testInsert(self):
-        table_name = 'test.table1'
-        field_map = {
-            'id': 2,
-            'column1': "'Varchar text (100 char)'",
-            'column2': 2.02
-        }
-        self.assertTrue(Oracle.insert(table_name, field_map, *self.conn_params_test))
+    def testExecuteSqlDml(self):
+        dml = "INSERT INTO test.table1 (id, column1, column2) " \
+              "VALUES (1, 'Varchar text (100 char)', 123456789.0123456789)"
+        status, result = Oracle.execute_sql(dml, *self.conn_params_test)
+        self.assertTrue(status)
+
+    def testBulkInsert(self):
+        source_path = '01001.csv'
+        table_name = 'px_01001'
+        data_file = 'px_01001.csv'
+        control_file = 'px_01001.ctl'
+        df = pandas.read_csv(source_path, header=0, sep=';', encoding='utf8')
+        df.name = table_name
+        Oracle.bulk_insert(df, data_file, control_file, mode="TRUNCATE")
+        self.assertTrue(os.path.isfile(data_file))
+        self.assertTrue(os.path.isfile(control_file))
 
 if __name__ == '__main__':
     unittest.main()

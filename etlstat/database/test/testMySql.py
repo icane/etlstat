@@ -1,108 +1,36 @@
 import unittest
-
 import pandas as pd
-from config_user import *
-from utils.database.MySql import MySql
-
-from etlstat import log
-
-log.basicConfig(level = log.INFO)
-
-log = log.getLogger(__name__)
-
-DATA_PATH = '/var/git/python/icane_etl/etlstat/database/test/'
-
-MYSQL = {
-    'SERVER'    : '127.0.0.1',
-    'DATABASE'  : 'test',
-    'PORT'      : '3306',
-    'USER'      : MYSQL_USER,
-    'PASSWORD'  : MYSQL_PASSWD
-}
-
-INFILE = {
-    'PATH'      : DATA_PATH + 'test1.csv'
-}
-
-DBTABLE = {
-    'TABLE_NAME': 'test'
-}
+import sqlalchemy as sq
+from etlstat.database.mysql import MySQL
 
 
-class TestMySql(unittest.TestCase):
+class TestMySQL(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUp(cls):
 
-        self.mysql = MySql(MYSQL['SERVER'],
-                           MYSQL['PORT'],
-                           MYSQL['DATABASE'],
-                           MYSQL['USER'],
-                           MYSQL['PASSWORD'])
+        conn_string = "mysql+mysqlconnector://root:password@127.0.0.1:3307/"
+        sql = "CREATE DATABASE IF NOT EXISTS mysql_test"
+        engine = sq.create_engine(conn_string)
+        engine.execute(sql)
 
-        log.info(" Setup : OK\n")
+    def test_create_table(self):
 
-    def test_select_all(self):
+        conn_string = "mysql+mysqlconnector://root:password@127.0.0.1:3307/mysql_test"
 
-        results = [('11', 'AA', '11AA'), ('22', 'BB', '22BB'), ('33', 'CC', '33CC')]
+        # Create data frame
+        data_columns = ['column_int', 'column_string', 'column_float']
+        table = pd.DataFrame(columns=data_columns)
 
-        self.mysql.delete(DBTABLE['TABLE_NAME'])
+        # Assign columns data types
+        table['column_int'] = table['column_int'].astype(int)
+        table['column_string'] = table['column_string'].astype(str)
+        table['column_float'] = table['column_float'].astype(float)
 
-        self.mysql.insert(DBTABLE['TABLE_NAME'], ["'11'", "'AA'", "'11AA'"])
-        self.mysql.insert(DBTABLE['TABLE_NAME'], ["'22'", "'BB'", "'22BB'"])
-        self.mysql.insert(DBTABLE['TABLE_NAME'], ["'33'", "'CC'", "'33CC'"])
+        # Rename data frame
+        table.name = "table_test"
 
-        db_query = self.mysql.select_all(DBTABLE['TABLE_NAME'])
-
-        i = 0
-        assert db_query.rowcount == 3
-        for row in db_query:
-            assert row == results[i]
-            i += 1
-
-        self.mysql.delete(DBTABLE['TABLE_NAME'])
-
-        del self.mysql
-
-        log.info(" test_select_all : OK\n")
-
-    def test_delete(self):
-
-        self.mysql.insert(DBTABLE['TABLE_NAME'], ["'11'", "'AA'", "'11AA'"])
-
-        self.mysql.delete(DBTABLE['TABLE_NAME'])
-
-        db_query = self.mysql.select_all(DBTABLE['TABLE_NAME'])
-
-        assert db_query.rowcount == 0
-
-        del self.mysql
-
-        log.info(" test_delete : OK\n")
-
-
-    def test_bulk_insert(self):
-
-        dataframe = pd.read_csv(INFILE['PATH'], header = None, sep = ';')
-
-        self.mysql.delete(DBTABLE['TABLE_NAME'])
-
-        self.mysql.bulk_insert(dataframe,
-                               DBTABLE['TABLE_NAME'],
-                               INFILE['PATH'])
-        
-        db_query = self.mysql.select_all(DBTABLE['TABLE_NAME'])
-
-        assert db_query.rowcount == 24
-            
-        del self.mysql
-
-        log.info(" test_bulk_insert : OK\n")
-
-    def test_check_for_table(self):
-        #TODO create table t1 automatically
-        self.assertTrue(self.mysql.check_for_table('t1'))
-
+        MySQL.create(table, conn_string)
 
 if __name__ == '__main__':
-
     unittest.main()
