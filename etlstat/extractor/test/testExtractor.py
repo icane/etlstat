@@ -1,8 +1,11 @@
 import unittest
 from etlstat.extractor.extractor import *
+import config_test as ct
 
 
 class TestExtractor(unittest.TestCase):
+
+    base_path = ct.GLOBAL_PATH + '/etlstat/extractor/test/'
 
     def testSimilar(self):
         string1 = "HOLA"
@@ -26,8 +29,7 @@ class TestExtractor(unittest.TestCase):
         self.assertGreater(similar(string1, string3), similar(string1, string2))
 
     def testExcelProcessing(self):
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_MT_mercado_trabajo/Afiliados Seguridad Social/' + \
-                   'Nueva tablas/Afiliados medios/'
+        dir_path = self.base_path + 'xls/'
         excel = 'CA_MT_327.xls'
         dict = excel_processing(dir_path, excel)
         assert (dict['Hoja1'] == {'skip_rows': 3, 'footer_rows': 5})
@@ -49,16 +51,11 @@ class TestExtractor(unittest.TestCase):
         assert (dict['Hoja3'] == {'skip_rows': 0, 'footer_rows': 0})
         assert (len(dict) == 3)
 
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_SP_sector primario/' + \
-                   'AGRICULTURA/Consejo Regulador Agricultura Ecologica (CRAE)/'
-
         excel = 'CA_SP_063.xls'
         dict = excel_processing(dir_path, excel)
         assert (dict['Hoja5'] == {'skip_rows': 3, 'footer_rows': 2})
         assert (dict['Comprobación'] == {'skip_rows': 3, 'footer_rows': 22})
         assert (len(dict) == 2)
-
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_MT_mercado_trabajo/'
 
         excel = 'CA_MT_072.xls'
         dict = excel_processing(dir_path, excel)
@@ -81,8 +78,6 @@ class TestExtractor(unittest.TestCase):
         assert (dict['comprobacion'] == {'skip_rows': 1, 'footer_rows': 0})
         assert (len(dict) == 2)
 
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_EL_Elecciones/'
-
         excel = 'CA_EL_009.xls'
         dict = excel_processing(dir_path, excel)
         assert (dict['2015'] == {'footer_rows': 15, 'skip_rows': 3})
@@ -93,14 +88,10 @@ class TestExtractor(unittest.TestCase):
         assert (dict['Hoja1'] == {'skip_rows': 3, 'footer_rows': 5})
         assert (len(dict) == 3)
 
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_DE_Deportes/'
-
         excel = 'CA_DE_02.xls'
         dict = excel_processing(dir_path, excel)
         assert (dict['Hoja1'] == {'footer_rows': 3, 'skip_rows': 3})
         assert (len(dict) == 3)
-
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_CE_comercio_exterior/INVERSIONES_EXTERIORES/'
 
         excel = 'CA_CE_008.xls'
         dict = excel_processing(dir_path, excel)
@@ -109,8 +100,7 @@ class TestExtractor(unittest.TestCase):
 
     def testExcelIn(self):
 
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_MT_mercado_trabajo/' + \
-                   'Afiliados Seguridad Social/Nueva tablas/Afiliados medios/'
+        dir_path = self.base_path + 'xls/'
 
         df_dict = excel_in(dir_path, 'Hoja1', pattern="CA_*.xls")
         print(df_dict.keys())
@@ -119,21 +109,17 @@ class TestExtractor(unittest.TestCase):
         assert (isinstance(df_dict['CA_MT_327.xls'], pd.DataFrame))
         assert (isinstance(df_dict['CA_MT_328.xls'], pd.DataFrame))
         assert (isinstance(df_dict['CA_MT_329.xls'], pd.DataFrame))
-        assert (df_dict['CA_MT_327.xls'].shape[0] ==108)
-        assert (df_dict['CA_MT_327.xls'].shape[1] ==24)
-        assert (df_dict['CA_MT_328.xls'].shape[0] ==108)
-        assert (df_dict['CA_MT_328.xls'].shape[1] ==24)
-        assert (df_dict['CA_MT_329.xls'].shape[0] ==108)
-        assert (df_dict['CA_MT_329.xls'].shape[1] ==70)
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_SP_sector primario/AGRICULTURA/' + \
-                   'Consejo Regulador Agricultura Ecologica (CRAE)/'
+        assert (df_dict['CA_MT_327.xls'].shape[0] == 108)
+        assert (df_dict['CA_MT_327.xls'].shape[1] == 24)
+        assert (df_dict['CA_MT_328.xls'].shape[0] == 108)
+        assert (df_dict['CA_MT_328.xls'].shape[1] == 24)
+        assert (df_dict['CA_MT_329.xls'].shape[0] == 108)
+        assert (df_dict['CA_MT_329.xls'].shape[1] == 70)
         df_dict = excel_in(dir_path, 'Hoja5')
         assert ('CA_SP_063.xls' in df_dict)
         assert (isinstance(df_dict['CA_SP_063.xls'], pd.DataFrame))
         assert (len(df_dict['CA_SP_063.xls']) == 19)
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_MT_mercado_trabajo/'
         self.assertRaises(KeyError, excel_in, dir_path, 'regulacion empleo')
-        dir_path = '/mnt/gobcan/datos/series actualizadas/CA_DE_Deportes/'
         df_dict = excel_in(dir_path, 'Hoja1')
         assert ('CA_DE_01.xls' in df_dict)
         assert ('CA_DE_02.xls' in df_dict)
@@ -143,32 +129,32 @@ class TestExtractor(unittest.TestCase):
         assert (len(df_dict['CA_DE_02.xls']) == 67)
 
     def testCsvIn(self):
-        dir_path = '/mnt/gobcan/datos/microdatos/EEE/'
-        df = csv_in(dir_path, sep = ";")
+        dir_path = self.base_path + 'csv/'
+        df = csv_in(dir_path, sep=";")
         log.debug(df.keys())
-        assert (len(df)==21)
+        assert (len(df) == 21)
         assert (df['AUDIOV_SER_06_15.csv'].shape[0] == 22)
         assert (df['AUDIOV_SER_06_15.csv'].shape[1] == 24)
         assert (df['POST_SER_06_15.csv'].shape[0] == 12)
         assert (df['POST_SER_06_15.csv'].shape[1] == 74)
 
     def testPositionalIn(self):
-        dir_path = '/mnt/gobcan/datos/icane_etl/economia/industria/eie/data/input/'
+        dir_path = self.base_path + 'txt/'
         dataf = positional_in(dir_path)
-        assert (len(dataf)==21)
+        assert (len(dataf) == 21)
         assert (dataf['POST_SER_06_15.TXT'].shape[0] == 12)
         assert (dataf['POST_SER_06_15.TXT'].shape[1] == 74)
         assert (dataf['AUDIOV_SER_06_15.TXT'].shape[0] == 22)
         assert (dataf['AUDIOV_SER_06_15.TXT'].shape[1] == 24)
 
     def testPcAxisIn(self):
-        pc_axis_dict = pc_axis_in('/var/git/python/etlstat/etlstat/extractor/test/pcaxis_urls.csv')
+        pc_axis_dict = pc_axis_in(self.base_path + 'pcaxis_urls.csv')
         assert (isinstance(pc_axis_dict['px_01001'], pd.DataFrame))
         assert (isinstance(pc_axis_dict['px_01002'], pd.DataFrame))
         assert (isinstance(pc_axis_dict['px_01006'], pd.DataFrame))
 
     def testXmlIn(self):
-        xml_dict = xml_in('/var/git/xml/pdi-series/Definitivo/Economía/Sector exterior/Comercio Exterior/')
+        xml_dict = xml_in(self.base_path + 'xml/')
         assert (len(xml_dict) == 11)
         root = xml_dict['Comex.kjb'].getroot()
         assert (root.tag == 'job')
@@ -176,7 +162,7 @@ class TestExtractor(unittest.TestCase):
         assert (root.tag == 'transformation')
 
     def testSqlIn(self):
-        sqldata = sql_in('/var/git/python/icanetl/economia/mercado-trabajo/formacion-empleo/sql/query/')
-        assert (len(sqldata['afiliados']) == 1584)
-        assert (len(sqldata['contratos']) == 3026)
-        assert (len(sqldata['ratios']) == 13735)
+        sql_data = sql_in(self.base_path + 'sql/')
+        assert (len(sql_data['afiliados']) == 1584)
+        assert (len(sql_data['contratos']) == 3026)
+        assert (len(sql_data['ratios']) == 13735)
