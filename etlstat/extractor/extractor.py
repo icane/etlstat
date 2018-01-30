@@ -84,7 +84,7 @@ def excel_in(dir_path, sheet_name, pattern='*.xls', encoding='utf-8'):
         encoding (str): file encoding
 
     Returns:
-        dict: Excel name as KEY and dataframe as VALUE
+        dict: Excel name as KEY and data frame as VALUE
     """
     excel_files = []
     os.chdir(dir_path)
@@ -97,6 +97,7 @@ def excel_in(dir_path, sheet_name, pattern='*.xls', encoding='utf-8'):
     df_dict = dict.fromkeys(keys, '')
     for j in range(len(keys)):
         aux = excel_processing(dir_path, keys[j])
+        print(aux)
         ini = aux[sheet_name]['skip_rows']
         fin = aux[sheet_name]['footer_rows']
         logger.info('Reading file: ' + keys[j] + ' with skip_rows = ' + str(ini))
@@ -176,10 +177,10 @@ def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX
         'DOUBLE': np.float32,
         'INTEGER': np.int32
     }
-    field_name = 'Nombre del Campo'
-    data_type = 'Tipo de dato'
-    longitud = 'Longitud'
-    asignation_map = {}
+    field_name = 'field_name'
+    data_type = 'data_type'
+    field_length = 'field_length'
+    assignation_map = {}
     aux = None
     csv_s = []
     txt_s = []
@@ -193,7 +194,7 @@ def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX
     csv_list = list(csv_list)
     keys = set(txt_s)
     keys = list(keys)
-    correspondence_map = dict.fromkeys(keys,dict())
+    correspondence_map = dict.fromkeys(keys, dict())
     max_similarity = 0
     for item in keys:
         for element in csv_list:
@@ -202,27 +203,27 @@ def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX
                 max_similarity = similarity
                 aux = element
         max_similarity = 0
-        asignation_map[item] = aux  # CREATE MAP BETWEEN FILE NAME AND FORMAT NAME
-        logger.info("Matched data file: " + item + " with: " + asignation_map[item])
-    for i in range(len(asignation_map)):
-        asignation_map[keys[i]] = pd.read_csv(dir_path + asignation_map[keys[i]], sep=sep,
+        assignation_map[item] = aux  # CREATE MAP BETWEEN FILE NAME AND FORMAT NAME
+        logger.info("Matched data file: " + item + " with: " + assignation_map[item])
+    for i in range(len(assignation_map)):
+        assignation_map[keys[i]] = pd.read_csv(dir_path + assignation_map[keys[i]], sep=sep,
                                               encoding=encoding)
-    for l in range(len(asignation_map)):
-        for m in range(len(asignation_map[keys[l]])):
-            correspondence_map[keys[l]][asignation_map[keys[l]][field_name][m]] = \
-                conversion_map[asignation_map[keys[l]][data_type][m]]
+    for l in range(len(assignation_map)):
+        for m in range(len(assignation_map[keys[l]])):
+            correspondence_map[keys[l]][assignation_map[keys[l]][field_name][m]] = \
+                conversion_map[assignation_map[keys[l]][data_type][m]]
 
-    for j in range(len(asignation_map)):
+    for j in range(len(assignation_map)):
         aux = pd.read_fwf(dir_path + keys[j],
-                          widths=asignation_map[keys[j]][longitud].tolist(),
-                          names=asignation_map[keys[j]][field_name].tolist(),
+                          widths=assignation_map[keys[j]][field_length].tolist(),
+                          names=assignation_map[keys[j]][field_name].tolist(),
                           dtype=correspondence_map[keys[j]],
                           nwords=0)
 
         aux.name = keys[j]
-        asignation_map[keys[j]] = aux
+        assignation_map[keys[j]] = aux
 
-    return asignation_map
+    return assignation_map
 
 
 def xml_in(dir_path, pattern=('.xml','.ktr','.kjb','.XML','.KTR','.KJB')):

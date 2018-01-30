@@ -1,13 +1,16 @@
 import csv
 from etlstat.extractor.pcaxis import *
+import config_test as ct
 import unittest
 
 
 class TestPcaxis(unittest.TestCase):
 
+    base_path = ct.GLOBAL_PATH + '/etlstat/extractor/test/'
+
     def testUriType(self):
-        self.assertEqual(uri_type('22350.px'), 'FILE', 'Uri type differs!')
-        self.assertEqual(uri_type('http://www.ine.es/jaxiT3/files/t/es/px/22350.px'), 'URL', 'Uri type differs!')
+        self.assertEqual(uri_type('2184.px'), 'FILE', 'Uri type differs!')
+        self.assertEqual(uri_type('http://www.ine.es/jaxiT3/files/t/es/px/2184.px'), 'URL', 'Uri type differs!')
 
     def testMetaDataSplit(self):
         pc_axis = """AXIS-VERSION="2006";
@@ -112,63 +115,45 @@ class TestPcaxis(unittest.TestCase):
         self.assertEqual(dimension_members[0][1], 'Número de Alumnos', 'Dimension member differs!')
 
     def testFromPcaxis(self):
-        meta_dict, data_frame = from_pc_axis('22350.px', encoding='ISO-8859-2')
+        meta_dict, data_frame = from_pc_axis(self.base_path + 'px/2184.px', encoding='ISO-8859-2')
         self.assertEqual(data_frame.dtypes['DATA'], 'float64')
-        self.assertEqual(meta_dict['VALUES(Grupos ECOICOP)'].index('00 Índice general'), 0, 'Dictionary index differs!')
-        self.assertEqual(len(data_frame), 195520)
+        self.assertEqual(meta_dict['VALUES(Índices y tasas)'].index('Índice'), 0, 'Dictionary index differs!')
+        self.assertGreater(len(data_frame), 9500)
 
     def testToCsv(self):
         # fichero 1
-        meta_dict, df = from_pc_axis('http://www.ine.es/jaxiT3/files/es/3284.px', encoding='windows-1252')
+        meta_dict, df = from_pc_axis('http://www.ine.es/jaxiT3/files/es/2184.px', encoding='windows-1252')
         df.to_csv(
-            path_or_buf='3284.csv',
+            path_or_buf=self.base_path + 'px/2184.csv',
             sep=',',
             header=True,
             index=False,
             doublequote=True,
             quoting=csv.QUOTE_NONNUMERIC,
             encoding='utf-8')
-        fd = open('3284.csv', 'r')
+        fd = open(self.base_path + 'px/2184.csv', 'r')
         for line in fd:
             pass
         last = line
         fd.close()
-        self.assertEqual(last, '"17 Rioja, La","Energía","Variación en lo que va de año","1975M01",""\n')
+        self.assertEqual(last, '"19 Melilla","Vivienda segunda mano","Variación en lo que va de año","2007T1",""\n')
         # fichero 2
-        meta_dict, df = from_pc_axis('http://www.ine.es/jaxiT3/files/es/3280.px', encoding='windows-1252')
+        meta_dict, df = from_pc_axis('http://www.ine.es/jaxiT3/files/es/1443.px', encoding='windows-1252')
         df.to_csv(
-            path_or_buf='3280.csv',
+            path_or_buf=self.base_path + 'px/1443.csv',
             sep=',',
             header=True,
             index=False,
             doublequote=True,
             quoting=csv.QUOTE_NONNUMERIC,
             encoding='utf-8')
-        fd = open('3280.csv', 'r')
+        fd = open(self.base_path + 'px/1443.csv', 'r')
         for line in fd:
             pass
         last = line
         fd.close()
-        self.assertEqual(last,
-                         '"17 Rioja, La","B Industrias extractivas","Variación en lo que va de año","1975M01",""\n')
-        # fichero 3
-        meta_dict, df = from_pc_axis('http://www.ine.es/jaxiT3/files/es/3281.px', encoding='windows-1252')
-        df.to_csv(
-            path_or_buf='3281.csv',
-            sep=',',
-            header=True,
-            index=False,
-            doublequote=True,
-            quoting=csv.QUOTE_NONNUMERIC,
-            encoding='utf-8')
-        fd = open('3281.csv', 'r')
-        for line in fd:
-            pass
-        last = line
-        fd.close()
-        self.assertEqual(last,
-                         '"17 Rioja, La","36 Captación, depuración y distribución de agua",'
-                         '"Variación en lo que va de año","1975M01",""\n')
+        print(last)
+        self.assertEqual(last, '"19 Melilla","Extranjera","1975",""\n')
 
     def testHTTPError(self):
         # returns status code 404
