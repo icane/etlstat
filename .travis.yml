@@ -11,19 +11,11 @@ services:
 before_install:
   - docker pull mysql
   - docker run --name mysqldb -d -p 3307:3306 -e MYSQL_ROOT_PASSWORD=password mysql
-  - docker pull sath89/oracle-xe-11g
-  - docker run --name orcldb -d -p 1521:1521 sath89/oracle-xe-11g
-  - wget http://download.oracle.com/otn/linux/instantclient/11204/oracle-instantclient11.2-basic-11.2.0.4.0-1.x86_64.rpm
-  - sudo apt-get install alien
-  - sudo apt-get install libaio1
-  - sudo alien oracle-instantclient11.2-basic-11.2.0.4.0-1.x86_64.rpm
-  - sudo dpkg -i oracle-instantclient11.2-basic_11.2.0.4.0-2_amd64.deb
 
 install: "pip install -r requirements.txt"
 
 script:
-  - python -m unittest discover
+  - python -m unittest database/test/testMySQL.py
 
 after_script:
   - docker rm -f mysqldb
-  - docker rm -f orcldb
