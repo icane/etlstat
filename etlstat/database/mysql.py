@@ -312,7 +312,7 @@ class MySQL:
         connection = cls.engine.connect()
 
         if not cls.check_for_table(table.name, user, password, host, port, database):
-            cls.create(table)
+            cls.create(table, user, password, host, port, database)
 
         if isinstance(table, DataFrame):
             aux = table.replace(np.NaN, "\\N")
