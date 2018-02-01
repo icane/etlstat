@@ -311,7 +311,7 @@ class MySQL:
         cls._connect(user, password, host, port, database)
         connection = cls.engine.connect()
 
-        if not cls.check_for_table(table.name):
+        if not cls.check_for_table(table.name, user, password, host, port, database):
             cls.create(table)
 
         if isinstance(table, DataFrame):
