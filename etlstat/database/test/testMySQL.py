@@ -21,7 +21,8 @@ class TestMySQL(unittest.TestCase):
         database = ''
         conn_params = [user, password, host, port, database]
         ddl = "CREATE DATABASE IF NOT EXISTS mysql_test"
-        status, result = MySQL.execute_sql(ddl, *conn_params)
+        my_conn = MySQL(*conn_params)
+        status, result = my_conn.execute_sql(ddl)
         print(result)
 
     def test_create_table(self):
@@ -36,7 +37,10 @@ class TestMySQL(unittest.TestCase):
 
         # Rename data frame
         table.name = "table_test"
-        self.assertFalse(MySQL.create(table, *self.conn_params))
+        my_conn = MySQL(*self.conn_params)
+        self.assertFalse(my_conn.create(table))
+
+    # TODO: add tests for all class methods
 
 if __name__ == '__main__':
     unittest.main()
