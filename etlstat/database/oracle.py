@@ -26,6 +26,7 @@ from sqlalchemy.exc import DatabaseError
 class Oracle:
 
     engine = None
+
     # TODO: check this conversion map
     conversion_map = {
         'object': 'VARCHAR2',
@@ -33,30 +34,22 @@ class Oracle:
         'float': 'NUMBER'
     }
 
-    @classmethod
-    def _connect(cls, user, password, host, port, service_name):
-        cls.conn_string = "oracle+cx_oracle://{0}:{1}@{2}:{3}/?service_name={4}".format(
+    def __init__(self, user, password, host, port, service_name):
+        conn_string = "oracle+cx_oracle://{0}:{1}@{2}:{3}/?service_name={4}".format(
             user,
             password,
             host,
             port,
             service_name)
-        cls.engine = create_engine(cls.conn_string)
+        self.engine = create_engine(conn_string)
 
-    @classmethod
-    def execute_sql(cls, sql, user, password, host, port, service_name):
+    def execute_sql(self, sql):
         """
         Executes a DDL or DML SQL statement
         :param sql: SQL statement
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param service_name: Oracle instance service name
-        :return: status (True | False); result (str or data frame)
+        :return: status (True | False); result (data frame or error string)
         """
-        cls._connect(user, password, host, port, service_name)
-        connection = cls.engine.connect()
+        connection = self.engine.connect()
         try:
             result = connection.execute(sql)
             status = True

@@ -72,6 +72,7 @@ def excel_processing(dir_path, excel):
 
 
 def excel_in(dir_path, sheet_name, pattern='*.xls', encoding='utf-8'):
+    # TODO: debug get 0 rows when sheet has no footer
     """
     Function that reads files in a directory filtered by regEx and generates a
     map with xls names. This method also calls excel_processing in order to generate

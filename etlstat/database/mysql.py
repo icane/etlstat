@@ -27,6 +27,7 @@ from sqlalchemy.exc import DatabaseError
 class MySQL:
 
     engine = None
+
     # TODO: check this conversion map
     conversion_map = {
         'object': 'VARCHAR(255)',
@@ -35,30 +36,22 @@ class MySQL:
         'float64': 'DECIMAL(20,6)'
     }
 
-    @classmethod
-    def _connect(cls, user, password, host, port, database):
-        cls.conn_string = "mysql+mysqlconnector://{0}:{1}@{2}:{3}/{4}".format(
+    def __init__(self, user, password, host, port, database):
+        conn_string = "mysql+mysqlconnector://{0}:{1}@{2}:{3}/{4}".format(
             user,
             password,
             host,
             port,
             database)
-        cls.engine = create_engine(cls.conn_string)
+        self.engine = create_engine(conn_string)
 
-    @classmethod
-    def execute_sql(cls, sql, user, password, host, port, database):
+    def execute_sql(self, sql):
         """
         Executes a DDL or DML SQL statement
         :param sql: SQL statement
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param database: database name
-        :return: status (True | False); result (str or data frame)
+        :return: status (True | False); result (data frame or error string)
         """
-        cls._connect(user, password, host, port, database)
-        connection = cls.engine.connect()
+        connection = self.engine.connect()
         try:
             result = connection.execute(sql)
             status = True
@@ -72,30 +65,23 @@ class MySQL:
             connection.close()
         return status, result
 
-    @classmethod
-    def create(cls, table, user, password, host, port, database):
+    def create(self, table):
         """
         Create a new table in database from DataFrame format.
 
         :param table: DataFrame which name and column's label match with database
         table's name and columns that you wish to create.
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param database: database name
         """
-        cls._connect(user, password, host, port, database)
-        connection = cls.engine.connect()
+        connection = self.engine.connect()
 
-        if not cls.check_for_table(table.name, user, password, host, port, database):
+        if not self.check_for_table(table.name):
             sql = "CREATE TABLE"
 
             if isinstance(table, DataFrame):
                 sql += " `{0}` (".format(table.name)
 
                 for label in table:
-                    sql += "`{0}` {1}, ".format(label, cls.conversion_map[str(table[label].dtype)])
+                    sql += "`{0}` {1}, ".format(label, self.conversion_map[str(table[label].dtype)])
                 sql = sql[:-2] + ')'
 
                 rts = connection.execute(sql)
@@ -116,8 +102,7 @@ class MySQL:
 
         return False
 
-    @classmethod
-    def select(cls, table, user, password, host, port, database, conditions=''):
+    def select(self, table, conditions=''):
         """
         Select data from table.
 
@@ -125,11 +110,6 @@ class MySQL:
                     you want read all fields in database table or a DataFrame
                     which name and column's label match with table's name and
                     columns table that you want read from database.
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param database: database name
         :param conditions: (:obj:`str` or :obj:`list` of :obj:`str`, optional):
                     A select condition or list of select conditions with sql
                     syntax.
@@ -137,8 +117,7 @@ class MySQL:
             :obj:`DataFrame`: A DataFrame with data from database.
 
         """
-        cls._connect(user, password, host, port, database)
-        connection = cls.engine.connect()
+        connection = self.engine.connect()
 
         df = None
         sql = "SELECT"
@@ -172,19 +151,13 @@ class MySQL:
 
         return df
 
-    @classmethod
-    def insert(cls, table, user, password, host, port, database, rows=None):
+    def insert(self, table, rows=None):
         """
         Insert DataFrame's rows in a database table.
 
         :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and column's name in database. It
                     must filled with data rows.
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param database: database name
         :param rows: (:obj:`list` of int, optional): A list of row's indexes that you
                     want insert to database.
         Returns:
@@ -192,12 +165,11 @@ class MySQL:
         """
         rows_matched = 0
 
-        cls._connect(user, password, host, port, database)
-        connection = cls.engine.connect()
+        connection = self.engine.connect()
 
         if isinstance(table, DataFrame):
-            if not cls.check_for_table(table.name):
-                cls.create(table)
+            if not self.check_for_table(table.name):
+                self.create(table)
 
             sql = "INSERT INTO"
             sql += " `{0}`".format(table.name)
@@ -233,19 +205,13 @@ class MySQL:
 
         return rows_matched
 
-    @classmethod
-    def update(cls, table, user, password, host, port, database, index=None):
+    def update(self, table, index=None):
         """
         Update rows in a database table.
 
         :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and columns name in database. It must
                     filled with data rows.
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param database: database name
         :param index: (:obj:`list` of name columns): list of DataFrame's columns names
                     use as index in the update search. Other columns will be
                     updated in database.
@@ -254,8 +220,7 @@ class MySQL:
         """
         rows_matched = 0
 
-        cls._connect(user, password, host, port, database)
-        connection = cls.engine.connect()
+        connection = self.engine.connect()
 
         if isinstance(table, DataFrame):
             if isinstance(index, list):
@@ -289,30 +254,21 @@ class MySQL:
 
         return rows_matched
 
-    @classmethod
-    def bulk_insert(cls, table, user, password, host, port, database):
+    def bulk_insert(self, table, csv_path='temp.csv'):
         """
         Make a bulk insert in database.
 
         :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and columns in database. It must
                     filled with data rows.
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param database: database name
+        :param csv_path: (:str): default csv file
         Returns:
             int: number of rows matched.
         """
-        rows_matched = 0
-        csv_path = 'temp.csv'
+        connection = self.engine.connect()
 
-        cls._connect(user, password, host, port, database)
-        connection = cls.engine.connect()
-
-        if not cls.check_for_table(table.name, user, password, host, port, database):
-            cls.create(table, user, password, host, port, database)
+        if not self.check_for_table(table.name):
+            self.create(table)
 
         if isinstance(table, DataFrame):
             aux = table.replace(np.NaN, "\\N")
@@ -333,25 +289,18 @@ class MySQL:
 
         return rows_matched
 
-    @classmethod
-    def delete(cls, table, user, password, host, port, database, conditions=''):
+    def delete(self, table, conditions=''):
         """
         Delete data from table.
 
         Args:
         :param table: (:obj:`str`): Database table name that you wish delete rows.
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param database: database name
         :param conditions: (:obj:`str`, optional): A string of select conditions
             with sql syntax.
         Returns:
             int: number of rows matched.
         """
-        cls._connect(user, password, host, port, database)
-        connection = cls.engine.connect()
+        connection = self.engine.connect()
 
         sql = "DELETE FROM `{0}`".format(table)
 
@@ -367,20 +316,12 @@ class MySQL:
 
         return rows_matched
 
-    @classmethod
-    def check_for_table(cls, table, user, password, host, port, database):
+    def check_for_table(self, table):
         """
         Check if table exists in database.
 
         :param table: (:obj:`str`): Database table's name.
-        :param user: database user
-        :param password: database password
-        :param host: host name or IP address
-        :param port: database connection port
-        :param database: database name
         Returns:
             bool: True if table exists, False in otherwise.
         """
-        cls._connect(user, password, host, port, database)
-
-        return cls.engine.dialect.has_table(cls.engine, table)
+        return self.engine.dialect.has_table(self.engine, table)
