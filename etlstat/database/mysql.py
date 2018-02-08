@@ -18,9 +18,9 @@
 
 import numpy as np
 import os
-from pandas import DataFrame, notnull
+from pandas import DataFrame, isnull
 import re
-from sqlalchemy import create_engine, inspect, MetaData, Table
+from sqlalchemy import create_engine
 from sqlalchemy.exc import DatabaseError
 
 
@@ -84,21 +84,16 @@ class MySQL:
                     sql += "`{0}` {1}, ".format(label, self.conversion_map[str(table[label].dtype)])
                 sql = sql[:-2] + ')'
 
-                rts = connection.execute(sql)
-                rts.close()
-                connection.close()
+                try:
+                    rts = connection.execute(sql)
+                    rts.close()
+                    status = True
+                except DatabaseError as e:
+                    status = False
+                finally:
+                    connection.close()
 
-                # meta = MetaData()
-
-                # messages = Table(table.name, meta, autoload=True, autoload_with=cls.engine)
-                # rts_columns = [c.name for c in messages.columns]
-                #
-                # if len(set(list(table.columns.values)) & set(rts_columns)) == len(table.columns):
-                #     return True
-                #
-                # #print(rts.keys())
-                # if rts.returns_rows:
-                #     print(rts.rowcount)
+                return status
 
         return False
 
@@ -140,14 +135,16 @@ class MySQL:
                 sql += " {0},".format(condition)
             sql = sql[:-1]
 
-        rts = connection.execute(sql)   # ResultProxy
-
-        if rts.rowcount > 0:
-            df = DataFrame(rts.fetchall())
-            df.columns = rts.keys()
-
-        rts.close()
-        connection.close()
+        try:
+            rts = connection.execute(sql)   # ResultProxy
+            if rts.rowcount > 0:
+                df = DataFrame(rts.fetchall())
+                df.columns = rts.keys()
+            rts.close()
+        except DatabaseError as e:
+            print(e)
+        finally:
+            connection.close()
 
         return df
 
@@ -188,18 +185,18 @@ class MySQL:
                         if isinstance(value, str):
                             sql_insert += "'{0}', ".format(value)
                         else:
-                            if np.isnan(value):
+                            if isnull(value):
                                 sql_insert += "{0}, ".format('NULL')
                             else:
                                 sql_insert += "{0}, ".format(value)
                     sql_insert = sql_insert[:-2] + ')'
 
-                    rts = connection.execute(sql_insert)  # ResultProxy
-
+                    rts = connection.execute(sql_insert)
                     rows_matched += rts.rowcount
 
-                    rts.close()
-                    connection.close()
+            rts.close()
+            connection.close()
+
         else:
             raise TypeError("table must be a DataFrame.")
 
@@ -211,7 +208,7 @@ class MySQL:
 
         :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and columns name in database. It must
-                    filled with data rows.
+                    be filled with data rows.
         :param index: (:obj:`list` of name columns): list of DataFrame's columns names
                     use as index in the update search. Other columns will be
                     updated in database.
@@ -243,12 +240,12 @@ class MySQL:
 
                     if len(sql_conditions) > 1:
                         sql += ' WHERE' + sql_conditions[:-4]
+
                     rts = connection.execute(sql)  # ResultProxy
-
                     rows_matched += rts.rowcount
-
                     rts.close()
-                    connection.close()
+
+                connection.close()
         else:
             raise TypeError("table must be a DataFrame.")
 

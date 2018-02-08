@@ -1,7 +1,10 @@
-# Instalación módulos de acceso a bases de datos relacionales (Python3)
+# Installation of modules required to get access to relational databases.
 
 ## MySQL Connector
-Instalación del conector MySQL para Python 3. Si no se especifica la versión, se intenta instalar la 2.2.3 y se produce un error: [Unable to find Protobuf include directory](http://stackoverflow.com/questions/43029672/unable-to-find-protobuf-include-directory)  
+Installation of MySQL connector for Python 3.
+If the version is not specified
+If the version is not specified, the default attempts to install 2.2.3
+and fails: [Unable to find Protobuf include directory](http://stackoverflow.com/questions/43029672/unable-to-find-protobuf-include-directory)
 
 ```
 > sudo pip3 install mysql-connector==2.1.4
@@ -13,15 +16,15 @@ Installing collected packages: mysql-connector
 Successfully installed mysql-connector-2.1.4
 ```
 
-Descarga e instalación de la última versión en .deb:
+Download and install the last version:
 ```
     https://dev.mysql.com/downloads/connector/python/
 
-    > sudo dpkg -i nombre_de_archivo
+    > sudo dpkg -i <connector_file_name.deb>
 ```
 
 ## cx_Oracle
-Es necesario tener instalado Oracle SQLNet. Ver el documento [Connecting to Oracle11g databases from Python scripts](/var/git/md/docs/dev/python/oracle_connection.md). 
+Cx_Oracle requires Oracle SQLNet. Read [Connecting to Oracle11g databases from Python scripts](/var/git/md/docs/dev/python/oracle_connection.md).
 ```
 # apt-get install python3-dev
 
@@ -44,22 +47,41 @@ Successfully installed cx-oracle-5.3
 
 ```
 
-# Testing MySql class
+## Testing
+Database tests require a local database instance running into a Docker container.
 
-Es necesario actualizar el mapa de configuración al principio del archivo testMySql.py:
-```
-    MYSQL = {
-        'SERVER'    : 'localhost',
-        'DATABASE'  : 'test',
-        'PORT'      : '',
-        'USER'      : '',
-        'PASSWORD'  : ''
-    }
-```
-(Se recomienda el uso de la base de datos local para la prueba, puerto por defecto 3306)
+### Oracle
+Reference: [Using Oracle Database with Docker Engine](https://www.toadworld.com/platforms/oracle/w/wiki/11638.using-oracle-database-with-docker-engine)
 
-# Uso de los módulos database
+Pulling the Oracle Docker image
+```sudo docker pull sath89/oracle-xe-11g```
 
-## Referencias
-[Connecting to MySQL databases from Python scripts](/var/git/md/docs/dev/python/mysql_connection.md)
-[Connecting to Oracle11g databases from Python scripts](/var/git/md/docs/dev/python/oracle_connection.md)
+Running the container
+```sudo docker run --name orcldb -d -p 8080:8080 -p 1521:1521 sath89/oracle-xe-11g```
+
+Connection parameters:
++ User: system
++ Password: oracle
++ Host name: localhost
++ Port: 1521
++ SID: xe
+
+### MySQL
+Reference: [Official repository mysql](https://hub.docker.com/_/mysql/)
+
+Pulling the image
+```sudo docker pull mysql```
+
+Running the container
+```sudo docker run --name mysqldb -d -p 3307:3306 -e MYSQL_ROOT_PASSWORD=password mysql[:<tag>]```
+
+Notes:
+  + in order to avoid conflicts with local MySQL instances and Travis builds, it is better to specify a non-standard MySQL port.
+  + use IP 127.0.0.1 instead of _localhost_ to stablish a connection
+
+Optional: **tag** is the tag specifying the MySQL version you want. See the list below for relevant tags.
+
++ 8.0.3, 8.0, 8
++ 5.7.21, 5.7, 5, latest
++ 5.6.39, 5.6
++ 5.5.59, 5.5
