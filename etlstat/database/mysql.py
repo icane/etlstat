@@ -45,6 +45,16 @@ class MySQL:
             database)
         self.engine = create_engine(conn_string)
 
+    def check_for_table(self, table):
+        """
+        Check if table exists in database.
+
+        :param table: (:obj:`str`): Database table's name.
+        Returns:
+            bool: True if table exists, False in otherwise.
+        """
+        return self.engine.dialect.has_table(self.engine, table)
+
     def execute_sql(self, sql):
         """
         Executes a DDL or DML SQL statement
@@ -251,41 +261,6 @@ class MySQL:
 
         return rows_matched
 
-    def bulk_insert(self, table, csv_path='temp.csv'):
-        """
-        Make a bulk insert in database.
-
-        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and columns in database. It must
-                    filled with data rows.
-        :param csv_path: (:str): default csv file
-        Returns:
-            int: number of rows matched.
-        """
-        connection = self.engine.connect()
-
-        if not self.check_for_table(table.name):
-            self.create(table)
-
-        if isinstance(table, DataFrame):
-            aux = table.replace(np.NaN, "\\N")
-            aux.to_csv(csv_path, sep=';', header=False, index=False)
-        else:
-            raise TypeError("table must be a DataFrame.")
-
-        sql = """LOAD DATA LOCAL INFILE '{0}' INTO TABLE `{1}` FIELDS TERMINATED BY ';' ENCLOSED BY '"' """\
-              .format(csv_path, table.name)
-
-        rts = connection.execute(sql)
-
-        rows_matched = rts.rowcount
-        rts.close()
-        connection.close()
-
-        os.remove(csv_path)
-
-        return rows_matched
-
     def delete(self, table, conditions=''):
         """
         Delete data from table.
@@ -304,21 +279,56 @@ class MySQL:
         if isinstance(conditions, str) and conditions is not '':
             sql += ' WHERE ' + conditions
 
-        rts = connection.execute(sql)
-
-        rows_matched = rts.rowcount
-
-        rts.close()
-        connection.close()
+        try:
+            rts = connection.execute(sql)
+            rows_matched = rts.rowcount
+            rts.close()
+        except DatabaseError as e:
+            rows_matched = None
+            print(e)
+        finally:
+            connection.close()
 
         return rows_matched
 
-    def check_for_table(self, table):
+    def bulk_insert(self, table, csv_path='temp.csv', sep=';', header=False, index=False):
         """
-        Check if table exists in database.
+        Make a bulk insert in database.
 
-        :param table: (:obj:`str`): Database table's name.
+        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
+                    match with table's name and columns in database. It must be
+                    filled with data rows.
+        :param csv_path: (:str): default csv file
+        :param sep: (:str): default field separator
+        :param header: (:bool): default header row is present or not
+        :param index: (:bool): default write or not row names
         Returns:
-            bool: True if table exists, False in otherwise.
+            int: number of rows matched.
         """
-        return self.engine.dialect.has_table(self.engine, table)
+        connection = self.engine.connect()
+
+        if not self.check_for_table(table.name):
+            self.create(table)
+
+        if isinstance(table, DataFrame):
+            aux = table.replace(np.NaN, "\\N")
+            aux.to_csv(csv_path, sep=sep, header=header, index=index)
+        else:
+            raise TypeError("table must be a DataFrame.")
+
+        sql = """LOAD DATA LOCAL INFILE '{0}' INTO TABLE `{1}` FIELDS TERMINATED BY ';' ENCLOSED BY '"' """\
+              .format(csv_path, table.name)
+
+        try:
+            rts = connection.execute(sql)
+            rows_matched = rts.rowcount
+            rts.close()
+        except DatabaseError as e:
+            rows_matched = None
+            print(e)
+        finally:
+            connection.close()
+
+        # os.remove(csv_path)
+
+        return rows_matched

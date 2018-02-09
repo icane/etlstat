@@ -114,11 +114,31 @@ class TestMySQL(unittest.TestCase):
         self.assertEqual(my_conn.update(df2, index=['column_int']), 2)
 
     def testDelete(self):
-        print('Delete')
+        data_columns = ['column_int', 'column_string', 'column_float']
+        data_values = [[1, 'string1', 456.956], [2, 'string2', 38.905]]
+        df = pd.DataFrame(data_values, columns=data_columns)
+        df.name = 'test_delete'
+        my_conn = MySQL(*self.conn_params)
+        my_conn.insert(df)
+        self.assertEqual(my_conn.delete(df.name, conditions="column_int = 2"), 1)
 
     def testBulkInsert(self):
-        print('Bulk')
+        data_columns = ['id', 'column_string', 'column_float']
+        data_types = {'id': int, 'column_string': object, 'column_float': float}
+        data_values = [
+            [1, 'Alpha',	5.39282029181928],
+            [2,	'Beta',	62.0512266797524],
+            [3, 'Gamma', 7.20169799112829],
+            [4, 'Delta', 17.2716470303442]
+        ]
+        df = pd.DataFrame(data=data_values, columns=data_columns)
+        for k, v in data_types.items():
+            df[k] = df[k].astype(v)
 
+        df.name = 'test_bulk_insert'
+        my_conn = MySQL(*self.conn_params)
+        self.assertEqual(my_conn.bulk_insert(df,
+                                             csv_path='test_bulk_insert.csv', sep=';', header=False, index=False), 4)
 
 if __name__ == '__main__':
     unittest.main()
