@@ -91,7 +91,7 @@ class TestMySQL(unittest.TestCase):
         table_name = "inf_schema"
         conditions = "table_name like 'INNO%' AND avg_row_length > 100"
         table_df = my_conn.select(table_name, conditions=conditions)
-        self.assertEqual(len(table_df), 6)
+        self.assertGreaterEqual(len(table_df), 6)
 
     def testInsert(self):
         data_columns = ['column_int', 'column_string', 'column_float']
