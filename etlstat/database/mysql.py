@@ -238,12 +238,12 @@ class MySQL:
                     for id, label in enumerate(table):
                         if label not in index:
                             if isinstance(row[id], str):
-                                sql_updates += " {0}={1},".format(label, row[id])
+                                sql_updates += " %s='%s'," % (label, row[id])
                             else:
                                 sql_updates += " {0}={1},".format(label, row[id])
                         else:
                             if isinstance(row[id], str):
-                                sql_conditions += " {0}={1} and".format(label, row[id])
+                                sql_conditions += " %s='%s' and" % (label, row[id])
                             else:
                                 sql_conditions += " {0}={1} and".format(label, row[id])
                     sql += sql_updates[:-1]
