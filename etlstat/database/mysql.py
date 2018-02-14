@@ -45,15 +45,16 @@ class MySQL:
             database)
         self.engine = create_engine(conn_string)
 
-    def check_for_table(self, table):
+    def check_for_table(self, table, schema=None):
         """
         Check if table exists in database.
 
         :param table: (:obj:`str`): Database table's name.
+        :param schema: (:obj:`str`): Schema name
         Returns:
             bool: True if table exists, False in otherwise.
         """
-        return self.engine.dialect.has_table(self.engine, table)
+        return self.engine.dialect.has_table(self.engine, table, schema=schema)
 
     def execute_sql(self, sql):
         """
@@ -146,10 +147,9 @@ class MySQL:
             sql = sql[:-1]
 
         try:
-            rts = connection.execute(sql)   # ResultProxy
-            if rts.rowcount > 0:
-                df = DataFrame(rts.fetchall())
-                df.columns = rts.keys()
+            rts = connection.execute(sql)
+            df = DataFrame(rts.fetchall())
+            df.columns = rts.keys()
             rts.close()
         except DatabaseError as e:
             print(e)
@@ -329,6 +329,6 @@ class MySQL:
         finally:
             connection.close()
 
-        # os.remove(csv_path)
+        os.remove(csv_path)
 
         return rows_matched
