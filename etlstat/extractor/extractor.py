@@ -166,17 +166,17 @@ def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX
     between data files and format files and returning a dict. (MICRODATA)
 
     Args:
-        dir_path (str): Path of DIR readed.
+        dir_path (str): Path of DIR to read.
         reg_ex (str): regEx to filter data|format names (Avoid adding format extension to regEx)
 
     Returns:
-        dict: Name of data file as KEY and dataframe as VALUE
+        dict: Name of data file as KEY and data frame as VALUE
     """
     conversion_map = {
         'STRING': str,
-        'NUMBER': np.float32,
-        'DOUBLE': np.float32,
-        'INTEGER': np.int32
+        'NUMBER': np.float64,
+        'DOUBLE': np.float64,
+        'INTEGER': np.int64
     }
     field_name = 'field_name'
     data_type = 'data_type'

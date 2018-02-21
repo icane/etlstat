@@ -117,7 +117,7 @@ class TestOracle(unittest.TestCase):
         df1.name = 'test_update'
         ora_conn = Oracle(*self.conn_params)
         ora_conn.insert(df1)
-        data_values2 = [[1, "updated string1", 456.956], [2, "'updated string2'", 38.905]]
+        data_values2 = [[1, "'updated string1'", 456.956], [2, "'updated string2'", 38.905]]
         df2 = pd.DataFrame(data_values2, columns=data_columns)
         df2.name = 'test_update'
         self.assertEqual(ora_conn.update(df2, index=['column_int']), 2)
