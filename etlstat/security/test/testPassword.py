@@ -14,5 +14,11 @@ class TestPassword(unittest.TestCase):
         self.assertTrue(len(pwd) <= max_length)
         self.assertTrue(pwd[:1].isalpha())
 
+    def testGeneratePasswordFail(self):
+        try:
+            password.generate_password(max_length, min_length)
+        except TypeError as e:
+            self.assertEqual(str(e), 'Minimum password length must be less or equal than maximum.')
+
 if __name__ == '__main__':
     unittest.main()
