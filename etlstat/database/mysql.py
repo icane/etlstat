@@ -148,8 +148,10 @@ class MySQL:
 
         try:
             rts = connection.execute(sql)
-            df = DataFrame(rts.fetchall())
-            df.columns = rts.keys()
+            df = None
+            if rts.rowcount > 0:
+                df = DataFrame(rts.fetchall())
+                df.columns = rts.keys()
             rts.close()
         except DatabaseError as e:
             print(e)
