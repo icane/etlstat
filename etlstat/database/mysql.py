@@ -31,6 +31,7 @@ class MySQL:
     # TODO: check this conversion map
     conversion_map = {
         'object': 'VARCHAR(255)',
+        'int32': 'INT',
         'int64': 'INT',
         'float32': 'DECIMAL(20,6)',
         'float64': 'DECIMAL(20,6)'

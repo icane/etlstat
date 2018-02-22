@@ -174,9 +174,9 @@ def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX
     """
     conversion_map = {
         'STRING': str,
-        'NUMBER': np.float64,
+        'NUMBER': np.float32,
         'DOUBLE': np.float64,
-        'INTEGER': np.int64
+        'INTEGER': np.int32
     }
     field_name = 'field_name'
     data_type = 'data_type'
@@ -207,8 +207,9 @@ def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX
         assignation_map[item] = aux  # CREATE MAP BETWEEN FILE NAME AND FORMAT NAME
         logger.info("Matched data file: " + item + " with: " + assignation_map[item])
     for i in range(len(assignation_map)):
-        assignation_map[keys[i]] = pd.read_csv(dir_path + assignation_map[keys[i]], sep=sep,
-                                              encoding=encoding)
+        assignation_map[keys[i]] = pd.read_csv(dir_path + assignation_map[keys[i]],
+                                               sep=sep,
+                                               encoding=encoding)
     for l in range(len(assignation_map)):
         for m in range(len(assignation_map[keys[l]])):
             correspondence_map[keys[l]][assignation_map[keys[l]][field_name][m]] = \
