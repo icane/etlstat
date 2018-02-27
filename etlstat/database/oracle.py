@@ -183,8 +183,8 @@ class Oracle:
         connection = self.engine.connect()
 
         if isinstance(table, DataFrame):
-            if not self.check_for_table(table.name):
-                self.create(table)
+            if not self.check_for_table(table.name, schema=schema):
+                self.create(table, schema=schema)
 
             sql = "INSERT INTO "
             if schema:
