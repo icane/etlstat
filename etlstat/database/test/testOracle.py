@@ -1,5 +1,4 @@
 import unittest
-import decimal as dec
 from etlstat.database.oracle import Oracle
 import os.path
 import pandas as pd

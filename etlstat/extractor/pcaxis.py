@@ -1,15 +1,22 @@
-"""
-    Obtains a pandas DataFrame of tabular data from a PC-Axis file or URL.
-    Read all metadata from PC-Axis and returns a dictionary containing it.
-    Reference: https://www.scb.se/Upload/PC-Axis/Support/Documents/PX-file_format_specification_2013.pdf
-    Regex debugging: https://pythex.org/
+# -*- coding: utf-8 -*-
 
-    Date:
-        25/09/2017
+"""Pcaxis Parser module
 
-    Authors:
-        slave110
-        lla11358
+This module obtains a pandas DataFrame of tabular data from a PC-Axis file or URL.
+Reads data and metadata from PC-Axis into a dataframe and dictionary, and returns a
+dictionary containing both structures.
+
+Example:
+    from etlstat.extractor.pcaxis import *
+
+    dict = from_pc_axis(self.base_path + 'px/2184.px', encoding='ISO-8859-2')
+    
+References:
+    PX-file format specification AXIS-VERSION 2013:
+        https://www.scb.se/Upload/PC-Axis/Support/Documents/PX-file_format_specification_2013.pdf
+
+Todo:
+    meta_split: "NOTE" attribute can be multiple, but only the last one is added to the dictionary
 """
 
 import itertools
@@ -25,24 +32,36 @@ logger = log.getLogger(__name__)
 
 def uri_type(uri):
     """
-    Determines the type of URI
-    :param uri: pc-axis file name or URL
-    :return: uri_type (string)
+    Determines the type of URI.
+
+    Args:
+        uri (str): pc-axis file name or URL
+
+    Returns:
+        str_type (str): 'URL' | 'FILE'
+
+    ..  Regex debugging:
+        https://pythex.org/
     """
+    str_type = 'FILE'
     if re.match('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', uri):
-        return 'URL'
-    else:
-        return 'FILE'
+        str_type = 'URL'
+
+    return str_type
 
 
 @timeit
 def read(uri, encoding, timeout=10):
     """
-    Read a text file from file system or URL
-    :param uri: file name or URL
-    :param encoding: charset encoding
-    :param timeout: request timeout; optional
-    :return: file contents as string
+    Reads a text file from file system or URL.
+
+    Args:
+        uri (str): file name or URL
+        encoding (str): charset encoding
+        timeout (int): request timeout; optional
+
+    Returns:
+        pc_axis (str): file contents.
     """
 
     pc_axis = """
@@ -81,9 +100,14 @@ def read(uri, encoding, timeout=10):
 
 def meta_data_split(pc_axis):
     """
-    Extract metadata and data. Remove new line and semicolons
-    :param pc_axis: string containing the pc_axis file
-    :return:
+    Extracts metadata and data from pc-axis file contents.
+
+    Args:
+        pc_axis (str): pc_axis file contents.
+
+    Returns:
+        meta (list of string): each item conforms to pattern ATTRIBUTE=VALUES
+        data (string): data values
     """
     # replace new line characters with blank
     pc_axis = pc_axis.replace('\n', ' ').replace('\r', ' ')
@@ -102,10 +126,14 @@ def meta_data_split(pc_axis):
 
 def meta_split(meta_list):
     """
-    Splits the list of metadata elements into a dictionary of multi-valued keys
-    Sets self._meta_dict -> dictionary
+    Splits the list of metadata elements into a dictionary of multi-valued keys.
+
+    Args:
+        meta_list (list of string): pairs ATTRIBUTE=VALUES
+
+    Returns:
+        meta_dict (dictionary): {'attribute1': ['value1', 'value2', ... ], ...}
     """
-    # TODO: "NOTE" attribute can be multiple, but only the last one is added to the dictionary
     meta_dict = {}
 
     for m in meta_list:
@@ -122,9 +150,14 @@ def meta_split(meta_list):
 
 def dimensions(meta_dict):
     """
-    Reads STUB and HEADING values
-    :param meta_dict: dictionary of metadata
-    :return: dimension_names, dimension_members
+    Reads STUB and HEADING values from metadata dictionary.
+
+    Args:
+        meta_dict: dictionary of metadata
+
+    Returns:
+        dimension_names (list)
+        dimension_members (list)
     """
 
     dimension_names = []
@@ -162,8 +195,15 @@ def dimensions(meta_dict):
 def to_data_frame(dimension_names, dimension_members, data_list):
     """
     Builds a data frame by adding the cartesian product of dimension members,
-    plus series of data
-    :return: pandas data frame object
+    plus series of data.
+
+    Args:
+        dimension_names (list of string)
+        dimension_members (list of string)
+        data_list (list of string)
+
+    Returns:
+        data_frame (pandas data frame)
     """
 
     # cartesian product of dimension members
@@ -188,10 +228,14 @@ def to_data_frame(dimension_names, dimension_members, data_list):
 def from_pc_axis(uri, encoding, timeout=10):
     """
     Extracts metadata and data sections from pc-axis.
-    :param uri: file name or URL
-    :param encoding: charset encoding
-    :param timeout: request timeout; optional
-    :return metadata dictionary, data frame
+
+    Args:
+        uri (str): file name or URL
+        encoding (str): charset encoding
+        timeout (int): request timeout in seconds; optional
+
+    Returns:
+         pc_axis_dict (dictionary): dictionary of metadata and pandas data frame
     """
 
     # get file content or URL stream
@@ -212,4 +256,9 @@ def from_pc_axis(uri, encoding, timeout=10):
     # build a data frame
     data_frame = to_data_frame(dimension_names, dimension_members, data_list)
 
-    return meta_dict, data_frame
+    # dictionary of metadata and data
+    pc_axis_dict = {
+        'METADATA': meta_dict,
+        'DATA': data_frame
+    }
+    return pc_axis_dict
