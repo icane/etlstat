@@ -3,6 +3,7 @@
 # database
 from etlstat.database.mysql import MySQL
 from etlstat.database.oracle import Oracle
+from etlstat.database.simplesql import SimpleSQL
 
 # extractor
 from etlstat.extractor.extractor import excel_in, csv_in, pc_axis_in, \
