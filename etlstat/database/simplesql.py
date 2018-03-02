@@ -23,6 +23,17 @@ class SimpleSQL:
 
     @classmethod
     def parse_conn_string(cls, config):
+        """
+        Split conn_string, acquired from Configuration object into db_params and
+        database_name.
+
+        Args:
+            config (Configuration): object Configuration filled with all params
+                                    needed.
+        Returns:
+            db_params (str[]): user, password, host and port terms into list.
+            database_name (str): name of database schema.
+        """
         conn_string = config.store.conn_string
         connector, conn_data = conn_string.split('//')
         user, link, port_db = conn_data.split(':')
@@ -40,7 +51,14 @@ class SimpleSQL:
     @classmethod
     def push(cls, table, config):
         """
+        Insert dataframe's data into database table. If table doesn't exist, push
+        will create it.
 
+        Args:
+            table (DataFrame): a pandas DataFrame object filled with data that you
+                               want insert into database.
+            config (Configuration): object Configuration filled with all params
+                                    needed.
         """
         db_params, database_name = cls.parse_conn_string(config)
 
@@ -48,17 +66,25 @@ class SimpleSQL:
 
         if not conn.check_for_table(table.name):
             conn.create(table)
-            conn.execute_sql("ALTER TABLE %s ADD COLUMN `id` INT PRIMARY KEY AUTO_INCREMENT" % table.name)
-
-        if len(table) > 10:
-            conn.bulk_insert(table)
+            if len(table) > 0 and len(table) < 10:
+                conn.execute_sql("ALTER TABLE %s ADD COLUMN `id` INT PRIMARY KEY AUTO_INCREMENT" % table.name)
+            elif len(table) > 10:
+                conn.bulk_insert(table)
         else:
             conn.insert(table)
 
     @classmethod
     def pull(cls, table, config):
         """
+        Request data columns dataframe from database.
 
+        Args:
+            table (DataFrame): a empty pandas DataFrame object structured
+                               with data columns.
+            config (Configuration): object Configuration filled with all params
+                                    needed.
+        Returns:
+            result (DataFrame): a pandas DataFrame filled with data from database.
         """
         db_params, database_name = cls.parse_conn_string(config)
 
@@ -77,7 +103,12 @@ class SimpleSQL:
     @classmethod
     def drop(cls, table_name, config):
         """
+        Drop database table called table_name.
 
+        Args:
+            table_name (str): database table name.
+            config (Configuration): object Configuration filled with all params
+                                    needed.
         """
         db_params, database_name = cls.parse_conn_string(config)
 
