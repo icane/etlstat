@@ -12,4 +12,7 @@ from etlstat.extractor.pcaxis import read, from_pc_axis
 # log
 from etlstat.log.timing import timeit
 
+# text
+from etlstat.text.parsed_columns import parsed_columns
+
 
