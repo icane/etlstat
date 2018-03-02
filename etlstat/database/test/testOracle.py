@@ -1,5 +1,4 @@
 import unittest
-import decimal as dec
 from etlstat.database.oracle import Oracle
 import os.path
 import pandas as pd
@@ -89,7 +88,7 @@ class TestOracle(unittest.TestCase):
         # Rename data frame
         table.name = "test_create"
         ora_conn = Oracle(*self.conn_params)
-        self.assertTrue(ora_conn.create(table))
+        self.assertTrue(ora_conn.create(table, 'test'))
         sql = "DROP TABLE test_create"
         ora_conn.execute_sql(sql)
 

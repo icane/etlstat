@@ -30,7 +30,9 @@ class Oracle:
     # TODO: check this conversion map
     conversion_map = {
         'object': 'VARCHAR2(256)',
+        'int32': 'INTEGER',
         'int64': 'INTEGER',
+        'float32': 'NUMBER',
         'float64': 'NUMBER'
     }
 
@@ -74,20 +76,23 @@ class Oracle:
             connection.close()
         return status, result
 
-    def create(self, table):
+    def create(self, table, schema=None):
         """
         Create a new table in database from DataFrame format.
 
         :param table: DataFrame which name and column's label match with database
+        :param schema: database schema. If None, then the table is created in the user's default
         table's name and columns that you wish to create.
         """
         connection = self.engine.connect()
 
-        if not self.check_for_table(table.name):
-            sql = "CREATE TABLE"
+        if not self.check_for_table(table.name, schema=schema):
+            sql = "CREATE TABLE "
+            if schema:
+                sql += "{0}.".format(schema)
 
             if isinstance(table, DataFrame):
-                sql += " {0} (".format(table.name)
+                sql += "{0} (".format(table.name)
 
                 for label in table:
                     sql += "{0} {1}, ".format(label, self.conversion_map[str(table[label].dtype)])
@@ -106,7 +111,7 @@ class Oracle:
 
         return False
 
-    def select(self, table, conditions=''):
+    def select(self, table, schema=None, conditions=''):
         """
         Select data from table.
 
@@ -114,6 +119,7 @@ class Oracle:
                     you want read all fields in database table or a DataFrame
                     which name and column's label match with table's name and
                     columns table that you want read from database.
+        :param schema: database schema
         :param conditions: (:obj:`str` or :obj:`list` of :obj:`str`, optional):
                     A select condition or list of select conditions with sql
                     syntax.
@@ -124,9 +130,13 @@ class Oracle:
         connection = self.engine.connect()
 
         df = None
-        sql = "SELECT"
+        sql = "SELECT "
+
+        if schema:
+            sql += "{0}.".format(schema)
+
         if isinstance(table, str):
-            sql += " {0} FROM {1}".format('*', table)
+            sql += "{0} FROM {1}".format('*', table)
         elif isinstance(table, DataFrame):
             for label in list(table):
                 sql += " {0},".format(label)
@@ -155,13 +165,14 @@ class Oracle:
 
         return df
 
-    def insert(self, table, rows=None):
+    def insert(self, table, schema=None, rows=None):
         """
         Insert DataFrame's rows in a database table.
 
         :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and column's name in database. It
                     must filled with data rows.
+        :param schema: database schema
         :param rows: (:obj:`list` of int, optional): A list of row's indexes that you
                     want insert to database.
         Returns:
@@ -172,11 +183,13 @@ class Oracle:
         connection = self.engine.connect()
 
         if isinstance(table, DataFrame):
-            if not self.check_for_table(table.name):
-                self.create(table)
+            if not self.check_for_table(table.name, schema=schema):
+                self.create(table, schema=schema)
 
-            sql = "INSERT INTO"
-            sql += " {0}".format(table.name)
+            sql = "INSERT INTO "
+            if schema:
+                sql += "{0}.".format(schema)
+            sql += "{0}".format(table.name)
             sql += ' ('
             for label in list(table):
                 sql += "{0}, ".format(label)
@@ -209,13 +222,14 @@ class Oracle:
 
         return rows_matched
 
-    def update(self, table, index=None):
+    def update(self, table, schema=None, index=None):
         """
         Update rows in a database table.
 
         :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and columns name in database. It must
                     be filled with data rows.
+        :param schema: database schema
         :param index: (:obj:`list` of name columns): list of DataFrame's columns names
                     use as index in the update search. Other columns will be
                     updated in database.
@@ -229,7 +243,10 @@ class Oracle:
         if isinstance(table, DataFrame):
             if isinstance(index, list):
                 for row in table.values:
-                    sql = "UPDATE {0} SET".format(table.name)
+                    sql = "UPDATE "
+                    if schema:
+                        sql += "{0}.".format(schema)
+                    sql += "{0} SET".format(table.name)
                     sql_conditions = ''
                     sql_updates = ''
                     for id, label in enumerate(table):
@@ -258,12 +275,13 @@ class Oracle:
 
         return rows_matched
 
-    def delete(self, table, conditions=''):
+    def delete(self, table, schema=None, conditions=''):
         """
         Delete data from table.
 
         Args:
         :param table: (:obj:`str`): Database table name that you wish delete rows.
+        :param schema: database schema
         :param conditions: (:obj:`str`, optional): A string of select conditions
             with sql syntax.
         Returns:
@@ -271,7 +289,10 @@ class Oracle:
         """
         connection = self.engine.connect()
 
-        sql = "DELETE FROM {0}".format(table)
+        sql = "DELETE FROM "
+        if schema:
+            sql += "{0}.".format(schema)
+        sql += "{0}".format(table)
 
         if isinstance(conditions, str) and conditions is not '':
             sql += ' WHERE ' + conditions
@@ -297,7 +318,7 @@ class Oracle:
 
             sqlldr <user>/<password> control=<control_file> [log=<log_file>] [bad=bad_file]
 
-        :param table :obj:DataFrame: DataFrame which name and column's label match with table's name and columns
+        :param table :obj:DataFrame: DataFrame whose name and column's label match with table's name and columns
         in database. It must be filled with data rows.
         :param data_file: path for output data file
         :param control_file: path for output control file
