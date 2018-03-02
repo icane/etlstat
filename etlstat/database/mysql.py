@@ -31,6 +31,7 @@ class MySQL:
     # TODO: check this conversion map
     conversion_map = {
         'object': 'VARCHAR(255)',
+        'int32': 'INT',
         'int64': 'INT',
         'float32': 'DECIMAL(20,6)',
         'float64': 'DECIMAL(20,6)'
@@ -130,8 +131,11 @@ class MySQL:
         if isinstance(table, str):
             sql += " {0} FROM `{1}`".format('*', table)
         elif isinstance(table, DataFrame):
-            for label in list(table):
-                sql += " {0},".format(label)
+            if len(list(table)) > 0:
+                for label in list(table):
+                    sql += " {0},".format(label)
+            else:
+                sql += " *  "
 
             sql = sql[:-1]
             sql += " FROM `{0}`".format(table.name)
