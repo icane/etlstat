@@ -69,7 +69,7 @@ class SimpleSQL:
             conn.execute_sql("ALTER TABLE %s ADD COLUMN `id` INT PRIMARY KEY AUTO_INCREMENT" % table.name)
             if len(table) > 0 and len(table) < 10:
                 conn.insert(table)
-            elif len(table) > 10:
+            elif len(table) > 9:
                 conn.bulk_insert(table)
         else:
             conn.insert(table)
