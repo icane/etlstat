@@ -154,8 +154,8 @@ def pc_axis_in(file_path, sep=",", encoding='windows-1252'):
         reader = csv.reader(f, delimiter=sep)
 
         for row in reader:
-            md, df = from_pc_axis(row[1], encoding)
-            pc_axis_dict[row[0]] = df
+            meta_data_dict = from_pc_axis(row[1], encoding)
+            pc_axis_dict[row[0]] = meta_data_dict['DATA']
 
     return pc_axis_dict
 
