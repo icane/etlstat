@@ -6,6 +6,10 @@ import pandas as pd
 
 class TestOracle(unittest.TestCase):
 
+    output_path = './'
+    os_path = '/usr/local/bin:/usr/bin:/bin:/opt/oracle/instantclient_12_2'
+    os_ld_library_path = '/opt/oracle/instantclient_12_2'
+    schema = 'test'
     user = 'test'
     password = 'test'
     host = 'localhost'
@@ -135,16 +139,39 @@ class TestOracle(unittest.TestCase):
         ora_conn.execute_sql(sql)
         
     def testBulkInsert(self):
-        source_path = '01001.csv'
+        source_file = '01001.csv'
         table_name = 'px_01001'
-        data_file = 'px_01001.csv'
+        data_file = 'px_01001.dat'
         control_file = 'px_01001.ctl'
-        df = pd.read_csv(source_path, header=0, sep=';', encoding='utf8')
+        log_file = 'px_01001.log'
+        bad_file = 'px_01001.bad'
+        data_columns = ['id', 'tipo_indicador', 'nivel_educativo', 'valor']
+        table_def = pd.DataFrame(columns=data_columns)
+        table_def['id'] = table_def['id'].astype(int)
+        table_def['tipo_indicador'] = table_def['tipo_indicador'].astype(str)
+        table_def['nivel_educativo'] = table_def['nivel_educativo'].astype(str)
+        table_def['valor'] = table_def['valor'].astype(float)
+        table_def.name = table_name
+        ora_conn = Oracle(*self.conn_params)
+        ora_conn.create(table_def, self.schema)
+
+        df = pd.read_csv(source_file, header=0, sep=';', encoding='utf8')
         df.name = table_name
-        ora_conn = Oracle.__new__(Oracle)
-        ora_conn.bulk_insert(df, data_file, control_file, mode="TRUNCATE")
+        ora_conn.bulk_insert(self.user,
+                             self.password,
+                             self.host,
+                             self.port,
+                             self.service_name,
+                             self.schema,
+                             df,
+                             self.output_path,
+                             self.os_path,
+                             self.os_ld_library_path,
+                             mode="TRUNCATE")
         self.assertTrue(os.path.isfile(data_file))
         self.assertTrue(os.path.isfile(control_file))
+        self.assertTrue(os.path.isfile(log_file))
+        self.assertFalse(os.path.isfile(bad_file))
 
 if __name__ == '__main__':
     unittest.main()

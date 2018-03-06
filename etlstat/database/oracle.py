@@ -18,6 +18,7 @@
 
 import csv
 from pandas import DataFrame, isnull
+import os
 import re
 from sqlalchemy import create_engine
 from sqlalchemy.exc import DatabaseError
@@ -310,30 +311,52 @@ class Oracle:
         return rows_matched
 
     @staticmethod
-    def bulk_insert(table, data_file, control_file, mode="APPEND"):
+    def bulk_insert(user,
+                    password,
+                    host,
+                    port,
+                    service_name,
+                    schema,
+                    table,
+                    output_path,
+                    os_path,
+                    os_ld_library_path,
+                    mode="APPEND"):
         """
         Generates control and data files for Oracle SQL Loader by extracting field names and data values from a Pandas
-        DataFrame.
-        Usage of SQL Loader in the database server:
+        DataFrame. Requires Oracle Instant Client and Tools installed in the workstation.
+        Destination table must exist in the database.
+        Usage of SQL Loader:
 
             sqlldr <user>/<password> control=<control_file> [log=<log_file>] [bad=bad_file]
 
-        :param table :obj:DataFrame: DataFrame whose name and column's label match with table's name and columns
-        in database. It must be filled with data rows.
-        :param data_file: path for output data file
-        :param control_file: path for output control file
-        :param mode: APPEND | REPLACE | TRUNCATE
-        :return:
+        Args:
+            user (str): database user
+            password (str): database password
+            host: database server host name or IP address
+            port (str): Oracle listener port
+            service_name (str): Oracle instance service name
+            schema (str): database schema
+            table (pandas DataFrame): data frame whose name and column's label match with
+            destination table's name and columns in database. It must be filled with data rows.
+            output_path (str): path for output data files
+            os_path (str): PATH environment variable
+            os_ld_library_path (str): LD_LIBRARY_PATH environment variable
+            mode (str): insertion mode: APPEND | REPLACE | TRUNCATE
+
+        Returns:
+            True if success or False
         """
+
         columns = ",".join(table.columns.values.tolist())
 
         # control file
-        ctl_file = open(control_file, mode='w', encoding='utf8')
+        ctl_file = open(output_path + table.name + '.ctl', mode='w', encoding='utf8')
         ctl_header = """LOAD DATA\n""" + \
                      """CHARACTERSET UTF8\n""" + \
-                     """INFILE '""" + data_file + """'\n""" + \
+                     """INFILE '""" + output_path + table.name + '.dat' + """'\n""" + \
                      mode + """\n""" + \
-                     """INTO TABLE """ + table.name + """\n""" + \
+                     """INTO TABLE """ + schema + """.""" + table.name + """\n""" + \
                      """FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '\"'\n""" + \
                      """TRAILING NULLCOLS\n""" + \
                      """(""" + columns + """)"""
@@ -341,7 +364,7 @@ class Oracle:
         ctl_file.close()
 
         # data file
-        table.to_csv(data_file,
+        table.to_csv(output_path + table.name + '.dat',
                      sep=';',
                      header=False,
                      index=False,
@@ -349,3 +372,12 @@ class Oracle:
                      quoting=csv.QUOTE_NONNUMERIC,
                      encoding='utf-8'
                      )
+
+        # execution of Oracle SQL Loader
+        os_command = "export PATH=" + os_path + "; export LD_LIBRARY_PATH=" + os_ld_library_path + "; "
+        os_command += "sqlldr " + user + "/" + password + "@" + host + ":" + port + "/" + service_name + " "
+        os_command += "control='" + output_path + table.name + ".ctl' "
+        os_command += "log='" + output_path + table.name + ".log' "
+        os_command += "bad='" + output_path + table.name + ".bad'"
+
+        return os.system(os_command)

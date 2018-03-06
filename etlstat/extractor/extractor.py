@@ -160,14 +160,24 @@ def pc_axis_in(file_path, sep=",", encoding='windows-1252'):
     return pc_axis_dict
 
 
-def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX][tT]", sep=';', encoding='utf-8'):
+def positional_in(
+        dir_path,
+        pattern_csv='*.[cC][sS][vV]',
+        pattern_txt="*.[tT][xX][tT]",
+        sep=';',
+        encoding='utf-8',
+        na_values=['']):
     """
     Function that reads files in a directory filtered by regEx, generates a correspondence
     between data files and format files and returning a dict. (MICRODATA)
 
     Args:
         dir_path (str): Path of DIR to read.
-        reg_ex (str): regEx to filter data|format names (Avoid adding format extension to regEx)
+        pattern_csv (str):
+        pattern_txt (str):
+        sep (str):
+        encoding (str):
+        na_values (list):
 
     Returns:
         dict: Name of data file as KEY and data frame as VALUE
@@ -220,7 +230,8 @@ def positional_in(dir_path, pattern_csv='*.[cC][sS][vV]', pattern_txt="*.[tT][xX
                           widths=assignation_map[keys[j]][field_length].tolist(),
                           names=assignation_map[keys[j]][field_name].tolist(),
                           dtype=correspondence_map[keys[j]],
-                          nwords=0)
+                          nwords=0,
+                          na_values=na_values)
 
         aux.name = keys[j]
         assignation_map[keys[j]] = aux
