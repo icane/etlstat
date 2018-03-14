@@ -6,11 +6,17 @@ from contextlib import ExitStack
 
 import numpy as np
 import pandas as pd
-import xlrd
 from Levenshtein import ratio
-
 from etlstat.extractor.pcaxis import *
 
+
+
+conversion_map = {
+    'STRING': str,
+    'NUMBER': np.float32,
+    'DECIMAL': np.float32,
+    'ENTERO': np.int32
+}
 
 def similar(a, b):
     """
@@ -23,94 +29,126 @@ def similar(a, b):
     """
     return ratio(a, b)
 
-
-def excel_processing(dir_path, excel):
+def data_format(dir_path,data,suffix='formato'):
     """
-    Function  (internal method) that reads and process an excel returning in a dict the skip_rows and skip_footer values
-     for every sheet of this excel,
-     Note: If a data column has a txt note in the same row this method will fail.
+    Function that matchs formats files(csv's) with data files in a directory.
 
     Args:
-        dir_path (str): directory containing Excel file.
-        excel (str): Excel file name.
+        dir_path (str): directory containing files.
+        data (str): type of data format(excel,csv,txt)
 
     Returns:
-        dict: information (ini and end rows) about sheets of an excel.
+        dict: Excel name and sheetnames as KEYS and data frame as VALUE
     """
-    xls_map = {}
-    workbook = xlrd.open_workbook(dir_path + excel)
-    sheet_names = workbook.sheet_names()
-    dict_exists = 0
-    sheet_pointer = 0
-    for sheet in workbook.sheets():
-        list_a = [0, 0]
-        sum_a = 0
-        flag = 0
-        footer = 0
-        for row in range(sheet.nrows):
-            if list_a[1] < sum_a:
-                list_a[0] = row - 1
-                list_a[1] = sum_a
-                flag = 1
-            elif sum_a == 0 and flag == 1:
-                footer = sheet.nrows - row + 1
-                flag = 0
-            sum_a = 0
-            for column in range(sheet.ncols):
-                if sheet.cell(row, column).value != '':
-                    sum_a += 1
-        if dict_exists == 0:
-            for name in sheet_names:
-                xls_map[name] = dict()
-                xls_map[name]['skip_rows'] = 0
-                xls_map[name]['footer_rows'] = 0
-            dict_exists = 1
-        xls_map[sheet_names[sheet_pointer]]['skip_rows'] = list_a[0]
-        xls_map[sheet_names[sheet_pointer]]['footer_rows'] = footer
-        sheet_pointer += 1
-    return xls_map
+    excel_flag = 0
+    format = '*.[cC][sS][vV]'
+    if(data == 'excel'):
+        max_format = 0
+        excel_flag = 1
+        data = "*.[xX][lL][sS]"
+    if(data == 'txt'):
+        data = "*.[tT][xX][tT]"
+    if(data == 'csv'):
+        data = '*[!'+suffix+'].[cC][sS][vV]'
+        format = '*'+suffix+'.[cC][sS][vV]'
+    assignation_map = {}
+    data_s = []
+    format_s = []
+    os.chdir(dir_path)
+    for file in os.listdir('.'):
+        if fnmatch.fnmatch(file, format):
+            format_s.append(file)
+        if fnmatch.fnmatch(file, data):
+            data_s.append(file)
+    csv_list = set(format_s)
+    csv_list = list(csv_list)
+    if len(csv_list) == 0:
+        raise FileNotFoundError ("Not format files found in the directory")
+    keys = set(data_s)
+    keys = list(keys)
+    max_similarity = 0
+    for item in keys:
+        if(excel_flag):
+            assignation_map[item] = dict()
+            assignation_map[item]['data'] = None
+            assignation_map[item]['format'] = None
+            data_str = item[:-4] + '_datos' + item[-4:]
+            format_str = item[:-4] + '_hoja' + item[-4:]
+            for element in csv_list:
+                similarity_data = similar(data_str, element)
+                similarity_format = similar(format_str, element)
+                if similarity_data > max_similarity:
+                    max_similarity = similarity_data
+                    aux_data = element
+                if similarity_format > max_format:
+                    max_format = similarity_format
+                    aux_format = element
+            max_similarity = 0
+            max_format = 0
+            assignation_map[item]['data'] = aux_data
+            assignation_map[item]['format'] = aux_format
+            logger.info("Matched data file: " + item + " with: " + assignation_map[item]['data'] + ' and ' + assignation_map[item]['format'])
+
+        else:
+            for element in csv_list:
+                similarity = similar(item, element)
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    aux = element
+            max_similarity = 0
+            assignation_map[item] = aux  # CREATE MAP BETWEEN FILE NAME AND FORMAT NAME
+            logger.info("Matched data file: " + item + " with: " + assignation_map[item])
+    return assignation_map
 
 
-def excel_in(dir_path, sheet_name, pattern='*.xls', encoding='utf-8'):
-    # TODO: debug get 0 rows when sheet has no footer
+def excel_in(dir_path, sep=';', encoding='utf-8'):
     """
-    Function that reads files in a directory filtered by regEx and generates a
-    map with xls names. This method also calls excel_processing in order to generate
-    the data frame in a proper way.
+    Function that reads excel files in a directory and generates a
+    dict with xls names and sheetnames as keys of the dataframe.
+    This method also calls data_format() in order to generate
+    the data frame.
 
     Args:
         dir_path (str): directory containing Excel files.
-        sheet_name (str):
-        pattern (str): regEx to filter data names (Avoid adding format extension to regEx)
         encoding (str): file encoding
 
     Returns:
-        dict: Excel name as KEY and data frame as VALUE
+        dict: Excel name and sheetnames as KEYS and data frame as VALUE
     """
-    excel_files = []
-    os.chdir(dir_path)
-    for file in os.listdir('.'):
-        if fnmatch.fnmatch(file, pattern):
-            excel_files.append(file)
-    # In order to have unique keys
-    keys = set(excel_files)
-    keys = list(keys)
-    df_dict = dict.fromkeys(keys, '')
-    for j in range(len(keys)):
-        aux = excel_processing(dir_path, keys[j])
-        print(aux)
-        ini = aux[sheet_name]['skip_rows']
-        fin = aux[sheet_name]['footer_rows']
-        logger.info('Reading file: ' + keys[j] + ' with skip_rows = ' + str(ini))
-        df_dict[keys[j]] = pd.read_excel(open(dir_path + keys[j], 'rb'),
-                                         sheetname=sheet_name,
-                                         skiprows=ini,
-                                         encoding=encoding,
-                                         skip_footer=fin)
-    return df_dict
+    data = dict()
+    assignation_map = data_format(dir_path,'excel')
+    for excel in assignation_map:
+        data[excel] = dict()
+        aux = pd.read_csv(dir_path + assignation_map[excel]['format'], sep=sep,
+                encoding=encoding)
+        for line in range(len(aux)):
+            data[excel][aux['SHEET_NAME'][line]] = dict()
+            data[excel][aux['SHEET_NAME'][line]]['START_ROW'] = [aux['START_ROW'][line]]
+            data[excel][aux['SHEET_NAME'][line]]['START_COLUMN'] = [aux['START_COLUMN'][line]]
+            data[excel][aux['SHEET_NAME'][line]]['FIELD_NAME'] = []
+            data[excel][aux['SHEET_NAME'][line]]['DATA_TYPE'] = dict()
+        aux = pd.read_csv(dir_path + assignation_map[excel]['data'], sep=sep,
+                encoding=encoding)
+        for line in range(len(aux)):
+            #print(data[excel][aux['SHEET_NAME'][line]]['DATA_TYPE'])
+            data[excel][aux['SHEET_NAME'][line]]['FIELD_NAME'].append(aux['FIELD_NAME'][line])
+            data[excel][aux['SHEET_NAME'][line]]['DATA_TYPE'][str(aux['FIELD_NAME'][line])] = conversion_map[aux['DATA_TYPE'][line]]
+
+        for sheet in data[excel]:
+            #print(data[excel][sheet]['DATA_TYPE'])
+            data[excel][sheet] = pd.read_excel(open(dir_path + excel, 'rb'),
+                                         sheetname=str(sheet),
+                                         skiprows=data[excel][sheet]['START_ROW'][0]-1,
+                                         names=data[excel][sheet]['FIELD_NAME'],
+                                         dtype=data[excel][sheet]['DATA_TYPE'],
+                                         encoding=encoding)
+            data[excel][sheet].name = sheet
 
 
-def csv_in(dir_path, pattern='*.csv', sep=',', encoding='utf-8'):
+    return data
+
+
+def csv_in(dir_path, sep=';', encoding='utf-8', suffix='formato',na_values=None):
     """
     Function that reads files in a directory filtered by regEx and generates a
     dict with csv names.
@@ -124,18 +162,19 @@ def csv_in(dir_path, pattern='*.csv', sep=',', encoding='utf-8'):
     Returns:
         dict: Csv name as KEY and data frame as VALUE
     """
-    csv_files = []
-    os.chdir(dir_path)
-    for file in os.listdir('.'):
-        if fnmatch.fnmatch(file, pattern):
-            csv_files.append(file)
-    keys = set(csv_files)
-    keys = list(keys)
-    df_dict = dict.fromkeys(keys,'')
-    for i in range(len(keys)):
-        df_dict[keys[i]] = pd.read_csv(dir_path + keys[i], sep=sep, encoding=encoding)
-    return df_dict
-
+    data = data_format(dir_path, 'csv', suffix)
+    for csv in data:
+        conversion = dict()
+        data[csv] = pd.read_csv(dir_path + data[csv], sep=sep,
+                                encoding=encoding)
+        for line in range(len(data[csv])):
+            conversion[data[csv]['FIELD_NAME'][line]] = conversion_map[data[csv]['DATA_TYPE'][line]]
+        data[csv] = pd.read_csv(dir_path + csv,
+                                dtype=conversion,
+                                na_values=na_values,
+                                sep=sep)
+        data[csv].name = csv
+    return data
 
 def pc_axis_in(file_path, sep=",", encoding='windows-1252'):
     """
@@ -154,89 +193,36 @@ def pc_axis_in(file_path, sep=",", encoding='windows-1252'):
         reader = csv.reader(f, delimiter=sep)
 
         for row in reader:
-            meta_data_dict = from_pc_axis(row[1], encoding)
-            pc_axis_dict[row[0]] = meta_data_dict['DATA']
+            md, df = from_pc_axis(row[1], encoding)
+            pc_axis_dict[row[0]] = df
 
     return pc_axis_dict
 
-
-def positional_in(
-        dir_path,
-        pattern_csv='*.[cC][sS][vV]',
-        pattern_txt="*.[tT][xX][tT]",
-        sep=';',
-        encoding='utf-8',
-        na_values=['']):
+def positional_in(dir_path, sep=';', encoding='utf-8'):
     """
-    Function that reads files in a directory filtered by regEx, generates a correspondence
+    Function that reads files in a directory, generates a correspondence
     between data files and format files and returning a dict. (MICRODATA)
 
     Args:
-        dir_path (str): Path of DIR to read.
-        pattern_csv (str):
-        pattern_txt (str):
-        sep (str):
-        encoding (str):
-        na_values (list):
+        dir_path (str): Path of DIR readed.
 
     Returns:
-        dict: Name of data file as KEY and data frame as VALUE
+        dict: Name of data file as KEY and dataframe as VALUE
     """
-    conversion_map = {
-        'STRING': str,
-        'NUMBER': np.float32,
-        'DOUBLE': np.float64,
-        'INTEGER': np.int32
-    }
-    field_name = 'field_name'
-    data_type = 'data_type'
-    field_length = 'field_length'
-    assignation_map = {}
-    aux = None
-    csv_s = []
-    txt_s = []
-    os.chdir(dir_path)
-    for file in os.listdir('.'):
-        if fnmatch.fnmatch(file, pattern_csv):
-            csv_s.append(file)
-        if fnmatch.fnmatch(file, pattern_txt):
-            txt_s.append(file)
-    csv_list = set(csv_s)
-    csv_list = list(csv_list)
-    keys = set(txt_s)
-    keys = list(keys)
-    correspondence_map = dict.fromkeys(keys, dict())
-    max_similarity = 0
-    for item in keys:
-        for element in csv_list:
-            similarity = similar(item, element)
-            if similarity > max_similarity:
-                max_similarity = similarity
-                aux = element
-        max_similarity = 0
-        assignation_map[item] = aux  # CREATE MAP BETWEEN FILE NAME AND FORMAT NAME
-        logger.info("Matched data file: " + item + " with: " + assignation_map[item])
-    for i in range(len(assignation_map)):
-        assignation_map[keys[i]] = pd.read_csv(dir_path + assignation_map[keys[i]],
-                                               sep=sep,
-                                               encoding=encoding)
-    for l in range(len(assignation_map)):
-        for m in range(len(assignation_map[keys[l]])):
-            correspondence_map[keys[l]][assignation_map[keys[l]][field_name][m]] = \
-                conversion_map[assignation_map[keys[l]][data_type][m]]
-
-    for j in range(len(assignation_map)):
-        aux = pd.read_fwf(dir_path + keys[j],
-                          widths=assignation_map[keys[j]][field_length].tolist(),
-                          names=assignation_map[keys[j]][field_name].tolist(),
-                          dtype=correspondence_map[keys[j]],
-                          nwords=0,
-                          na_values=na_values)
-
-        aux.name = keys[j]
-        assignation_map[keys[j]] = aux
-
-    return assignation_map
+    data = data_format(dir_path,'txt')
+    for txt in data:
+        conversion = dict()
+        data[txt] = pd.read_csv(dir_path + data[txt], sep=sep,
+                                encoding=encoding)
+        for line in range(len(data[txt])):
+            conversion[data[txt]['FIELD_NAME'][line]] = conversion_map[data[txt]['DATA_TYPE'][line]]
+        data[txt] = pd.read_fwf(dir_path + txt,
+                                widths=data[txt]['LENGTH'].tolist(),
+                                names=data[txt]['FIELD_NAME'].tolist(),
+                                dtype=conversion,
+                                nwords=0)
+        data[txt].name = txt
+    return data
 
 
 def xml_in(dir_path, pattern=('.xml','.ktr','.kjb','.XML','.KTR','.KJB')):
