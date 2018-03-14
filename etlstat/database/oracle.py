@@ -44,14 +44,20 @@ class Oracle:
             host,
             port,
             service_name)
-        self.engine = create_engine(conn_string, coerce_to_unicode=True, coerce_to_decimal=False)
+        self.engine = create_engine(
+            conn_string,
+            encoding='utf8',
+            coerce_to_unicode=True,
+            coerce_to_decimal=False)
 
     def check_for_table(self, table, schema=None):
         """
         Check if table exists in database.
 
-        :param table: (:obj:`str`): Database table's name.
-        :param schema: (:obj:`str`): Database schema's name
+        Args:
+            table (str): Database table's name.
+            schema (str): Database schema's name.
+
         Returns:
             bool: True if table exists, False in otherwise.
         """
@@ -59,9 +65,14 @@ class Oracle:
 
     def execute_sql(self, sql):
         """
-        Executes a DDL or DML SQL statement
-        :param sql: SQL statement
-        :return: status (True | False); result (data frame or error)
+        Executes a DDL or DML SQL statement.
+
+        Args:
+            sql (str): SQL statement
+
+        Returns:
+            status (bool)
+            result (data frame or error)
         """
         connection = self.engine.connect()
         try:
@@ -81,9 +92,10 @@ class Oracle:
         """
         Create a new table in database from DataFrame format.
 
-        :param table: DataFrame which name and column's label match with database
-        :param schema: database schema. If None, then the table is created in the user's default
-        table's name and columns that you wish to create.
+        Args:
+            table (DataFrame): its name and column's label match with database table.
+            schema (str): database schema. If None, then the table is created in the
+            user's default schema.
         """
         connection = self.engine.connect()
 
@@ -116,16 +128,17 @@ class Oracle:
         """
         Select data from table.
 
-        :param table: (:obj:`str` or :obj:`DataFrame`): Table's name in database if
-                    you want read all fields in database table or a DataFrame
-                    which name and column's label match with table's name and
-                    columns table that you want read from database.
-        :param schema: database schema
-        :param conditions: (:obj:`str` or :obj:`list` of :obj:`str`, optional):
-                    A select condition or list of select conditions with sql
-                    syntax.
+        Args:
+            table: (obj str or obj DataFrame): Table's name in database if
+            you want read all fields in database table, or a DataFrame whose
+            name and column's label match with table's name and columns table
+            that you want to read from database.
+            schema (str): database schema
+            conditions (str or list): optional. A select condition or list of
+            select conditions with sql syntax.
+
         Returns:
-            :obj:`DataFrame`: A DataFrame with data from database.
+            df (obj DataFrame): a DataFrame with data from database.
 
         """
         connection = self.engine.connect()
@@ -170,14 +183,15 @@ class Oracle:
         """
         Insert DataFrame's rows in a database table.
 
-        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and column's name in database. It
-                    must filled with data rows.
-        :param schema: database schema
-        :param rows: (:obj:`list` of int, optional): A list of row's indexes that you
-                    want insert to database.
+        Args:
+            table (obj DataFrame): DataFrame whose name and column's label
+            match with table's name and column's name in database. It must be
+            filled with data rows.
+            schema (str): database schema
+            rows (obj list): A list of row's indexes that you want to insert into database.
+
         Returns:
-            int: number of rows matched.
+            rows_matched (int): number of rows matched.
         """
         rows_matched = 0
 
@@ -212,10 +226,10 @@ class Oracle:
                                 sql_insert += "{0}, ".format(value)
                     sql_insert = sql_insert[:-2] + ')'
 
-                    rts = connection.execute(sql_insert)
-                    rows_matched += rts.rowcount
+                rts = connection.execute(sql_insert)
+                rows_matched += rts.rowcount
+                rts.close()
 
-            rts.close()
             connection.close()
 
         else:
@@ -223,19 +237,77 @@ class Oracle:
 
         return rows_matched
 
+    def insert_many(self, table, schema=None):
+        """
+        Insert all DataFrame's rows in a database table.
+
+        Args:
+            table (obj DataFrame): DataFrame whose name and column's label
+            match with table's name and column's name in database. It must be
+            filled with data rows.
+            schema (str): database schema
+
+        Returns:
+            rows_inserted (int): number of inserted rows.
+        """
+        if isinstance(table, DataFrame):
+            if not self.check_for_table(table.name, schema=schema):
+                self.create(table, schema=schema)
+
+            sql_fields = "INSERT INTO "
+            sql_values = " VALUES ("
+
+            if schema:
+                sql_fields += "{0}.".format(schema)
+            sql_fields += "{0}".format(table.name)
+            sql_fields += ' ('
+            i = 0
+            for label in list(table):
+                i += 1
+                sql_fields += "{0}, ".format(label)
+                sql_values += " :" + str(i) + ","
+            sql_fields = sql_fields[:-2]
+            sql_values = sql_values[:-1]
+            sql_fields += ")"
+            sql_values += ")"
+
+            rows = []
+            for row in table.iterrows():
+                index, data = row
+                rows.append(data.tolist())
+
+            try:
+                cursor = self.engine.raw_connection().cursor()
+                cursor.prepare(sql_fields + sql_values)
+                cursor.executemany(None, rows)
+                self.engine.raw_connection().commit()
+                cursor.close()
+                rows_inserted = rows.__len__()
+            except DatabaseError as e:
+                rows_inserted = 0
+                self.engine.raw_connection().rollback()
+                print(e)
+            finally:
+                self.engine.raw_connection().close()
+        else:
+            raise TypeError("table must be a DataFrame.")
+
+        return rows_inserted
+
     def update(self, table, schema=None, index=None):
         """
         Update rows in a database table.
 
-        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and columns name in database. It must
-                    be filled with data rows.
-        :param schema: database schema
-        :param index: (:obj:`list` of name columns): list of DataFrame's columns names
-                    use as index in the update search. Other columns will be
-                    updated in database.
+        Args:
+            table: (obj DataFrame): DataFrame whose name and column's label
+            match with table's name and columns name in database. It must
+            be filled with data rows.
+            schema (str): database schema.
+            index: (obj list): list of DataFrame's columns names used as index
+            in the update search. Other columns will be updated in database.
+
         Returns:
-            int: number of rows matched.
+            rows_matched (int): number of rows matched.
         """
         rows_matched = 0
 
@@ -281,12 +353,13 @@ class Oracle:
         Delete data from table.
 
         Args:
-        :param table: (:obj:`str`): Database table name that you wish delete rows.
-        :param schema: database schema
-        :param conditions: (:obj:`str`, optional): A string of select conditions
-            with sql syntax.
+            table: (str): Database table name that you wish delete rows.
+            schema (str): database schema
+            conditions (str): optional. A string of select conditions
+            to be added to WHERE clause.
+
         Returns:
-            int: number of rows matched.
+            rows_matched (int): number of rows matched.
         """
         connection = self.engine.connect()
 
