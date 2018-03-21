@@ -1,6 +1,6 @@
 import unittest
 from etlstat.database.oracle import Oracle
-import os.path
+import os
 import pandas as pd
 
 
@@ -105,11 +105,19 @@ class TestOracle(unittest.TestCase):
 
     def testInsert(self):
         data_columns = ['column_int', 'column_string', 'column_float']
-        data_values = [[1, 'string1', 456.956], [2, 'string2', 38.905]]
-        df = pd.DataFrame(data_values, columns=data_columns)
+        data_values1 = [[1, 'stríng1', 456.956], [2, 'string2', 38.905]]
+        df = pd.DataFrame(data_values1, columns=data_columns)
         df.name = 'test_insert'
         ora_conn = Oracle(*self.conn_params)
         self.assertEqual(ora_conn.insert(df), 2)
+        sql = "DROP TABLE test_insert"
+        ora_conn.execute_sql(sql)
+
+    def testInsertMany(self):
+        df = pd.read_csv('test_insert.csv', header=0, sep=',', encoding='utf8')
+        df.name = 'test_insert'
+        ora_conn = Oracle(*self.conn_params)
+        self.assertEqual(ora_conn.insert_many(df, 'test'), 2)
         sql = "DROP TABLE test_insert"
         ora_conn.execute_sql(sql)
 
