@@ -146,7 +146,7 @@ def excel_in(dir_path, sep=';', encoding='utf-8', suffix='formato', na_values=No
         for sheet in data[excel]:
             data[excel][sheet] = pd.read_excel(open(dir_path + excel, 'rb'),
                                                sheet_name=str(sheet),
-                                               skiprows=data[excel][sheet]['START_ROW'] - 1,
+                                               skiprows=data[excel][sheet]['START_ROW']-2,
                                                skip_footer=data[excel][sheet]['SKIP_FOOTER'],
                                                names=data[excel][sheet]['FIELD_NAME'],
                                                dtype=data[excel][sheet]['DATA_TYPE'],
