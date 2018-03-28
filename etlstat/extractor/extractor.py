@@ -13,7 +13,7 @@ conversion_map = {
     'STRING': str,
     'NUMBER': np.float32,
     'DECIMAL': np.float32,
-    'INTEGER': np.int32
+    'INTEGER': np.float32
 }
 
 
