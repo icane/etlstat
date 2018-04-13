@@ -28,47 +28,27 @@ class TestExtractor(unittest.TestCase):
         string3 = 'EEE_IDENT.csv'
         self.assertGreater(ratio(string1, string3), ratio(string1, string2))
 
-
-
     def testCsvIn(self):
         dir_path = self.base_path + 'csv/'
         df = csv_in(dir_path, sep=";")
         log.debug(df.keys())
         agenv_head = ['NORDEN', 'QI11', 'QI121', 'QI122', 'QI131', 'QI132', 'QI1331',
-       'QI1332', 'QI1333', 'QI1334', 'QI134', 'QI135', 'QI135E', 'QI14',
-       'QI15', 'QI15E', 'QI21', 'QI221', 'QI222', 'QI231', 'QI232', 'QI24',
-       'QI25', 'QJ11', 'QJ12', 'QJ131', 'QJ132', 'QJ133', 'QJ134', 'QJ14',
-       'QJ15', 'QJ16', 'QJ17', 'QJ18', 'QJ18E', 'QJ2', 'QJ3', 'QJ4', 'QJ5',
-       'QJ6', 'QJ6E']
+                      'QI1332', 'QI1333', 'QI1334', 'QI134', 'QI135', 'QI135E', 'QI14',
+                      'QI15', 'QI15E', 'QI21', 'QI221', 'QI222', 'QI231', 'QI232', 'QI24',
+                      'QI25', 'QJ11', 'QJ12', 'QJ131', 'QJ132', 'QJ133', 'QJ134', 'QJ14',
+                      'QJ15', 'QJ16', 'QJ17', 'QJ18', 'QJ18E', 'QJ2', 'QJ3', 'QJ4', 'QJ5',
+                      'QJ6', 'QJ6E']
 
         aereo_head = ['NORDEN', 'AI1', 'AI11', 'AI12', 'AI2', 'AI21', 'AI22', 'AI3', 'AI4',
-       'AI5', 'AJ1', 'AJ2', 'AJ3', 'AJ4', 'AJ5', 'AJ6', 'AJ7', 'AJ7E', 'AK111',
-       'AK121', 'AK131', 'AK112', 'AK122', 'AK132', 'AK211', 'AK221', 'AK231',
-       'AK212', 'AK222', 'AK232', 'AK213', 'AK223', 'AK233', 'AK214', 'AK224',
-       'AK234', 'AM1', 'AM11', 'AM2']
+                      'AI5', 'AJ1', 'AJ2', 'AJ3', 'AJ4', 'AJ5', 'AJ6', 'AJ7', 'AJ7E', 'AK111',
+                      'AK121', 'AK131', 'AK112', 'AK122', 'AK132', 'AK211', 'AK221', 'AK231',
+                      'AK212', 'AK222', 'AK232', 'AK213', 'AK223', 'AK233', 'AK214', 'AK224',
+                      'AK234', 'AM1', 'AM11', 'AM2']
 
         aloj_head = ['NORDEN', 'HI11', 'HI12', 'HI13', 'HI14', 'HI15', 'HI16', 'HI17',
-       'HI18', 'HI19', 'HI19E', 'HI21', 'HI221', 'HI222', 'HI231', 'HI232',
-       'HI24', 'HI25', 'HI25E', 'HJ1', 'HJ2', 'HJ3', 'HJ4', 'HJ5', 'HJ6',
-       'HJ7', 'HJ8', 'HJ9', 'HJ10', 'HJ10E']
-
-        aereo_type = ['int32', 'int32', 'float32', 'float32', 'float32', 'float32', 'int32',
-        'int32', 'int32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'float32', 'float32', 'O', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32']
-
-        agenv_type = ['int32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'O', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'O']
-
-        aloj_type = ['int32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'float32', 'float32', 'O', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-        'O', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'O']
-
-
+                     'HI18', 'HI19', 'HI19E', 'HI21', 'HI221', 'HI222', 'HI231', 'HI232',
+                     'HI24', 'HI25', 'HI25E', 'HJ1', 'HJ2', 'HJ3', 'HJ4', 'HJ5', 'HJ6',
+                     'HJ7', 'HJ8', 'HJ9', 'HJ10', 'HJ10E']
 
         assert (df['AEREO_SER_06_15.csv'].shape[0] == 2)
         assert (df['AEREO_SER_06_15.csv'].shape[1] == 39)
@@ -79,9 +59,6 @@ class TestExtractor(unittest.TestCase):
         assert (list(df['AEREO_SER_06_15.csv'].columns) == aereo_head)
         assert (list(df['AGENV_SER_06_15.csv'].columns) == agenv_head)
         assert (list(df['ALOJ_SER_06_15.csv'].columns) == aloj_head)
-        assert (list(df['AEREO_SER_06_15.csv'].dtypes) == aereo_type)
-        assert (list(df['AGENV_SER_06_15.csv'].dtypes) == agenv_type)
-        assert (list(df['ALOJ_SER_06_15.csv'].dtypes) == aloj_type)
 
     def testPositionalIn(self):
         dir_path = self.base_path + 'positional/'
@@ -98,12 +75,12 @@ class TestExtractor(unittest.TestCase):
                      'PM21', 'PM22', 'PM3', 'PM4']
 
         post_type = ['O', 'float32', 'float32', 'O', 'O', 'float32', 'float32', 'float32', 'float32', 'float32',
-                     'float32','float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
+                     'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
                      'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'O',
                      'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
                      'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
                      'float32', 'O', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-                     'float32','float32', 'float32', 'float32','float32', 'float32', 'float32', 'float32', 'float32',
+                     'float32', 'float32', 'float32', 'float32','float32', 'float32', 'float32', 'float32', 'float32',
                      'float32', 'float32', 'float32', 'float32', 'O', 'float32', 'float32', 'float32', 'float32',
                      'float32']
 
@@ -115,8 +92,8 @@ class TestExtractor(unittest.TestCase):
                     'KI211', 'KI212', 'KI212E']
 
         tec_type = ['O', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
-                    'float32', 'float32','float32', 'float32', 'float32', 'float32', 'float32', 'O', 'float32',
-                    'float32', 'float32', 'float32', 'O', 'float32', 'float32','float32', 'float32', 'float32', 'O',
+                    'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'O', 'float32',
+                    'float32', 'float32', 'float32', 'O', 'float32', 'float32', 'float32', 'float32', 'float32', 'O',
                     'float32', 'float32', 'O', 'float32', 'float32', 'float32', 'float32', 'float32', 'float32',
                     'float32', 'float32', 'float32', 'float32', 'float32', 'float32', 'O']
 
@@ -135,15 +112,12 @@ class TestExtractor(unittest.TestCase):
         dir_path = self.base_path + 'excel/'
         df = excel_in(dir_path)
 
-        assert (len(df['Datos_web.xls']) == 6)
-        assert (len(df['3 Carga_web.xls']) == 6)
-        assert (type(df['3 Carga_web.xls'][2]) == pandas.core.frame.DataFrame)
-        assert (type(df['Datos_web.xls'][2]) == pandas.core.frame.DataFrame)
-        assert (type(df['Datos_web.xls'][3]) == pandas.core.frame.DataFrame)
-        assert (type(df['Datos_web.xls'][4]) == pandas.core.frame.DataFrame)
-        assert (type(df['Datos_web.xls'][5]) == pandas.core.frame.DataFrame)
-        assert (type(df['Datos_web.xls'][6]) == pandas.core.frame.DataFrame)
-
+        assert (len(df['prueba_excel.xls']) == 4)
+        assert (len(df['excel_prueba.xls']) == 4)
+        assert (type(df['prueba_excel.xls']['Hoja1']) == pandas.core.frame.DataFrame)
+        assert (type(df['prueba_excel.xls']['Hoja3']) == pandas.core.frame.DataFrame)
+        assert (type(df['excel_prueba.xls']['Hoja1']) == pandas.core.frame.DataFrame)
+        assert (type(df['excel_prueba.xls']['Hoja2']) == pandas.core.frame.DataFrame)
 
     def testXmlIn(self):
         xml_dict = xml_in(self.base_path + 'xml/')

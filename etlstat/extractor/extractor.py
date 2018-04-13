@@ -3,52 +3,39 @@ import fnmatch
 import os
 import xml.etree.ElementTree as ET
 from contextlib import ExitStack
+import xlrd
 
 import numpy as np
 import pandas as pd
 from Levenshtein import ratio
 from etlstat.extractor.pcaxis import *
 
-conversion_map = {
-    'STRING': str,
-    'NUMBER': np.float32,
-    'DECIMAL': np.float32,
-    'INTEGER': np.float32
-}
 
-
-def data_format(dir_path, data, suffix='formato'):
+def data_format(dir_path, data_extension, format_extension):
     """
-    Function that matches format files(csv's) with data files in a directory.
+    Function that matches format files(csv) with data files (txt) in a directory
+    for positional files. (Internal Method)
 
     Args:
         dir_path (str): directory containing files.
-        data (str): type of data format(excel,csv,txt)
-        suffix (str): standard for format name
+        data_extension (str): standard for data filenames extensions.
+        format_extension (str): standard for format filenames extensions.
 
     Returns:
-        dict:   Excel name and sheet_names as KEYS and data frame as VALUE if we read excels.
-                Data files names as KEYS and data frame as VALUE in other cases.
+        dict: Data filenames (TXT) as KEYS and format filenames (CSV) as VALUES.
     """
-    format_map = {
-        'excel': '*.[xX][lL][sS]',
-        'txt': '*.[tT][xX][tT]',
-        'csv': '*[!' + suffix + '].[cC][sS][vV]'
-    }
-    # regEx for the name of format files
-    format = '*' + suffix + '*.[cC][sS][vV]'
     assignation_map = {}
-    # Contains data file names
+    # Contains data filenames
     data_list = []
-    # Contains format file names
+    # Contains format filenames
     format_list = []
     os.chdir(dir_path)
     for file in os.listdir('.'):
         # Finds all format files in a directory
-        if fnmatch.fnmatch(file, format):
+        if fnmatch.fnmatch(file, format_extension):
             format_list.append(file)
         # Finds all data files in a directory
-        if fnmatch.fnmatch(file, format_map[data]):
+        if fnmatch.fnmatch(file, data_extension):
             data_list.append(file)
     format_list = set(format_list)
     format_list = list(format_list)
@@ -57,137 +44,74 @@ def data_format(dir_path, data, suffix='formato'):
     data_list = set(data_list)
     data_list = list(data_list)
     for item in data_list:
-        if (data == 'excel'):
-            max_format = None
-            max_data = None
-            max_format_similarity = 0
-            max_data_similarity = 0
-            # I create a key for each excel
-            assignation_map[item] = dict()
-            assignation_map[item]['data'] = None
-            assignation_map[item]['format'] = None
-            # I add '_datos' and '_hoja' to data string in order to ensure a correct assignment
-            data_str = item[:-4] + '_datos' + item[-4:]
-            sheet_str = item[:-4] + '_hoja' + item[-4:]
-            for element in format_list:
-                # I check the similarity between format files and data format files
-                similarity_data = ratio(data_str, element)
-                # I check the similarity between format files and sheet format files
-                similarity_sheet = ratio(sheet_str, element)
-                if similarity_data > max_data_similarity:
-                    max_data_similarity = similarity_data
-                    # I take the maximum format data element
-                    max_data = element
-                if similarity_sheet > max_format_similarity:
-                    max_format_similarity = similarity_sheet
-                    # I take the maximum format sheet element
-                    max_format = element
-            assignation_map[item]['data'] = max_data
-            assignation_map[item]['format'] = max_format
-            logger.info("Matched data file: " + item + " with: " + assignation_map[item]['data'] + ' and ' +
-                        assignation_map[item]['format'])
-
-        else:
-            max_similarity = 0
-            max_element = None
-            for element in format_list:
-                similarity = ratio(item, element)
-                if similarity > max_similarity:
-                    max_similarity = similarity
-                    max_element = element
-            assignation_map[item] = max_element
-            logger.info("Matched data file: " + item + " with: " + assignation_map[item])
+        max_similarity = 0
+        max_element = None
+        for element in format_list:
+            similarity = ratio(item, element)
+            if similarity > max_similarity:
+                max_similarity = similarity
+                max_element = element
+        assignation_map[item] = max_element
+        logger.info("Matched data file: " + item + " with: " + assignation_map[item])
     return assignation_map
 
 
-def excel_in(dir_path, sep=';', encoding='utf-8', suffix='formato', na_values=None):
+def excel_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[xX][lL][sS]', na_values=None):
     """
     Function that reads excel files in a directory and generates a
     dict with xls names and sheetnames as keys of the dataframe.
-    This method also calls data_format() in order to generate
-    the data frame.
+
 
     Args:
         dir_path (str): directory containing Excel files.
         sep (str): field separator.
         encoding (str): file encoding.
-        suffix (str): standard for format name.
+        data_extension (str): standard for data filenames extensions.
         na_values (scalar, str, list-like, or dict) : Additional strings to recognize as NA/NaN.
 
     Returns:
-        dict: Excel name and sheet_names as KEYS and data frame as VALUE
+        dict: Excel name and sheet_names as KEYS and dataframe as VALUE.
     """
-    data = dict()
-    assignation_map = data_format(dir_path, 'excel', suffix)
-    for excel in assignation_map:
-        data[excel] = dict()
-        # I read sheet format files (csv)
-        file = pd.read_csv(dir_path + assignation_map[excel]['format'], sep=sep,
-                           encoding=encoding)
-        for line in range(len(file)):
-            # I create a key for each sheet_name (data[excel][sheet_name])
-            sheetname = file['SHEET_NAME'][line]
-            data[excel][sheetname] = dict()
-            data[excel][sheetname]['START_ROW'] = file['START_ROW'][line]
-            data[excel][sheetname]['START_COLUMN'] = file['START_COLUMN'][line]
-            data[excel][sheetname]['SKIP_FOOTER'] = file['SKIP_FOOTER'][line]
-            data[excel][sheetname]['FIELD_NAME'] = []
-            data[excel][sheetname]['DATA_TYPE'] = dict()
-        # I read data format files (csv)
-        file = pd.read_csv(dir_path + assignation_map[excel]['data'], sep=sep,
-                           encoding=encoding)
-        # I declare FIELD NAMES and DATA_TYPE(must be a DICT)
-        for line in range(len(file)):
-            sheetname = file['SHEET_NAME'][line]
-            data[excel][sheetname]['FIELD_NAME'].append(file['FIELD_NAME'][line])
-            data[excel][sheetname]['DATA_TYPE'][str(file['FIELD_NAME'][line])] = conversion_map[
-                file['DATA_TYPE'][line]]
-
-        for sheet in data[excel]:
-            data[excel][sheet] = pd.read_excel(open(dir_path + excel, 'rb'),
-                                               sheet_name=str(sheet),
-                                               skiprows=data[excel][sheet]['START_ROW']-2,
-                                               skip_footer=data[excel][sheet]['SKIP_FOOTER'],
-                                               names=data[excel][sheet]['FIELD_NAME'],
-                                               dtype=data[excel][sheet]['DATA_TYPE'],
-                                               encoding=encoding,
-                                               na_values=na_values)
+    os.chdir(dir_path)
+    data = {}
+    for excel in os.listdir('.'):
+        if fnmatch.fnmatch(excel, data_extension):
+            data[excel] = dict()
+            book = xlrd.open_workbook(dir_path + excel)
+            for sheet in book.sheet_names():
+                data[excel][sheet] = pd.read_excel(open(dir_path + excel, 'rb'),
+                                                   encoding=encoding,
+                                                   sep=sep,
+                                                   na_values=na_values)
             data[excel][sheet].name = sheet
-
     return data
 
 
-def csv_in(dir_path, sep=';', encoding='utf-8', suffix='formato', na_values=None):
+def csv_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[cC][sS][vV]', na_values=None):
     """
     Function that reads csv files in a directory and generates a
     dict with csv names as keys of the dataframe.
-    This method also calls data_format() in order to generate
-    the data frame.
 
     Args:
         dir_path (str): directory containing Csv files.
-        sep (str): field separator
-        encoding (str): file encoding
-        suffix (str): standard for format name
+        sep (str): field separator.
+        encoding (str): file encoding.
+        data_extension (str): standard for data filenames extensions.
         na_values (scalar, str, list-like, or dict) : Additional strings to recognize as NA/NaN.
 
     Returns:
-        dict: Csv name as KEY and data frame as VALUE
+        dict: Csv name as KEY and dataframe as VALUE
     """
-    assignation_map = data_format(dir_path, 'csv', suffix)
-    for csv in assignation_map:
-        conversion = dict()
-        assignation_map[csv] = pd.read_csv(dir_path + assignation_map[csv], sep=sep,
-                                encoding=encoding)
-        for line in range(len(assignation_map[csv])):
-            conversion[assignation_map[csv]['FIELD_NAME'][line]] = conversion_map[assignation_map[csv]['DATA_TYPE'][line]]
-        assignation_map[csv] = pd.read_csv(dir_path + csv,
-                                dtype=conversion,
-                                encoding=encoding,
-                                na_values=na_values,
-                                sep=sep)
-        assignation_map[csv].name = csv
-    return assignation_map
+    os.chdir(dir_path)
+    data = {}
+    for csv in os.listdir('.'):
+        if fnmatch.fnmatch(csv, data_extension):
+            data[csv] = pd.read_csv(dir_path + csv,
+                                    encoding=encoding,
+                                    na_values=na_values,
+                                    sep=sep)
+        data[csv].name = csv
+    return data
 
 
 def pc_axis_in(dir_path, sep=",", encoding='windows-1252'):
@@ -197,8 +121,8 @@ def pc_axis_in(dir_path, sep=",", encoding='windows-1252'):
 
     Args:
         dir_path (str): extractor with uris file path (including file name).
-        sep (str): field separator
-        encoding (str): file encoding
+        sep (str): field separator.
+        encoding (str): file encoding.
     Returns:
         dict: URL as KEY and dataframe as VALUE
     """
@@ -212,38 +136,46 @@ def pc_axis_in(dir_path, sep=",", encoding='windows-1252'):
     return pc_axis_dict
 
 
-def positional_in(dir_path, sep=';', encoding='windows-1252', suffix='', na_values=None):
+def positional_in(dir_path, sep=';', encoding='windows-1252', format_extension='*.[cC][sS][vV]',
+                  data_extension='*.[tT][xX][tT]', na_values=None):
     """
     Function that reads files in a directory, generates a correspondence
     between data files and format files and returning a dict. (MICRODATA).
     This method also calls data_format() in order to generate
-    the data frame.
+    the dataframe.
 
     Args:
         dir_path (str): directory containing Positional files.
         sep (str): field separator.
         encoding (str): file encoding.
-        suffix (str): standard for format name
+        format_extension (str): standard for format name.
+        data_extension (str): standard for data name.
         na_values (scalar, str, list-like, or dict) : Additional strings to recognize as NA/NaN.
 
 
     Returns:
-        dict: Name of data file as KEY and dataframe as VALUE
+        dict: Name of data file as KEY and dataframe as VALUE.
     """
-    assignation_map = data_format(dir_path, 'txt', suffix)
+    conversion_map = {
+        'STRING': str,
+        'NUMBER': np.float32,
+        'DECIMAL': np.float32,
+        'INTEGER': np.float32
+    }
+    assignation_map = data_format(dir_path, data_extension, format_extension)
     for txt in assignation_map:
         conversion = dict()
         assignation_map[txt] = pd.read_csv(dir_path + assignation_map[txt], sep=sep,
-                                encoding=encoding)
+                                           encoding=encoding)
         for line in range(len(assignation_map[txt])):
             conversion[assignation_map[txt]['FIELD_NAME'][line]] = conversion_map[assignation_map[txt]['DATA_TYPE'][line]]
         assignation_map[txt] = pd.read_fwf(dir_path + txt,
-                                widths=assignation_map[txt]['LENGTH'].tolist(),
-                                names=assignation_map[txt]['FIELD_NAME'].tolist(),
-                                dtype=conversion,
-                                nwords=0,
-                                encoding=encoding,
-                                na_values=na_values)
+                                           widths=assignation_map[txt]['LENGTH'].tolist(),
+                                           names=assignation_map[txt]['FIELD_NAME'].tolist(),
+                                           dtype=conversion,
+                                           nwords=0,
+                                           encoding=encoding,
+                                           na_values=na_values)
         assignation_map[txt].name = txt
     return assignation_map
 
@@ -255,10 +187,10 @@ def xml_in(dir_path, pattern='*.[xXkK][mMtTjJ][lLrRbB]'):
 
     Args:
         dir_path (str): directory containing XML files.
-        pattern (str): regEx to filter data names
+        pattern (str): regEx to filter data names.
 
     Returns:
-        dict: XML name as KEY and etree object as VALUE
+        dict: XML name as KEY and etree object as VALUE.
     """
     xml_list = []
     os.chdir(dir_path)
@@ -270,18 +202,17 @@ def xml_in(dir_path, pattern='*.[xXkK][mMtTjJ][lLrRbB]'):
     df_dict = dict.fromkeys(xml_list, '')
     for i in range(len(xml_list)):
         df_dict[xml_list[i]] = ET.parse(dir_path + xml_list[i])
-
     return df_dict
 
 
 def sql_in(dir_path):
     """
-    Function that open sql files in the sql directory using a context manager
+    Function that open sql files in the sql directory using a context manager.
     Args:
         dir_path (str): Path of DIR readed.
 
     Returns:
-        dict: query name  as KEY and query as VALUE
+        dict: query name  as KEY and query as VALUE.
     """
     files = {}
     os.chdir(dir_path)
@@ -291,5 +222,4 @@ def sql_in(dir_path):
                 f = cm.enter_context(open(filename, 'r'))
                 files[filename.split(dir_path, 1)[-1][:-4]] = f.read()
         cm.pop_all().close()
-
     return files
