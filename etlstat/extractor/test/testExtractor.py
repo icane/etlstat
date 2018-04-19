@@ -132,6 +132,14 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(len(sql_data['afiliados']), 1582)
         self.assertEqual(len(sql_data['contratos']), 3023)
 
+    def testPcAxisIn(self):
+        pc_axis_data = pc_axis_in(self.base_path + 'px/pcaxis_urls.csv')
+        assert (len(pc_axis_data) == 3)
+        assert (type(pc_axis_data['px_01001']) == pandas.core.frame.DataFrame)
+        assert (type(pc_axis_data['px_01002']) == pandas.core.frame.DataFrame)
+        assert (type(pc_axis_data['px_01006']) == pandas.core.frame.DataFrame)
+
+
 
 
 

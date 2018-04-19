@@ -116,26 +116,26 @@ def csv_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[cC][sS][vV]',
     return data
 
 
-def pc_axis_in(dir_path, sep=",", encoding='windows-1252'):
+def pc_axis_in(filename, sep=",", encoding='windows-1252'):
     """
     Reads and converts Pc-Axis files to dataframe from URIs listed
     in a CSV file.
 
     Args:
-        dir_path (str): extractor with uris file path (including file name).
+        filename (str): CSV FILE with uris file path (including file name).
         sep (str): field separator.
         encoding (str): file encoding.
     Returns:
-        dict: URL as KEY and dataframe as VALUE
+        dict: px name as KEY and dataframe as VALUE
     """
-    pc_axis_dict = {}
-    with open(dir_path, "rt") as f:
-        reader = csv.reader(f, delimiter=sep)
-        for row in reader:
-            return_dict = from_pc_axis(row[1], encoding)
-            pc_axis_dict[row[0]] = return_dict['DATA']
-
-    return pc_axis_dict
+    csv = pd.read_csv(filename,
+                      sep=sep,
+                      encoding=encoding,
+                      header=None)
+    data = {}
+    for row in range(len(csv)):
+        data[csv[0][row]] = from_pc_axis(csv[1][row], encoding)['DATA']
+    return data
 
 
 def positional_in(dir_path, sep=';', encoding='windows-1252', format_extension='*.[cC][sS][vV]',
