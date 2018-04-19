@@ -82,7 +82,9 @@ def excel_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[xX][lL][sS]
                 data[excel][sheet] = pd.read_excel(open(dir_path + excel, 'rb'),
                                                    encoding=encoding,
                                                    sep=sep,
-                                                   na_values=na_values)
+                                                   sheet_name=sheet,
+                                                   na_values=na_values
+                                                   )
             data[excel][sheet].name = sheet
     return data
 
