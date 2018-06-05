@@ -338,3 +338,21 @@ class MySQL:
         os.remove(csv_path)
 
         return rows_matched
+
+    def get_row(self, sql):
+        """
+        Executes a DML SQL statement
+        :param sql: SQL statement
+        :return: status (True | False); result (dictionary or error string)
+        """
+        connection = self.engine.connect()
+        try:
+            row = connection.execute(sql)
+            status = True
+            result = dict(row)
+        except DatabaseError as e:
+            result = e
+            status = False
+        finally:
+            connection.close()
+        return status, result

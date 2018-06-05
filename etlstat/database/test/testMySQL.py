@@ -140,5 +140,22 @@ class TestMySQL(unittest.TestCase):
         self.assertEqual(my_conn.bulk_insert(df,
                                              csv_path='test_bulk_insert.csv', sep=';', header=False, index=False), 4)
 
+    def testGetRow(self):
+        my_conn = MySQL(*self.conn_params)
+        sql = "CREATE TABLE table1 (id integer, column1 varchar(100), column2 double)"
+        status, result = my_conn.execute_sql(sql)
+        self.assertTrue(status)
+        sql = "INSERT INTO table1 (id, column1, column2) " \
+              "VALUES (1, 'Varchar text (100 char)', 123456789.0123456789)"
+        status, result = my_conn.execute_sql(sql)
+        self.assertTrue(status)
+        sql = 'select * from table1 order by id'
+        status, result = my_conn.get_row(sql)
+        self.assertTrue(status)
+        self.assertTrue(isinstance(result, dict))
+        sql = "DROP TABLE table1"
+        status, result = my_conn.execute_sql(sql)
+        self.assertTrue(status)
+
 if __name__ == '__main__':
     unittest.main()
