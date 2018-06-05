@@ -1,6 +1,6 @@
 import unittest
 import pandas
-from etlstat.text.parsed_columns import parsed_columns
+from etlstat.text.parse_columns import parse_columns
 
 
 class TestParsedColumns(unittest.TestCase):
@@ -8,7 +8,7 @@ class TestParsedColumns(unittest.TestCase):
     def testParsedColumns(self):
         df = pandas.DataFrame
         df.columns = ['Período', 'Clasificación CNAE 2009', 'Número de trabajadores', 'Índice de variación']
-        parsed_columns(df)
+        parse_columns(df)
         self.assertEqual(df.columns[0], 'periodo')
         self.assertEqual(df.columns[1], 'clasificacion_cnae_2009')
         self.assertEqual(df.columns[2], 'numero_de_trabajadores')
