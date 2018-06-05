@@ -341,15 +341,15 @@ class MySQL:
 
     def get_row(self, sql):
         """
-        Executes a DML SQL statement
+        Executes a DML SQL statement that returns 1 single row
         :param sql: SQL statement
         :return: status (True | False); result (dictionary or error string)
         """
         connection = self.engine.connect()
         try:
-            row = connection.execute(sql)
+            result = connection.execute(sql)
             status = True
-            result = dict(row)
+            result = dict(result.first())
         except DatabaseError as e:
             result = e
             status = False

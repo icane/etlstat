@@ -54,7 +54,7 @@ Database tests require a local database instance running into a Docker container
 Reference: [Using Oracle Database with Docker Engine](https://www.toadworld.com/platforms/oracle/w/wiki/11638.using-oracle-database-with-docker-engine)
 
 Pulling the Oracle Docker image
-```sudo docker pull sath89/oracle-xe-11g```
+```sudo docker pull sath89/oraclexe-11g```
 
 Running the container
 ```sudo docker run --name orcldb -d -p 8080:8080 -p 1521:1521 sath89/oracle-xe-11g```

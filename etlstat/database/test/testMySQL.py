@@ -149,7 +149,7 @@ class TestMySQL(unittest.TestCase):
               "VALUES (1, 'Varchar text (100 char)', 123456789.0123456789)"
         status, result = my_conn.execute_sql(sql)
         self.assertTrue(status)
-        sql = 'select * from table1 order by id'
+        sql = 'select * from table1 order by id LIMIT 0,1'
         status, result = my_conn.get_row(sql)
         self.assertTrue(status)
         self.assertTrue(isinstance(result, dict))
