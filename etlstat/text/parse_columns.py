@@ -12,3 +12,4 @@ def parse_columns(df):
                             unidecode(column.lower().replace(',', '')))
         pars_columns.append(re.sub(r'[ ]{2,}', '', to_replace).replace(' ', '_'))
     df.columns = pars_columns
+    return df
