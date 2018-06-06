@@ -299,7 +299,7 @@ class MySQL:
 
     def bulk_insert(self, table, csv_path='temp.csv', sep=';', header=False, index=False):
         """
-        Make a bulk insert in database.
+        Make a bulk insert in database from a data csv.
 
         :param table: (:obj:`DataFrame`): DataFrame which name and column's label
                     match with table's name and columns in database. It must be
