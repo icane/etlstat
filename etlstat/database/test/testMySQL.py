@@ -153,6 +153,10 @@ class TestMySQL(unittest.TestCase):
         status, result = my_conn.get_row(sql)
         self.assertTrue(status)
         self.assertTrue(isinstance(result, dict))
+        sql = 'select * from table1 where id = 0'
+        status, result = my_conn.get_row(sql)
+        self.assertTrue(status)
+        self.assertFalse(isinstance(result, dict))
         sql = "DROP TABLE table1"
         status, result = my_conn.execute_sql(sql)
         self.assertTrue(status)

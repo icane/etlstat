@@ -349,9 +349,12 @@ class MySQL:
         try:
             result = connection.execute(sql)
             status = True
-            result = dict(result.first())
+            if result.rowcount > 0:
+                result = dict(result.first())
+            else:
+                result = None
         except DatabaseError as e:
-            result = e
+            result = {'Error': e}
             status = False
         finally:
             connection.close()
