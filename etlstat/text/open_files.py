@@ -10,15 +10,14 @@
 from contextlib import ExitStack
 import glob
 
-# absolute path
-dir = '/var/git/python/icanetl/'
-
 dictionary = {}
 def open_files(file_path, path):
 # Open sql files in the sql directory using a context manager
     with ExitStack() as cm:
-        for filename in glob.glob(dir + file_path):
+        print(file_path)
+
+        for filename in glob.glob(file_path):
             f = cm.enter_context(open(filename, 'r'))
-            dictionary[filename.split(dir + path, 1)[-1][:-4]] = f.read().replace('\n', ' ')
+            dictionary[filename.split(path, 1)[-1][:-4]] = f.read().replace('\n', ' ')
         cm.pop_all().close()
     return dictionary
