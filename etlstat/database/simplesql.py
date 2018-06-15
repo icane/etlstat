@@ -51,8 +51,9 @@ class SimpleSQL:
     @classmethod
     def push(cls, table, config):
         """
-        Insert dataframe's data into database table. If table doesn't exist, push
+        Inserts dataframe's data into database table with a bulk insert. If table doesn't exist, push
         will create it.
+        push is faster than other data insertion methods like to_sql of pandas.
 
         Args:
             table (DataFrame): a pandas DataFrame object filled with data that you
@@ -77,7 +78,8 @@ class SimpleSQL:
     @classmethod
     def pull(cls, table, config):
         """
-        Request data columns dataframe from database.
+        Request data columns dataframe from database with a select.
+        pull checks if table exists.
 
         Args:
             table (DataFrame): a empty pandas DataFrame object structured

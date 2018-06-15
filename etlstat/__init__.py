@@ -14,6 +14,8 @@ from etlstat.extractor.pcaxis import read, from_pc_axis
 from etlstat.log.timing import timeit
 
 # text
-from etlstat.text.parsed_columns import parsed_columns
+from etlstat.text.parse_columns import parse_columns
 
 
+# text
+from etlstat.text.open_files import open_files
