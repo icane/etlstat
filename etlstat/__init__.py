@@ -18,4 +18,4 @@ from etlstat.text.parse_columns import parse_columns
 
 
 # text
-from etlstat.text.open_files import open_files
+from etlstat.extractor.open_files import open_files
