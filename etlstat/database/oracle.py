@@ -23,6 +23,7 @@ import re
 from sqlalchemy import create_engine
 from sqlalchemy.exc import DatabaseError
 
+# TODO: implement transaction control
 
 class Oracle:
 
@@ -65,7 +66,7 @@ class Oracle:
 
     def execute_sql(self, sql):
         """
-        Executes a DDL or DML SQL statement.
+        Executes a DDL or DML SQL statement. Implements a transaction.
 
         Args:
             sql (str): SQL statement
@@ -75,15 +76,18 @@ class Oracle:
             result (data frame or error)
         """
         connection = self.engine.connect()
+        trans = connection.begin()
         try:
             result = connection.execute(sql)
             status = True
+            trans.commit()
             if re.match('^[ ]*SELECT .*', sql, re.IGNORECASE):
                 rows = result.fetchall()
                 result = DataFrame(rows, columns=result.keys())
         except DatabaseError as e:
             result = e
             status = False
+            trans.rollback()
         finally:
             connection.close()
         return status, result
