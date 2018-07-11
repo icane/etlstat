@@ -236,6 +236,8 @@ def from_pc_axis(uri, encoding, timeout=10):
 
     Returns:
          pc_axis_dict (dictionary): dictionary of metadata and pandas data frame
+            METADATA: dictionary of metadata
+            DATA: pandas data frame
     """
 
     # get file content or URL stream
@@ -256,7 +258,7 @@ def from_pc_axis(uri, encoding, timeout=10):
     # build a data frame
     data_frame = to_data_frame(dimension_names, dimension_members, data_list)
 
-    # dictionary of metadata and data
+    # dictionary of metadata and data (pandas data frame)
     pc_axis_dict = {
         'METADATA': meta_dict,
         'DATA': data_frame
