@@ -13,7 +13,6 @@
 
     Notes:
 
-
 """
 
 import csv
@@ -24,6 +23,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import DatabaseError
 
 # TODO: implement transaction control
+
 
 class Oracle:
 
@@ -38,7 +38,7 @@ class Oracle:
         'float64': 'NUMBER'
     }
 
-    def __init__(self, user, password, host, port, service_name):
+    def __init__(self, user, password, host, port, service_name, encoding='utf8'):
         conn_string = "oracle+cx_oracle://{0}:{1}@{2}:{3}/?service_name={4}".format(
             user,
             password,
@@ -47,7 +47,7 @@ class Oracle:
             service_name)
         self.engine = create_engine(
             conn_string,
-            encoding='utf8',
+            encoding=encoding,
             coerce_to_unicode=True,
             coerce_to_decimal=False)
 
