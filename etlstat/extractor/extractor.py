@@ -89,7 +89,7 @@ def excel_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[xX][lL][sS]
     return data
 
 
-def csv_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[cC][sS][vV]', na_values=None):
+def csv_in(dir_path, data_extension='*.[cC][sS][vV]', dtype=None, encoding='utf-8', na_values=None, sep=';'):
     """
     Function that reads csv files in a directory and generates a
     dict with csv names as keys of the dataframe.
@@ -100,6 +100,7 @@ def csv_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[cC][sS][vV]',
         encoding (str): file encoding.
         data_extension (str): standard for data filenames extensions.
         na_values (scalar, str, list-like, or dict) : Additional strings to recognize as NA/NaN.
+        dtype (str, dict): data type for data or columns
 
     Returns:
         dict: Csv name as KEY and dataframe as VALUE
@@ -109,6 +110,7 @@ def csv_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[cC][sS][vV]',
     for csv in os.listdir('.'):
         if fnmatch.fnmatch(csv, data_extension):
             data[csv] = pd.read_csv(dir_path + csv,
+                                    dtype=dtype,
                                     encoding=encoding,
                                     na_values=na_values,
                                     sep=sep)
