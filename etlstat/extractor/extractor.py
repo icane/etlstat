@@ -89,18 +89,26 @@ def excel_in(dir_path, sep=';', encoding='utf-8', data_extension='*.[xX][lL][sS]
     return data
 
 
-def csv_in(dir_path, data_extension='*.[cC][sS][vV]', dtype=None, encoding='utf-8', na_values=None, sep=';'):
+def csv_in(
+        dir_path,
+        data_extension='*.[cC][sS][vV]',
+        dtype=None, encoding='utf-8',
+        na_values=None,
+        sep=';',
+        skipinitialspace=False
+):
     """
     Function that reads csv files in a directory and generates a
     dict with csv names as keys of the dataframe.
 
     Args:
         dir_path (str): directory containing Csv files.
-        sep (str): field separator.
-        encoding (str): file encoding.
         data_extension (str): standard for data filenames extensions.
+        dtype (str, dict): data type for data or columns.
+        encoding (str): file encoding.
         na_values (scalar, str, list-like, or dict) : Additional strings to recognize as NA/NaN.
-        dtype (str, dict): data type for data or columns
+        sep (str): field separator.
+        skipinitialspace (bool): skip spaces after delimiter.
 
     Returns:
         dict: Csv name as KEY and dataframe as VALUE
@@ -113,7 +121,8 @@ def csv_in(dir_path, data_extension='*.[cC][sS][vV]', dtype=None, encoding='utf-
                                     dtype=dtype,
                                     encoding=encoding,
                                     na_values=na_values,
-                                    sep=sep)
+                                    sep=sep,
+                                    skipinitialspace=skipinitialspace)
         data[csv].name = csv
     return data
 
