@@ -3,6 +3,8 @@ from etlstat.database.oracle import Oracle
 import os
 import pandas as pd
 
+os.environ['NLS_LANG'] = '.AL32UTF8'
+
 
 class TestOracle(unittest.TestCase):
 
@@ -28,17 +30,21 @@ class TestOracle(unittest.TestCase):
         ora_conn = Oracle(*conn_params)
         sql = "DROP USER TEST CASCADE"
         status, result = ora_conn.execute_sql(sql)
-        print(result)
+        cls.flag1 = status
         sql = "CREATE USER test IDENTIFIED BY test " \
               "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
         status, result = ora_conn.execute_sql(sql)
-        print(result)
+        cls.flag2 = status
         sql = "ALTER USER test QUOTA UNLIMITED ON USERS"
         status, result = ora_conn.execute_sql(sql)
-        print(result)
+        cls.flag3 = status
         sql = "GRANT CONNECT, RESOURCE TO test"
         status, result = ora_conn.execute_sql(sql)
-        print(result)
+        cls.flag4 = status
+
+    def setUp(self):
+        self.assertTrue(self.flag3)
+        self.assertTrue(self.flag4)
 
     def testInit(self):
         self.assertEqual(str(Oracle(*self.conn_params).engine),
