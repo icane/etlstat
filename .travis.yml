@@ -10,11 +10,13 @@ services:
 
 before_install:
   - docker pull mysql:5.7
-  - docker run --name mysql57 -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password mysql:5.7
+  - docker run --name mysql57 -d -p 3307:3306 -e MYSQL_ROOT_PASSWORD=password mysql:5.7
 
 install: "pip install -r requirements.txt"
 
 script:
+#  - python -m unittest etlstat/database/test/testOracle.py
+  - python -m unittest etlstat/database/test/testMySQL.py
   - python -m unittest etlstat/extractor/test/testExtractor.py
   - python -m unittest etlstat/extractor/test/testPcaxis.py
   - python -m unittest etlstat/security/test/testPassword.py

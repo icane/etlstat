@@ -8,7 +8,7 @@ class TestMySQL(unittest.TestCase):
     user = 'test'
     password = 'password'
     host = '127.0.0.1'
-    port = '3306'
+    port = '3307'
     database = 'test'
     conn_params = [user, password, host, port, database]
 
@@ -17,7 +17,7 @@ class TestMySQL(unittest.TestCase):
         user = 'root'
         password = 'password'
         host = '127.0.0.1'
-        port = '3306'
+        port = '3307'
         database = ''
         conn_params = [user, password, host, port, database]
         ddl = "DROP DATABASE test"
@@ -38,7 +38,7 @@ class TestMySQL(unittest.TestCase):
 
     def testInit(self):
         self.assertEqual(str(MySQL(*self.conn_params).engine),
-                         "Engine(mysql+mysqlconnector://test:***@127.0.0.1:3306/test)")
+                         "Engine(mysql+mysqlconnector://test:***@127.0.0.1:3307/test)")
 
     def testCheckForTable(self):
         my_conn = MySQL(*self.conn_params)
