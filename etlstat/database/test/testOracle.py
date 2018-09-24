@@ -1,12 +1,13 @@
-import unittest
-from etlstat.database.oracle import Oracle
 import os
 import pandas as pd
+import unittest
+from etlstat.database.oracle import Oracle
 
 os.environ['NLS_LANG'] = '.AL32UTF8'
 
 
 class TestOracle(unittest.TestCase):
+    """Testing methods for class Oracle"""
 
     output_path = './'
     os_path = '/usr/local/bin:/usr/bin:/bin:/opt/oracle/instantclient_12_2'
@@ -186,6 +187,7 @@ class TestOracle(unittest.TestCase):
         self.assertTrue(os.path.isfile(control_file))
         self.assertTrue(os.path.isfile(log_file))
         self.assertFalse(os.path.isfile(bad_file))
+
 
 if __name__ == '__main__':
     unittest.main()

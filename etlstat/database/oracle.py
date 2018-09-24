@@ -16,20 +16,20 @@
 """
 
 import csv
-from pandas import DataFrame, isnull
 import os
 import re
+from pandas import DataFrame, isnull
 from sqlalchemy import create_engine
 from sqlalchemy.exc import DatabaseError
 
-# TODO: implement transaction control
-
 
 class Oracle:
+    """
+    This class manages Oracle database connections
+    """
 
     engine = None
 
-    # TODO: check this conversion map
     conversion_map = {
         'object': 'VARCHAR2(256)',
         'int32': 'INTEGER',
@@ -39,12 +39,7 @@ class Oracle:
     }
 
     def __init__(self, user, password, host, port, service_name, encoding='utf8'):
-        conn_string = "oracle+cx_oracle://{0}:{1}@{2}:{3}/?service_name={4}".format(
-            user,
-            password,
-            host,
-            port,
-            service_name)
+        conn_string = f"oracle+cx_oracle://{user}:{password}@{host}:{port}/?service_name={service_name}"
         self.engine = create_engine(
             conn_string,
             encoding=encoding,
@@ -77,20 +72,21 @@ class Oracle:
         """
         connection = self.engine.connect()
         trans = connection.begin()
+        d_f = None
         try:
             result = connection.execute(sql)
             status = True
             trans.commit()
             if re.match('^[ ]*SELECT .*', sql, re.IGNORECASE):
-                rows = result.fetchall()
-                result = DataFrame(rows, columns=result.keys())
-        except DatabaseError as e:
-            result = e
+                d_f = DataFrame(result.fetchall())
+                d_f.columns = result.keys()
+        except DatabaseError as db_error:
+            d_f = db_error
             status = False
             trans.rollback()
         finally:
             connection.close()
-        return status, result
+        return status, d_f
 
     def create(self, table, schema=None):
         """
@@ -104,16 +100,16 @@ class Oracle:
         connection = self.engine.connect()
 
         if not self.check_for_table(table.name, schema=schema):
-            sql = "CREATE TABLE "
+            sql = f"CREATE TABLE "
             if schema:
-                sql += "{0}.".format(schema)
+                sql += f"{schema}."
 
             if isinstance(table, DataFrame):
-                sql += "{0} (".format(table.name)
+                sql += f"{table.name} ("
 
                 for label in table:
-                    sql += "{0} {1}, ".format(label, self.conversion_map[str(table[label].dtype)])
-                sql = sql[:-2] + ')'
+                    sql += f"{label} {self.conversion_map[str(table[label].dtype)]}, "
+                sql = sql[:-2] + ")"
                 try:
                     rts = connection.execute(sql)
                     rts.close()
@@ -147,41 +143,41 @@ class Oracle:
         """
         connection = self.engine.connect()
 
-        df = None
-        sql = "SELECT "
+        d_f = None
+        sql = f"SELECT "
 
         if schema:
-            sql += "{0}.".format(schema)
+            sql += f"{schema}."
 
         if isinstance(table, str):
-            sql += "{0} FROM {1}".format('*', table)
+            sql += f"* FROM {table}"
         elif isinstance(table, DataFrame):
             for label in list(table):
-                sql += " {0},".format(label)
+                sql += f" {label},"
 
             sql = sql[:-1]
-            sql += " FROM {0}".format(table.name)
+            sql += f" FROM {table.name}"
         else:
             raise TypeError("table must be a string or DataFrame.")
 
         if isinstance(conditions, str) and conditions is not '':
-            sql += " WHERE {0}".format(conditions)
+            sql += f" WHERE {conditions}"
         elif isinstance(conditions, list) and len(conditions) > 0:
             sql += " WHERE"
             for condition in conditions:
-                sql += " {0},".format(condition)
+                sql += f" {condition},"
             sql = sql[:-1]
 
         try:
             rts = connection.execute(sql)
-            df = DataFrame(rts.fetchall(), columns=rts.keys())
+            d_f = DataFrame(rts.fetchall(), columns=rts.keys())
             rts.close()
-        except DatabaseError as e:
-            print(e)
+        except DatabaseError as db_error:
+            print(db_error)
         finally:
             connection.close()
 
-        return df
+        return d_f
 
     def insert(self, table, schema=None, rows=None):
         """
@@ -197,47 +193,47 @@ class Oracle:
         Returns:
             rows_matched (int): number of rows matched.
         """
-        rows_matched = 0
-
         connection = self.engine.connect()
 
-        if isinstance(table, DataFrame):
-            if not self.check_for_table(table.name, schema=schema):
-                self.create(table, schema=schema)
-
-            sql = "INSERT INTO "
-            if schema:
-                sql += "{0}.".format(schema)
-            sql += "{0}".format(table.name)
-            sql += ' ('
-            for label in list(table):
-                sql += "{0}, ".format(label)
-            sql = sql[:-2]
-            sql += ')'
-
-            for index, row in table.iterrows():
-
-                if rows is None or index in rows:
-                    sql_insert = sql
-                    sql_insert += " VALUES ("
-                    for value in row:
-                        if isinstance(value, str):
-                            sql_insert += "'{0}', ".format(value)
-                        else:
-                            if isnull(value):
-                                sql_insert += "{0}, ".format('NULL')
-                            else:
-                                sql_insert += "{0}, ".format(value)
-                    sql_insert = sql_insert[:-2] + ')'
-
-                rts = connection.execute(sql_insert)
-                rows_matched += rts.rowcount
-                rts.close()
-
-            connection.close()
-
-        else:
+        if not isinstance(table, DataFrame):
             raise TypeError("table must be a DataFrame.")
+
+        if not self.check_for_table(table.name, schema=schema):
+            self.create(table, schema=schema)
+
+        rows_matched = 0
+
+        sql = "INSERT INTO "
+        sql_insert = ""
+        if schema:
+            sql += f"{schema}."
+        sql += f"{table.name}"
+        sql += ' ('
+        for label in list(table):
+            sql += f"{label}, "
+        sql = sql[:-2]
+        sql += ')'
+
+        for index, row in table.iterrows():
+
+            if rows is None or index in rows:
+                sql_insert = sql
+                sql_insert += " VALUES ("
+                for value in row:
+                    if isinstance(value, str):
+                        sql_insert += f"'{value}', "
+                    else:
+                        if isnull(value):
+                            sql_insert += "NULL, "
+                        else:
+                            sql_insert += f"{value}, "
+                sql_insert = sql_insert[:-2] + ")"
+
+            rts = connection.execute(sql_insert)
+            rows_matched += rts.rowcount
+            rts.close()
+
+        connection.close()
 
         return rows_matched
 
@@ -254,47 +250,47 @@ class Oracle:
         Returns:
             rows_inserted (int): number of inserted rows.
         """
-        if isinstance(table, DataFrame):
-            if not self.check_for_table(table.name, schema=schema):
-                self.create(table, schema=schema)
-
-            sql_fields = "INSERT INTO "
-            sql_values = " VALUES ("
-
-            if schema:
-                sql_fields += "{0}.".format(schema)
-            sql_fields += "{0}".format(table.name)
-            sql_fields += ' ('
-            i = 0
-            for label in list(table):
-                i += 1
-                sql_fields += "{0}, ".format(label)
-                sql_values += " :" + str(i) + ","
-            sql_fields = sql_fields[:-2]
-            sql_values = sql_values[:-1]
-            sql_fields += ")"
-            sql_values += ")"
-
-            rows = []
-            for row in table.iterrows():
-                index, data = row
-                rows.append(data.tolist())
-
-            try:
-                cursor = self.engine.raw_connection().cursor()
-                cursor.prepare(sql_fields + sql_values)
-                cursor.executemany(None, rows)
-                self.engine.raw_connection().commit()
-                cursor.close()
-                rows_inserted = rows.__len__()
-            except DatabaseError as e:
-                rows_inserted = 0
-                self.engine.raw_connection().rollback()
-                print(e)
-            finally:
-                self.engine.raw_connection().close()
-        else:
+        if not isinstance(table, DataFrame):
             raise TypeError("table must be a DataFrame.")
+
+        if not self.check_for_table(table.name, schema=schema):
+            self.create(table, schema=schema)
+
+        sql_fields = "INSERT INTO "
+        sql_values = " VALUES ("
+
+        if schema:
+            sql_fields += f"{schema}."
+        sql_fields += f"{table.name}"
+        sql_fields += " ("
+        i = 0
+        for label in list(table):
+            i += 1
+            sql_fields += f"{label}, "
+            sql_values += " :" + str(i) + ","
+        sql_fields = sql_fields[:-2]
+        sql_values = sql_values[:-1]
+        sql_fields += ")"
+        sql_values += ")"
+
+        rows = []
+        for row in table.iterrows():
+            index, data = row
+            rows.append(data.tolist())
+
+        try:
+            cursor = self.engine.raw_connection().cursor()
+            cursor.prepare(sql_fields + sql_values)
+            cursor.executemany(None, rows)
+            self.engine.raw_connection().commit()
+            cursor.close()
+            rows_inserted = rows.__len__()
+        except DatabaseError as db_error:
+            rows_inserted = 0
+            self.engine.raw_connection().rollback()
+            print(db_error)
+        finally:
+            self.engine.raw_connection().close()
 
         return rows_inserted
 
@@ -313,42 +309,41 @@ class Oracle:
         Returns:
             rows_matched (int): number of rows matched.
         """
-        rows_matched = 0
-
         connection = self.engine.connect()
 
-        if isinstance(table, DataFrame):
-            if isinstance(index, list):
-                for row in table.values:
-                    sql = "UPDATE "
-                    if schema:
-                        sql += "{0}.".format(schema)
-                    sql += "{0} SET".format(table.name)
-                    sql_conditions = ''
-                    sql_updates = ''
-                    for id, label in enumerate(table):
-                        if label not in index:
-                            if isinstance(row[id], str):
-                                sql_updates += " {0}={1},".format(label, row[id])
-                            else:
-                                sql_updates += " {0}={1},".format(label, row[id])
-                        else:
-                            if isinstance(row[id], str):
-                                sql_conditions += " {0}={1} and".format(label, row[id])
-                            else:
-                                sql_conditions += " {0}={1} and".format(label, row[id])
-                    sql += sql_updates[:-1]
-
-                    if len(sql_conditions) > 1:
-                        sql += ' WHERE' + sql_conditions[:-4]
-
-                    rts = connection.execute(sql)
-                    rows_matched += rts.rowcount
-                    rts.close()
-
-                connection.close()
-        else:
+        if not isinstance(table, DataFrame):
             raise TypeError("table must be a DataFrame.")
+
+        rows_matched = 0
+        if isinstance(index, list):
+            for row in table.values:
+                sql = "UPDATE "
+                if schema:
+                    sql += f"{schema}."
+                sql += f"{table.name} SET"
+                sql_conditions = ""
+                sql_updates = ""
+                for id, label in enumerate(table):
+                    if label not in index:
+                        if isinstance(row[id], str):
+                            sql_updates += f" {label}={row[id]},"
+                        else:
+                            sql_updates += f" {label}={row[id]},"
+                    else:
+                        if isinstance(row[id], str):
+                            sql_conditions += f" {label}={row[id]} and"
+                        else:
+                            sql_conditions += f" {label}={row[id]} and"
+                sql += sql_updates[:-1]
+
+                if len(sql_conditions) > 1:
+                    sql += " WHERE" + sql_conditions[:-4]
+
+                rts = connection.execute(sql)
+                rows_matched += rts.rowcount
+                rts.close()
+
+            connection.close()
 
         return rows_matched
 
@@ -369,19 +364,19 @@ class Oracle:
 
         sql = "DELETE FROM "
         if schema:
-            sql += "{0}.".format(schema)
-        sql += "{0}".format(table)
+            sql += f"{schema}."
+        sql += f"{table}"
 
-        if isinstance(conditions, str) and conditions is not '':
-            sql += ' WHERE ' + conditions
+        if isinstance(conditions, str) and conditions is not "":
+            sql += " WHERE " + conditions
 
         try:
             rts = connection.execute(sql)
             rows_matched = rts.rowcount
             rts.close()
-        except DatabaseError as e:
+        except DatabaseError as db_error:
             rows_matched = None
-            print(e)
+            print(db_error)
         finally:
             connection.close()
 
