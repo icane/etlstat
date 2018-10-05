@@ -62,7 +62,7 @@ class TestExtractor(unittest.TestCase):
 
     def testPositionalIn(self):
         dir_path = self.base_path + 'positional/'
-        df = positional_in(dir_path)
+        df = positional_in(dir_path, format_path=dir_path + 'format/')
 
         post_head = ['NORDEN', 'PI1', 'PI2', 'PI2R', 'PI2N', 'PI21', 'PI31', 'PI41', 'PI42',
                      'PJ1', 'PJ11', 'PJ12', 'PJ13', 'PJ2', 'PJ21', 'PJ22', 'PJ3', 'PJ4',
@@ -138,15 +138,3 @@ class TestExtractor(unittest.TestCase):
         assert (type(pc_axis_data['px_01001']) == pandas.core.frame.DataFrame)
         assert (type(pc_axis_data['px_01002']) == pandas.core.frame.DataFrame)
         assert (type(pc_axis_data['px_01006']) == pandas.core.frame.DataFrame)
-
-
-
-
-
-
-
-
-
-
-
-

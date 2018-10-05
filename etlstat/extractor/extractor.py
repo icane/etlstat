@@ -11,14 +11,15 @@ from Levenshtein import ratio
 from etlstat.extractor.pcaxis import *
 
 
-def data_format(dir_path, data_extension, format_extension):
+def data_format(data_path, data_extension, format_path, format_extension):
     """
     Function that matches format files(csv) with data files (txt) in a directory
     for positional files. (Internal Method)
 
     Args:
-        dir_path (str): directory containing files.
+        data_path (str): directory containing data files.
         data_extension (str): standard for data filenames extensions.
+        format_path (str): directory containing format files.
         format_extension (str): standard for format filenames extensions.
 
     Returns:
@@ -27,22 +28,28 @@ def data_format(dir_path, data_extension, format_extension):
     assignation_map = {}
     # Contains data filenames
     data_list = []
+    os.chdir(data_path)
+    for file in os.listdir('.'):
+        # Finds all data files in a directory
+        if fnmatch.fnmatch(file, data_extension):
+            data_list.append(file)
+    if len(data_list) == 0:
+        raise FileNotFoundError("No data files found in data directory")
+    data_list = set(data_list)
+    data_list = list(data_list)
+
     # Contains format filenames
     format_list = []
-    os.chdir(dir_path)
+    os.chdir(format_path)
     for file in os.listdir('.'):
         # Finds all format files in a directory
         if fnmatch.fnmatch(file, format_extension):
             format_list.append(file)
-        # Finds all data files in a directory
-        if fnmatch.fnmatch(file, data_extension):
-            data_list.append(file)
+    if len(format_list) == 0:
+        raise FileNotFoundError("No format files found in format directory")
     format_list = set(format_list)
     format_list = list(format_list)
-    if len(format_list) == 0:
-        raise FileNotFoundError("Not format files found in the directory")
-    data_list = set(data_list)
-    data_list = list(data_list)
+
     for item in data_list:
         max_similarity = 0
         max_element = None
@@ -150,7 +157,7 @@ def pc_axis_in(filename, sep=",", encoding='windows-1252'):
 
 
 def positional_in(dir_path, sep=';', encoding='windows-1252', format_extension='*.[cC][sS][vV]',
-                  data_extension='*.[tT][xX][tT]', na_values=None):
+                  data_extension='*.[tT][xX][tT]', na_values=None, format_path=None):
     """
     Function that reads files in a directory, generates a correspondence
     between data files and format files and returning a dict. (MICRODATA).
@@ -158,12 +165,13 @@ def positional_in(dir_path, sep=';', encoding='windows-1252', format_extension='
     the dataframe.
 
     Args:
-        dir_path (str): directory containing Positional files.
+        dir_path (str): directory containing data files.
         sep (str): field separator.
         encoding (str): file encoding.
         format_extension (str): standard for format name.
         data_extension (str): standard for data name.
         na_values (scalar, str, list-like, or dict) : Additional strings to recognize as NA/NaN.
+        format_path (str): directory containing format files. Defaults to dir_path
 
 
     Returns:
@@ -175,10 +183,14 @@ def positional_in(dir_path, sep=';', encoding='windows-1252', format_extension='
         'DECIMAL': np.float32,
         'INTEGER': np.float32
     }
-    assignation_map = data_format(dir_path, data_extension, format_extension)
+
+    if not format_path:
+        format_path = dir_path
+
+    assignation_map = data_format(dir_path, data_extension, format_path, format_extension)
     for txt in assignation_map:
         conversion = dict()
-        assignation_map[txt] = pd.read_csv(dir_path + assignation_map[txt], sep=sep,
+        assignation_map[txt] = pd.read_csv(format_path + assignation_map[txt], sep=sep,
                                            encoding=encoding)
         for line in range(len(assignation_map[txt])):
             conversion[assignation_map[txt]['FIELD_NAME'][line]] = conversion_map[assignation_map[txt]['DATA_TYPE'][line]]

@@ -1,4 +1,3 @@
-# coding: utf-8
 """
     Oracle
 
@@ -432,6 +431,7 @@ class Oracle:
                      """FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '\"'\n""" + \
                      """TRAILING NULLCOLS\n""" + \
                      """(""" + columns + """)"""
+
         ctl_file.write(ctl_header)
         ctl_file.close()
 
