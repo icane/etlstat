@@ -122,15 +122,15 @@ def csv_in(
     """
     os.chdir(dir_path)
     data = {}
-    for csv in os.listdir('.'):
-        if fnmatch.fnmatch(csv, data_extension):
-            data[csv] = pd.read_csv(dir_path + csv,
-                                    dtype=dtype,
-                                    encoding=encoding,
-                                    na_values=na_values,
-                                    sep=sep,
-                                    skipinitialspace=skipinitialspace)
-        data[csv].name = csv
+    for file in os.listdir('.'):
+        if fnmatch.fnmatch(file, data_extension):
+            data[file] = pd.read_csv(dir_path + file,
+                                     dtype=dtype,
+                                     encoding=encoding,
+                                     na_values=na_values,
+                                     sep=sep,
+                                     skipinitialspace=skipinitialspace)
+            data[file].name = file
     return data
 
 
