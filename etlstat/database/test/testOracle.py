@@ -107,7 +107,7 @@ class TestOracle(unittest.TestCase):
         ora_conn = Oracle(*self.conn_params)
         table_name = "all_tables"
         conditions = "owner = 'CTXSYS'"
-        df = ora_conn.select(table_name, conditions=conditions)
+        df = ora_conn.select(table_name, conditions=conditions, schema='SYS')
         self.assertEqual(len(df), 5)
 
     def testInsert(self):

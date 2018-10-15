@@ -146,16 +146,18 @@ class Oracle:
         sql = f"SELECT "
 
         if schema:
-            sql += f"{schema}."
+            schema += '.'
+        else:
+            schema = ''
 
         if isinstance(table, str):
-            sql += f"* FROM {table}"
+            sql += f"* FROM {schema}{table}"
         elif isinstance(table, DataFrame):
             for label in list(table):
                 sql += f" {label},"
 
             sql = sql[:-1]
-            sql += f" FROM {table.name}"
+            sql += f" FROM {schema}{table.name}"
         else:
             raise TypeError("table must be a string or DataFrame.")
 
