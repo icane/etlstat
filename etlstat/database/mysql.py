@@ -1,361 +1,207 @@
 # coding: utf-8
 """
-    MySQL
+    This module manages MySQL primitives.
 
     Date:
-        24/01/2018
+        27/11/2018
 
     Author:
-        slave110
+        emm13775
 
     Version:
-        Alpha
+        0.1
 
     Notes:
 
 
 """
 
-import numpy as np
 import os
-from pandas import DataFrame, isnull
-import re
-from sqlalchemy import create_engine
+import logging
+from sqlalchemy import create_engine, text, select, func, MetaData, Table
 from sqlalchemy.exc import DatabaseError
+import pandas as pd
+import numpy as np
+from odo import odo
+
+
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
 
 
 class MySQL:
-
-    engine = None
-
-    # TODO: check this conversion map
-    conversion_map = {
-        'object': 'VARCHAR(255)',
-        'int32': 'INT',
-        'int64': 'INT',
-        'float32': 'DECIMAL(20,6)',
-        'float64': 'DECIMAL(20,6)'
-    }
+    """ MySQL class offers some helper methods that encapsulate primitive logic
+        to interactuate with the database: insert/upsert, execute, drop, etc.
+        Some primitives are not included because they can be handled more
+        properly with sqlalchemy. """
 
     def __init__(self, user, password, host, port, database):
-        conn_string = "mysql+mysqlconnector://{0}:{1}@{2}:{3}/{4}".format(
+        """ Initializes the database connection and other relevant data
+            Args:
+              user(string): database user to connect to the schema.
+              password(string): database password of the user.
+              host(string): database management system host.
+              port(string): tcp port where the database is listening.
+              database(string): schema or database name.
+        """
+        # connection string in sqlalchemy format
+        self.conn_string = "mysql+mysqlconnector://{0}:{1}@{2}:{3}/{4}".format(
             user,
             password,
             host,
             port,
             database)
-        self.engine = create_engine(conn_string)
+        self.engine = create_engine(self.conn_string)
+        self.database = database
 
-    def check_for_table(self, table, schema=None):
+    def get_table(self, table_name, schema=None):
+        """Gets a database table into a sqlalchemy Table object.
+            Args:
+                table_name(string): name of the database table to map.
+                schema(string): name of the schema to which the table belongs.
+                            Defaults to the selected database in the
+                            connection.
+            Returns:
+                table(Table): sqlalchemy Table object referencing the specified
+                              database table.
         """
-        Check if table exists in database.
 
-        :param table: (:obj:`str`): Database table's name.
-        :param schema: (:obj:`str`): Schema name
-        Returns:
-            bool: True if table exists, False in otherwise.
-        """
-        return self.engine.dialect.has_table(self.engine, table, schema=schema)
+        meta = MetaData(bind=self.engine,
+                        schema=schema if schema else self.database)
+        return Table(table_name, meta, autoload=True,
+                     autoload_with=self.engine)
 
-    def execute_sql(self, sql):
+    def execute(self, sql, **kwargs):
         """
         Executes a DDL or DML SQL statement
-        :param sql: SQL statement
-        :return: status (True | False); result (data frame or error string)
+        Args:
+            sql: SQL statement
+        Returns:
+            result_set(Dataframe):
         """
         connection = self.engine.connect()
+        trans = connection.begin()
+        result_set = pd.DataFrame()
         try:
-            result = connection.execute(sql)
-            status = True
-            if re.match('^[ ]*SELECT .*', sql, re.IGNORECASE):
-                rows = result.fetchall()
-                result = DataFrame(rows, columns=result.keys())
-        except DatabaseError as e:
-            result = e
-            status = False
+            result = connection.execute(text(sql), **kwargs)
+            trans.commit()
+            if result.returns_rows:
+                result_set = pd.DataFrame(result.fetchall())
+                result_set.columns = result.keys()
+                LOGGER.info('Number of returned rows: %s',
+                            str(len(result_set.index)))
+        except DatabaseError as db_error:
+            LOGGER.error(db_error)
+            raise
         finally:
             connection.close()
-        return status, result
+        return result_set
 
-    def create(self, table):
-        """
-        Create a new table in database from DataFrame format.
-
-        :param table: DataFrame which name and column's label match with database
-        table's name and columns that you wish to create.
-        """
-        connection = self.engine.connect()
-
-        if not self.check_for_table(table.name):
-            sql = "CREATE TABLE"
-
-            if isinstance(table, DataFrame):
-                sql += " `{0}` (".format(table.name)
-
-                for label in table:
-                    sql += "`{0}` {1}, ".format(label, self.conversion_map[str(table[label].dtype)])
-                sql = sql[:-2] + ')'
-
-                try:
-                    rts = connection.execute(sql)
-                    rts.close()
-                    status = True
-                except DatabaseError as e:
-                    status = False
-                finally:
-                    connection.close()
-
-                return status
-
-        return False
-
-    def select(self, table, conditions=''):
-        """
-        Select data from table.
-
-        :param table: (:obj:`str` or :obj:`DataFrame`): Table's name in database if
-                    you want read all fields in database table or a DataFrame
-                    which name and column's label match with table's name and
-                    columns table that you want read from database.
-        :param conditions: (:obj:`str` or :obj:`list` of :obj:`str`, optional):
-                    A select condition or list of select conditions with sql
-                    syntax.
-        Returns:
-            :obj:`DataFrame`: A DataFrame with data from database.
-
-        """
-        connection = self.engine.connect()
-
-        df = None
-        sql = "SELECT"
-        if isinstance(table, str):
-            sql += " {0} FROM `{1}`".format('*', table)
-        elif isinstance(table, DataFrame):
-            if len(list(table)) > 0:
-                for label in list(table):
-                    sql += " {0},".format(label)
-            else:
-                sql += " *  "
-
-            sql = sql[:-1]
-            sql += " FROM `{0}`".format(table.name)
-        else:
-            raise TypeError("table must be a string or DataFrame.")
-
-        if isinstance(conditions, str) and conditions is not '':
-            sql += " WHERE {0}".format(conditions)
-        elif isinstance(conditions, list) and len(conditions) > 0:
-            sql += " WHERE"
-            for condition in conditions:
-                sql += " {0},".format(condition)
-            sql = sql[:-1]
-
-        try:
-            rts = connection.execute(sql)
-            df = None
-            if rts.rowcount > 0:
-                df = DataFrame(rts.fetchall())
-                df.columns = rts.keys()
-            rts.close()
-        except DatabaseError as e:
-            print(e)
-        finally:
-            connection.close()
-
-        return df
-
-    def insert(self, table, rows=None):
-        """
-        Insert DataFrame's rows in a database table.
-
-        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and column's name in database. It
-                    must filled with data rows.
-        :param rows: (:obj:`list` of int, optional): A list of row's indexes that you
-                    want insert to database.
-        Returns:
-            int: number of rows matched.
-        """
-        rows_matched = 0
-
-        connection = self.engine.connect()
-
-        if isinstance(table, DataFrame):
-            if not self.check_for_table(table.name):
-                self.create(table)
-
-            sql = "INSERT INTO"
-            sql += " `{0}`".format(table.name)
-            sql += ' ('
-            for label in list(table):
-                sql += "{0}, ".format(label)
-            sql = sql[:-2]
-            sql += ')'
-
-            for index, row in table.iterrows():
-
-                if rows is None or index in rows:
-                    sql_insert = sql
-                    sql_insert += " VALUES ("
-                    for value in row:
-                        if isinstance(value, str):
-                            sql_insert += "'{0}', ".format(value)
-                        else:
-                            if isnull(value):
-                                sql_insert += "{0}, ".format('NULL')
-                            else:
-                                sql_insert += "{0}, ".format(value)
-                    sql_insert = sql_insert[:-2] + ')'
-
-                    rts = connection.execute(sql_insert)
-                    rows_matched += rts.rowcount
-
-            rts.close()
-            connection.close()
-
-        else:
-            raise TypeError("table must be a DataFrame.")
-
-        return rows_matched
-
-    def update(self, table, index=None):
-        """
-        Update rows in a database table.
-
-        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and columns name in database. It must
-                    be filled with data rows.
-        :param index: (:obj:`list` of name columns): list of DataFrame's columns names
-                    use as index in the update search. Other columns will be
-                    updated in database.
-        Returns:
-            int: number of rows matched.
-        """
-        rows_matched = 0
-
-        connection = self.engine.connect()
-
-        if isinstance(table, DataFrame):
-            if isinstance(index, list):
-                for row in table.values:
-                    sql = "UPDATE `{0}` SET".format(table.name)
-                    sql_conditions = ''
-                    sql_updates = ''
-                    for id, label in enumerate(table):
-                        if label not in index:
-                            if isinstance(row[id], str):
-                                sql_updates += " %s='%s'," % (label, row[id])
-                            else:
-                                sql_updates += " {0}={1},".format(label, row[id])
-                        else:
-                            if isinstance(row[id], str):
-                                sql_conditions += " %s='%s' and" % (label, row[id])
-                            else:
-                                sql_conditions += " {0}={1} and".format(label, row[id])
-                    sql += sql_updates[:-1]
-
-                    if len(sql_conditions) > 1:
-                        sql += ' WHERE' + sql_conditions[:-4]
-
-                    rts = connection.execute(sql)  # ResultProxy
-                    rows_matched += rts.rowcount
-                    rts.close()
-
-                connection.close()
-        else:
-            raise TypeError("table must be a DataFrame.")
-
-        return rows_matched
-
-    def delete(self, table, conditions=''):
-        """
-        Delete data from table.
+    def drop(self, table_name):
+        """ Drops a table from the database
 
         Args:
-        :param table: (:obj:`str`): Database table name that you wish delete rows.
-        :param conditions: (:obj:`str`, optional): A string of select conditions
-            with sql syntax.
+          table_name(str): name of the table to drop.
+
+        Returns: nothing.
+
+        """
+
+        db_table = self.get_table(table_name)
+        db_table.drop(self.engine, checkfirst=True)
+        LOGGER.info('Table %s successfully dropped.', table_name)
+
+        # Placeholders can only represent VALUES. You cannot use them for
+        # sql keywords/identifiers.
+
+    def insert(self, data_table, csv_path='temp.csv'):
+        """ Inserts a dataframe into a table by converting it to CSV format and
+            using odo bulk load functionality.
+        Args:
+          data_table(Dataframe): dataframe with the data to load.
+          csv_path(string): path to the CSV temporal file which will be loaded
+                            into the table.
+
         Returns:
-            int: number of rows matched.
+          db_table(Table): sqlalchemy table mapping the table with the inserted
+                           records.
         """
         connection = self.engine.connect()
+        db_table = Table()
 
-        sql = "DELETE FROM `{0}`".format(table)
-
-        if isinstance(conditions, str) and conditions is not '':
-            sql += ' WHERE ' + conditions
-
-        try:
-            rts = connection.execute(sql)
-            rows_matched = rts.rowcount
-            rts.close()
-        except DatabaseError as e:
-            rows_matched = None
-            print(e)
-        finally:
-            connection.close()
-
-        return rows_matched
-
-    def bulk_insert(self, table, csv_path='temp.csv', sep=';', header=False, index=False):
-        """
-        Make a bulk insert in database from a data csv.
-
-        :param table: (:obj:`DataFrame`): DataFrame which name and column's label
-                    match with table's name and columns in database. It must be
-                    filled with data rows.
-        :param csv_path: (:str): default csv file
-        :param sep: (:str): default field separator
-        :param header: (:bool): default header row is present or not
-        :param index: (:bool): default write or not row names
-        Returns:
-            int: number of rows matched.
-        """
-        connection = self.engine.connect()
-
-        if not self.check_for_table(table.name):
-            self.create(table)
-
-        if isinstance(table, DataFrame):
-            aux = table.replace(np.NaN, "\\N")
-            aux.to_csv(csv_path, sep=sep, header=header, index=index)
+        if isinstance(data_table, pd.DataFrame):
+            aux = data_table.replace(np.NaN, "\\N")
+            aux.to_csv(csv_path, index=False)
         else:
-            raise TypeError("table must be a DataFrame.")
-
-        sql = """LOAD DATA LOCAL INFILE '{0}' INTO TABLE `{1}` FIELDS TERMINATED BY ';' ENCLOSED BY '"' """\
-              .format(csv_path, table.name)
-
+            raise TypeError("data_table must be a DataFrame.")
         try:
-            rts = connection.execute(sql)
-            rows_matched = rts.rowcount
-            rts.close()
-        except DatabaseError as e:
-            rows_matched = None
-            print(e)
+            db_table = odo(csv_path,
+                           f'''{self.conn_string}::{data_table.name}''',
+                           local='LOCAL', has_header=True)
+            row_count = connection.engine.scalar(
+                select([func.count('*')]).select_from(db_table)
+            )
+            LOGGER.info('Number of inserted rows: %s', str(row_count))
+        except Exception as exception:
+            LOGGER.error(exception)
+            raise
         finally:
             connection.close()
-
         os.remove(csv_path)
+        return db_table
 
-        return rows_matched
+    def upsert(self, tmp_table, table_name, sql, csv_path='temp.csv',
+               rm_tmp=True):
+        """ Updates/inserts a dataframe into a table by converting it to CSV
+            format, using odo bulk load functionality to load it to a temporary
+            table and then executing a raw update or update/insert query from a
+            text file which extracts records from the temporary table and
+            loads them into the definitive one.
+            Args:
+                tmp_table(Dataframe): dataframe with the data to load in a
+                                      temporary table.
+                table_name(String): name of the table to be
+                                    updated/inserted to.
+                sql(string): string with the SQL update/insert query.
+                csv_path(string): path to the CSV temporal file which will be
+                                  loaded into the table.
+                                  Defaults to 'temp.csv'.
+                rm_tmp(Boolean): Defauls to True. Determines if the temporary
+                                 table should be dropped (expected behaviour)
+                                 or not (for debugging purposes).
 
-    def get_row(self, sql):
-        """
-        Executes a DML SQL statement that returns 1 single row
-        :param sql: SQL statement
-        :return: status (True | False); result (dictionary or error string)
+            Returns:
+                db_table(Table): sqlalchemy table mapping the table with the
+                                 inserted/updated records.
         """
         connection = self.engine.connect()
+        db_table = Table()
+        if isinstance(tmp_table, pd.DataFrame):
+            aux = tmp_table.replace(np.NaN, "\\N")
+            aux.to_csv(csv_path, index=False)
+        else:
+            raise TypeError("tmp_table must be a DataFrame.")
         try:
-            result = connection.execute(sql)
-            status = True
-            if result.rowcount > 0:
-                result = dict(result.first())
-            else:
-                result = None
-        except DatabaseError as e:
-            result = {'Error': e}
-            status = False
+            tmp_table = odo(csv_path,
+                            f'''{self.conn_string}::{tmp_table.name}''',
+                            local='LOCAL', has_header=True)
+            tmp_row_count = connection.engine.scalar(
+                select([func.count('*')]).select_from(tmp_table)
+            )
+            LOGGER.info('Number of temp table rows: %s', str(tmp_row_count))
+            os.remove(csv_path)  # remove temporary file
+            connection.execute(sql)  # update/insert query
+            if rm_tmp:
+                self.drop(tmp_table.name)  # remove temporary table
+            db_table = self.get_table(table_name)
+            row_count = connection.engine.scalar(
+                select([func.count('*')]).select_from(db_table)
+            )
+            LOGGER.info('Number of rows in the updated table: %s',
+                        str(row_count))
+        except Exception as exception:
+            LOGGER.exception(exception)
+            raise
         finally:
             connection.close()
-        return status, result
+        return db_table
