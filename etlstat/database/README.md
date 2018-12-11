@@ -1,63 +1,68 @@
-# Installation of modules required to get access to relational databases.
+# Installation of modules required to get access to relational databases
 
 ## MySQL Connector
+
 Installation of MySQL connector for Python 3.
-If the version is not specified
-If the version is not specified, the default attempts to install 2.2.3
-and fails: [Unable to find Protobuf include directory](http://stackoverflow.com/questions/43029672/unable-to-find-protobuf-include-directory)
+If the version is not specified, the default attempts to install 2.2.3 and fails: [Unable to find Protobuf include directory](http://stackoverflow.com/questions/43029672/unable-to-find-protobuf-include-directory)
 
-```
-> sudo pip3 install mysql-connector==2.1.4
-Collecting mysql-connector==2.1.4
-  Downloading mysql-connector-2.1.4.zip (355kB)
-    100% |████████████████████████████████| 358kB 1.7MB/s 
-Installing collected packages: mysql-connector
-  Running setup.py install for mysql-connector ... done
-Successfully installed mysql-connector-2.1.4
-```
+```sudo pip3 install mysql-connector==2.1.4```
 
-Download and install the last version:
-```
-    https://dev.mysql.com/downloads/connector/python/
+Download and install the last version from https://dev.mysql.com/downloads/connector/python/:
 
-    > sudo dpkg -i <connector_file_name.deb>
-```
+```sudo dpkg -i <connector_file_name.deb>```
 
 ## cx_Oracle
-Cx_Oracle requires Oracle SQLNet. Read [Connecting to Oracle11g databases from Python scripts](/var/git/md/docs/dev/python/oracle_connection.md).
+
+Cx_Oracle requires [Oracle Instant Client](https://www.oracle.com/technetwork/database/database-technologies/instant-client/overview/index.html).
+
+### Download and install Oracle Instant Client
+
+1. Download version 12.2.0.1.0 for Linux_x86_64 [Instant Client Downloads for Linux x86-64 (64-bit)](http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html).
+   1. Instant Client Package - Basic: All files required to run OCI, OCCI, and JDBC-OCI applications [instantclient-basic-linux.x64-12.2.0.1.0.zip](http://download.oracle.com/otn/linux/instantclient/122010/instantclient-basic-linux.x64-12.2.0.1.0.zip)
+   2. Instant Client Package - SQL*Plus: Additional libraries and executable for running SQL*Plus with Instant Client [instantclient-sqlplus-linux.x64-12.2.0.1.0.zip](http://download.oracle.com/otn/linux/instantclient/122010/instantclient-sqlplus-linux.x64-12.2.0.1.0.zip)
+   3. Instant Client Package - SDK: Additional header files and an example makefile for developing Oracle applications with Instant Client [instantclient-sdk-linux.x64-12.2.0.1.0.zip](http://download.oracle.com/otn/linux/instantclient/122010/instantclient-sdk-linux.x64-12.2.0.1.0.zip)
+   4. Instant Client Package - Tools: Includes Data Pump, SQL*Loader and Workload Replay Client [instantclient-tools-linux.x64-12.2.0.1.0.zip](http://download.oracle.com/otn/linux/instantclient/122010/instantclient-tools-linux.x64-12.2.0.1.0.zip)
+2. Unzip the packages (as root) into a single directory such as "/opt/oracle/instantclient_11_2" that is accessible to your application.
+3. Create the appropriate libclntsh.so and libocci.so links for the version of Instant Client.
+4. Set the environment variable LD_LIBRARY_PATH pointing to the directory created in Step 2.
+5. To use supplied binaries such as SQL*Plus, update your PATH environment variable.
+
+```sh
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/opt/oracle/instantclient_12_2"
+export PATH=$PATH:"/opt/oracle/instantclient_12_2"
 ```
-# apt-get install python3-dev
 
-# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/opt/oracle/instantclient_11_2"
++ Test your Instant Client install by using "sqlplus" or "sqlplus64" to connect to the database.
++ Edit **/etc/ld.so.conf.d/oracle.conf**. This is a new file, simply add the location of .so files here, then update the ldpath executing **ldconfig**.
 
-# export PATH=$PATH:"/opt/oracle/instantclient_11_2"
+### Install cx_Oracle Python package
 
-# pip3 install cx_oracle
-Collecting cx_oracle
-  Using cached cx_Oracle-5.3.tar.gz
-Installing collected packages: cx-oracle
-  Running setup.py install for cx-oracle ... done
-Successfully installed cx-oracle-5.3
-```
+Before install cx_oracle with pip, be sure LD_LIBRARY_PATH and PATH environment variables points to oracle installation directory.
+
+ ```sh
+ pip3 install python3-dev
+ pip3 install cx_oracle
+ ```
+
 ## Mysql-python
 
-```
-> sudo apt-get install python-dev libmysqlclient-dev
-
-
-```
+```sudo apt-get install python-dev libmysqlclient-dev```
 
 ## Testing
-Database tests require a local database instance running into a Docker container.
+
+Database tests require local database instances. The following explains how to run such instances in Docker containers.
 
 ### Oracle
+
 Reference: [Using Oracle Database with Docker Engine](https://www.toadworld.com/platforms/oracle/w/wiki/11638.using-oracle-database-with-docker-engine)
 
 Pulling the Oracle Docker image
+
 ```sudo docker pull sath89/oraclexe-11g```
 
 Running the container
-```sudo docker run --name orcldb -d -p 8080:8080 -p 1521:1521 sath89/oracle-xe-11g```
+
+```sudo docker run --name orcldb -d -p 1521:1521 sath89/oracle-xe-11g```
 
 Connection parameters:
 + User: system
@@ -67,17 +72,20 @@ Connection parameters:
 + SID: xe
 
 ### MySQL
+
 Reference: [Official repository mysql](https://hub.docker.com/_/mysql/)
 
 Pulling the image
 ```sudo docker pull mysql```
 
 Running the container
+
 ```sudo docker run --name mysqldb -d -p 3307:3306 -e MYSQL_ROOT_PASSWORD=password mysql[:<tag>]```
 
 Notes:
-  + in order to avoid conflicts with local MySQL instances and Travis builds, it is better to specify a non-standard MySQL port.
-  + use IP 127.0.0.1 instead of _localhost_ to stablish a connection
+
++ in order to avoid conflicts with local MySQL instances and Travis builds, it is better to specify a non-standard MySQL port.
++ use IP 127.0.0.1 instead of _localhost_ to stablish a connection
 
 Optional: **tag** is the tag specifying the MySQL version you want. See the list below for relevant tags.
 
