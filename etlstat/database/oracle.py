@@ -18,9 +18,9 @@ This module manages Oracle primitives.
 import csv
 import logging
 import os
-import pandas as pd
 import shlex
 import subprocess
+import pandas
 from sqlalchemy import create_engine, text, MetaData, Table
 from sqlalchemy.exc import DatabaseError
 
@@ -40,31 +40,30 @@ class Oracle:
 
     """
 
-    def __init__(
-            self, user, password, host,
-            port, service_name, encoding='utf8'):
+    def __init__(self, *conn_params, encoding='utf8'):
         """
         Initialize the database connection and other relevant data.
 
             Args:
-              user(string): database user to connect to the schema.
-              password(string): database password of the user.
-              host(string): database management system host.
-              port(string): tcp port where the database is listening.
-              service_name(string): Oracle instance name.
-              encoding (string): Charset encoding.
+                *conn_params: 5-tuple of the following connection parameters:
+                    user(string): database user to connect to the schema.
+                    password(string): database password of the user.
+                    host(string): database management system host.
+                    port(string): tcp port where the database is listening.
+                    service_name(string): Oracle instance name.
+                encoding (string): Charset encoding.
         """
         self.conn_string = "oracle+cx_oracle://{0}:{1}@{2}:{3}/{4}".format(
-            user,
-            password,
-            host,
-            port,
-            service_name)
+            conn_params[0],
+            conn_params[1],
+            conn_params[2],
+            conn_params[3],
+            conn_params[4])
         self.engine = create_engine(self.conn_string,
                                     encoding=encoding,
                                     coerce_to_unicode=True,
                                     coerce_to_decimal=False)
-        self.schema = user.upper()
+        self.schema = conn_params[0]
 
     def get_table(self, table_name, schema=None):
         """
@@ -89,19 +88,20 @@ class Oracle:
         Execute a DDL or DML SQL statement.
 
             Args:
-                sql: SQL statement
+                sql (string): SQL statement
+                kwargs (dictionary): optional statement named parameters
             Returns:
                 result_set(Dataframe):
 
         """
         connection = self.engine.connect()
         trans = connection.begin()
-        result_set = pd.DataFrame()
+        result_set = pandas.DataFrame()
         try:
             result = connection.execute(text(sql), **kwargs)
             trans.commit()
             if result.returns_rows:
-                result_set = pd.DataFrame(result.fetchall())
+                result_set = pandas.DataFrame(result.fetchall())
                 result_set.columns = result.keys()
                 LOGGER.info('Number of returned rows: %s',
                             str(len(result_set.index)))
@@ -132,18 +132,15 @@ class Oracle:
         # sql keywords/identifiers.
 
     @staticmethod
-    def load_data(
-        user,
-        password,
-        host,
-        port,
-        service_name,
-        schema,
-        table,
-        output_path,
-        os_path,
-        os_ld_library_path,
-        mode="APPEND"):
+    def insert(
+            *conn_params,
+            schema,
+            table,
+            output_path,
+            os_path,
+            os_ld_library_path,
+            mode="APPEND"
+    ):
         """
         Load a dataframe into a table via Oracle SQL Loader.
 
@@ -156,13 +153,14 @@ class Oracle:
             [bad=bad_file]
 
         Args:
-            user (str): database user
-            password (str): database password
-            host: database server host name or IP address
-            port (str): Oracle listener port
-            service_name (str): Oracle instance service name
+            *conn_params: 5-tuple of the following connection parameters:
+                    user(string): database user to connect to the schema.
+                    password(string): database password of the user.
+                    host(string): database management system host.
+                    port(string): tcp port where the database is listening.
+                    service_name(string): Oracle instance name.
             schema (str): database schema
-            table (pandas DataFrame): dataframe with the same name and column
+            table (DataFrame): dataframe with the same name and column
                 labels as the table in which it's going to be loaded.
                 It must be filled with data rows.
             output_path (str): path for output data files
@@ -207,7 +205,8 @@ class Oracle:
         env['LD_LIBRARY_PATH'] = os_ld_library_path
         # generate SQL Loader arguments
         os_command = "sqlldr {0}/{1}@{2}:{3}/{4} ".format(
-            user, password, host, port, service_name)
+            conn_params[0], conn_params[1], conn_params[2],
+            conn_params[3], conn_params[4])
         os_command += \
             "control='{0}{1}.ctl' log='{0}{1}.log' bad='{0}{1}.bad'".format(
                 output_path, table.name)

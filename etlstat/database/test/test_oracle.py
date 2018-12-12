@@ -4,8 +4,12 @@
 
 import os
 import unittest
-import pandas as pd
+import pandas
+import time
 from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy import (select, func, Column, Integer, String, Boolean, Float,
+                        DateTime)
+from sqlalchemy.ext.declarative import declarative_base
 from etlstat.database.oracle import Oracle
 
 os.environ['NLS_LANG'] = '.AL32UTF8'
@@ -22,8 +26,8 @@ class TestOracle(unittest.TestCase):
     conn_params = [user, password, host, port, service_name]
     output_path = os.getcwd() + '/etlstat/database/test/'
     os_path = '/usr/local/bin:/usr/bin:/bin:' \
-        '/var/opt/oracle/instantclient_18_3'
-    os_ld_library_path = '/var/opt/oracle/instantclient_18_3'
+        '/opt/oracle/instantclient_12_2'
+    os_ld_library_path = '/opt/oracle/instantclient_12_2'
 
     @classmethod
     def setUpClass(cls):
@@ -34,92 +38,92 @@ class TestOracle(unittest.TestCase):
         port = '1521'
         service_name = 'xe'
         conn_params = [user, password, host, port, service_name]
-        my_conn = Oracle(*conn_params)
+        ora_conn = Oracle(*conn_params)
         sql = "DROP USER TEST CASCADE"
-        my_conn.execute(sql)
+        ora_conn.execute(sql)
         sql = "CREATE USER test IDENTIFIED BY password " \
               "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
-        my_conn.execute(sql)
+        ora_conn.execute(sql)
         sql = "ALTER USER test QUOTA UNLIMITED ON USERS"
-        my_conn.execute(sql)
+        ora_conn.execute(sql)
         sql = "GRANT CONNECT, RESOURCE TO test"
-        my_conn.execute(sql)
+        ora_conn.execute(sql)
 
     def test_init(self):
         """Check connection with Oracle database."""
-        self.assertEqual(str(Oracle(*self.conn_params).engine),
-                         "Engine(oracle+cx_oracle://test:***@localhost:1521"
-                         "/?service_name=xe)")
+        self.assertEqual(
+            str(Oracle(*self.conn_params).engine),
+            "Engine(oracle+cx_oracle://test:***@localhost:1521/xe)")
 
     def test_execute(self):
-        """ Check if different queries are correctly executed."""
+        """Check if different queries are correctly executed."""
         ora_conn = Oracle(*self.conn_params)
-        sql = "CREATE TABLE test_sql (id integer, column1 varchar2(100), " \
+        sql = "CREATE TABLE table1 (id integer, column1 varchar2(100), " \
               "column2 number)"
-        status, result = ora_conn.execute_sql(sql)
-        self.assertTrue(status)
-        sql = "INSERT INTO test_sql (id, column1, column2) " \
+        ora_conn.execute(sql)
+        table1 = ora_conn.get_table('table1')
+        self.assertEqual(table1.c.column1.name, 'column1')
+        sql = "INSERT INTO table1 (id, column1, column2) " \
               "VALUES (1, 'Varchar text (100 char)', " \
               "123456789.012787648484859)"
-        status, result = ora_conn.execute_sql(sql)
-        self.assertTrue(status)
-        sql = 'select * from test_sql order by id'
-        status, result = ora_conn.execute_sql(sql)
-        self.assertEqual(result.columns.values[0], 'id')
-        self.assertEqual(result.columns.values[1], 'column1')
-        self.assertEqual(result.columns.values[2], 'column2')
-        self.assertEqual(result.values[0][0], 1)
-        self.assertEqual(result.values[0][1], 'Varchar text (100 char)')
-        self.assertEqual(result.values[0][2], 123456789.012787648484859)
-        sql = "UPDATE test_sql SET id = 2 WHERE id = 1"
-        status, result = ora_conn.execute_sql(sql)
-        self.assertTrue(status)
-        sql = "DELETE FROM test_sql WHERE id > 0"
-        status, result = ora_conn.execute_sql(sql)
-        self.assertTrue(status)
-        sql = "DROP TABLE test_sql"
-        status, result = ora_conn.execute_sql(sql)
-        self.assertTrue(status)
+        ora_conn.execute(sql)  # EXECUTE example
+        # The select.columns parameter is not available in the method form of
+        # select(), e.g. FromClause.select().
+        # See https://docs.sqlalchemy.org/en/latest/core/selectable.html#
+        # sqlalchemy.sql.expression.FromClause.select
+        results = ora_conn.engine.execute(
+            select([table1.c.column1]).select_from(table1)).fetchall()
+        expected = 'Varchar text (100 char)'
+        current = results[0][0]
+        # this returns a tuple inside a list and I dont know why
+        self.assertEqual(expected, current)
+        query = 'select * from table1 order by id'
+        result = ora_conn.execute(query)
+        expected = 1
+        current = len(result.index)
+        self.assertEqual(expected, current)
+        ora_conn.drop('table1')
 
     def test_select(self):
-        """ Check select statement using sqlalchemy"""
-        my_conn = MySQL(*self.conn_params)
-        table_name = "inf_schema"
-        inf_schema = my_conn.get_table(table_name)
-        # SELECT * FROM inf_schema
-        # WHERE table_name like 'INNO%' AND avg_row_length > 100
-        results = my_conn.engine.execute(select('*')
-                                         .where(inf_schema.c.table_name
-                                                .like('INNO%'))
-                                         .where(inf_schema.c.avg_row_length >
-                                                100)
-                                         .select_from(inf_schema)).fetchall()
-        table_df = pd.DataFrame(results)
-        self.assertGreaterEqual(len(table_df), 6)
+        """Check select statement using sqlalchemy."""
+        ora_conn = Oracle(*self.conn_params)
+        table_name = "audit_actions"
+        schema = "sys"
+        audit_actions = ora_conn.get_table(table_name, schema=schema)
+        # SELECT * FROM sys.audit_actions
+        # WHERE name like 'CREATE%' AND action > 100
+        results = ora_conn.engine.execute(
+            select('*').where(
+                audit_actions.c.name.like('CREATE%')).where(
+                    audit_actions.c.action > 100).select_from(
+                        audit_actions)).fetchall()
+        table_df = pandas.DataFrame(results)
+        self.assertGreaterEqual(len(table_df), 17)
 
     def test_get_table(self):
         """Check get table from the database using SqlAlchemy."""
-        my_conn = Oracle(*self.conn_params)
-        inf_schema = my_conn.get_table('inf_schema')  # GET TABLE example
-        row_count = my_conn.engine.scalar(
-            select([func.count('*')]).select_from(inf_schema)
+        ora_conn = Oracle(*self.conn_params)
+        hlp = ora_conn.get_table('help', schema='system')  # GET TABLE example
+        row_count = ora_conn.engine.scalar(
+            select([func.count('*')]).select_from(hlp)
         )
         # The select.columns parameter is not available in the method form of
         # select(), e.g. FromClause.select().
         # See https://docs.sqlalchemy.org/en/latest/core/selectable.html#
         # sqlalchemy.sql.expression.FromClause.select
-        my_conn.engine.execute(
-            select([inf_schema.c.table_name]).select_from(inf_schema))
-        self.assertEqual(row_count, 295)
+        ora_conn.engine.execute(
+            select([hlp.c.info]).select_from(hlp))
+        self.assertEqual(row_count, 919)
 
     def test_create(self):
-        """ Check create table using sqlalchemy """
+        """Check create table using sqlalchemy."""
         Base = declarative_base()
-        my_conn = MySQL(*self.conn_params)
+        ora_conn = Oracle(*self.conn_params)
 
         # table creation can be done via execute() + raw SQL or using this:
         class Table2(Base):
-            """ Auxiliary sqlalchemy table model for the tests"""
+            """Auxiliary sqlalchemy table model for the tests."""
+
             __tablename__ = 'table2'
 
             column_int = Column(Integer)
@@ -129,69 +133,82 @@ class TestOracle(unittest.TestCase):
             column_boolean = Column(Boolean)
             id = Column(Integer, primary_key=True)
 
-        Table2.__table__.create(bind=my_conn.engine)
-        table2 = my_conn.get_table('table2')
+        Table2.__table__.create(bind=ora_conn.engine)
+        table2 = ora_conn.get_table('table2')
         self.assertEqual(table2.c.column_datetime.name, 'column_datetime')
         self.assertEqual(len(table2.c), 6)
-        my_conn.drop('table2')
+        ora_conn.drop('table2')
 
     def test_drop(self):
-        """ Check drop for an existing table """
-        my_conn = Oracle(*self.conn_params)
-        sql = "CREATE TABLE table1 (id integer, column1 varchar(100), " \
-            "column2 double)"
-        my_conn.execute(sql)
-        my_conn.get_table('table1')
-        my_conn.drop('table1')  # DROP example
+        """Check drop for an existing table."""
+        ora_conn = Oracle(*self.conn_params)
+        sql = "CREATE TABLE table1 (id INTEGER, column1 VARCHAR(100), " \
+            "column2 NUMBER)"
+        ora_conn.execute(sql)
+        ora_conn.get_table('table1')
+        ora_conn.drop('table1')  # DROP example
         with self.assertRaises(InvalidRequestError):
-            my_conn.get_table('table1')
+            ora_conn.get_table('table1')
 
     def test_delete(self):
-        """ Check delete rows from table."""
-        data_columns = ['column_int', 'column_string', 'column_float']
-        data_values = [[1, 'string1', 456.956], [2, 'string2', 38.905]]
-        data = pd.DataFrame(data_values, columns=data_columns)
-        data.name = 'test_delete'
-        my_conn = MySQL(*self.conn_params)
-        my_conn.insert(data)
-        table = my_conn.get_table(data.name)
+        """Check delete rows from table."""
+        ora_conn = Oracle(*self.conn_params)
+        sql = "CREATE TABLE test_delete (column_int INTEGER," \
+            "column_string VARCHAR(100), column_float NUMBER)"
+        ora_conn.execute(sql)
+        sql1 = "INSERT INTO test_delete (column_int, column_string, " \
+            "column_float) VALUES(2, 'string2', 456.956)"
+        sql2 = "INSERT INTO test_delete (column_int, column_string, " \
+            "column_float) VALUES(1, 'string1', 38.905)"
+        ora_conn.execute(sql1)
+        ora_conn.execute(sql2)
+        table = ora_conn.get_table('test_delete')
         expected = 2
-        current = my_conn.engine.scalar(
+        current = ora_conn.engine.scalar(
             select([func.count('*')]).select_from(table)
         )
         self.assertEqual(current, expected)
+        # delete from operation
+        table.delete().where(table.c.column_int == 2).execute()
+        expected = 1
+        current = ora_conn.engine.scalar(
+            select([func.count('*')]).select_from(table)
+        )
+        self.assertEqual(current, expected)
+        ora_conn.drop('test_delete')
 
-    def test_load_data(self):
+    def test_insert(self):
         """Check if a bulk insert with sql loader is correctly executed."""
-        source_file = self.output_path + '01001.csv'
         table_name = 'px_01001'
+        ora_conn = Oracle(*self.conn_params)
+        sql = "CREATE TABLE {0} (id INTEGER, tipo_indicador " \
+            "VARCHAR(100), nivel_educativo VARCHAR(100), valor NUMBER)". \
+            format(table_name)
+        ora_conn.execute(sql)
+        px_01001 = ora_conn.get_table(table_name)
+        self.assertTrue(px_01001.exists)
+        source_file = self.output_path + 'px_01001.csv'
         data_file = self.output_path + 'px_01001.dat'
         control_file = self.output_path + 'px_01001.ctl'
         log_file = self.output_path + 'px_01001.log'
         bad_file = self.output_path + 'px_01001.bad'
         data_columns = ['id', 'tipo_indicador', 'nivel_educativo', 'valor']
-        table_def = pd.DataFrame(columns=data_columns)
+        table_def = pandas.DataFrame(columns=data_columns)
         table_def['id'] = table_def['id'].astype(int)
         table_def['tipo_indicador'] = table_def['tipo_indicador'].astype(str)
         table_def['nivel_educativo'] = table_def['nivel_educativo'].astype(str)
         table_def['valor'] = table_def['valor'].astype(float)
         table_def.name = table_name
-        ora_conn = Oracle(*self.conn_params)
-        ora_conn.create(table_def, self.schema)
-
-        data = pd.read_csv(source_file, header=0, sep=';', encoding='utf8')
+        data = pandas.read_csv(source_file, header=0, sep=';', encoding='utf8')
         data.name = table_name
-        ora_conn.bulk_insert(self.user,
-                             self.password,
-                             self.host,
-                             self.port,
-                             self.service_name,
-                             self.schema,
-                             data,
-                             self.output_path,
-                             self.os_path,
-                             self.os_ld_library_path,
-                             mode="TRUNCATE")
+        ora_conn.insert(
+            *self.conn_params,
+            schema=self.conn_params[0],
+            table=data,
+            output_path=self.output_path,
+            os_path=self.os_path,
+            os_ld_library_path=self.os_ld_library_path
+        )
         self.assertTrue(os.path.isfile(data_file))
         self.assertTrue(os.path.isfile(control_file))
         self.assertTrue(os.path.isfile(log_file))
