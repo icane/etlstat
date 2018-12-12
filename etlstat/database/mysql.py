@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-    This module manages MySQL primitives.
+This module manages MySQL primitives.
 
     Date:
         27/11/2018
@@ -12,7 +12,6 @@
         0.1
 
     Notes:
-
 
 """
 
@@ -30,32 +29,42 @@ LOGGER = logging.getLogger(__name__)
 
 
 class MySQL:
-    """ MySQL class offers some helper methods that encapsulate primitive logic
+    """
+    Manage connections to MySQL databases.
+
+    MySQL class offers some helper methods that encapsulate primitive logic
         to interactuate with the database: insert/upsert, execute, drop, etc.
         Some primitives are not included because they can be handled more
-        properly with sqlalchemy. """
+        properly with sqlalchemy.
 
-    def __init__(self, user, password, host, port, database):
-        """ Initializes the database connection and other relevant data
+    """
+
+    def __init__(self, *conn_params):
+        """
+        Initialize the database connection and other relevant data.
+
             Args:
-              user(string): database user to connect to the schema.
-              password(string): database password of the user.
-              host(string): database management system host.
-              port(string): tcp port where the database is listening.
-              database(string): schema or database name.
+                *conn_params: list with the following connection parameters:
+                    user(string): database user to connect to the schema.
+                    password(string): database password of the user.
+                    host(string): database management system host.
+                    port(string): tcp port where the database is listening.
+                    database(string): schema or database name.
         """
         # connection string in sqlalchemy format
         self.conn_string = "mysql+mysqlconnector://{0}:{1}@{2}:{3}/{4}".format(
-            user,
-            password,
-            host,
-            port,
-            database)
+            conn_params[0],
+            conn_params[1],
+            conn_params[2],
+            conn_params[3],
+            conn_params[4])
         self.engine = create_engine(self.conn_string)
-        self.database = database
+        self.database = conn_params[4]
 
     def get_table(self, table_name, schema=None):
-        """Gets a database table into a sqlalchemy Table object.
+        """
+        Get a database table into a sqlalchemy Table object.
+
             Args:
                 table_name(string): name of the database table to map.
                 schema(string): name of the schema to which the table belongs.
@@ -64,8 +73,8 @@ class MySQL:
             Returns:
                 table(Table): sqlalchemy Table object referencing the specified
                               database table.
-        """
 
+        """
         meta = MetaData(bind=self.engine,
                         schema=schema if schema else self.database)
         return Table(table_name, meta, autoload=True,
@@ -73,11 +82,13 @@ class MySQL:
 
     def execute(self, sql, **kwargs):
         """
-        Executes a DDL or DML SQL statement
+        Execute a DDL or DML SQL statement.
+
         Args:
             sql: SQL statement
         Returns:
             result_set(Dataframe):
+
         """
         connection = self.engine.connect()
         trans = connection.begin()
@@ -98,7 +109,8 @@ class MySQL:
         return result_set
 
     def drop(self, table_name):
-        """ Drops a table from the database
+        """
+        Drop a table from the database.
 
         Args:
           table_name(str): name of the table to drop.
@@ -106,7 +118,6 @@ class MySQL:
         Returns: nothing.
 
         """
-
         db_table = self.get_table(table_name)
         db_table.drop(self.engine, checkfirst=True)
         LOGGER.info('Table %s successfully dropped.', table_name)
@@ -115,8 +126,12 @@ class MySQL:
         # sql keywords/identifiers.
 
     def insert(self, data_table, csv_path='temp.csv'):
-        """ Inserts a dataframe into a table by converting it to CSV format and
-            using odo bulk load functionality.
+        """
+        Insert a dataframe into a table.
+
+        Converts the dataframe to CSV format and uses odo
+        bulk load functionality.
+
         Args:
           data_table(Dataframe): dataframe with the data to load.
           csv_path(string): path to the CSV temporal file which will be loaded
@@ -125,6 +140,7 @@ class MySQL:
         Returns:
           db_table(Table): sqlalchemy table mapping the table with the inserted
                            records.
+
         """
         connection = self.engine.connect()
         db_table = Table()
@@ -152,11 +168,15 @@ class MySQL:
 
     def upsert(self, tmp_table, table_name, sql, csv_path='temp.csv',
                rm_tmp=True):
-        """ Updates/inserts a dataframe into a table by converting it to CSV
-            format, using odo bulk load functionality to load it to a temporary
-            table and then executing a raw update or update/insert query from a
-            text file which extracts records from the temporary table and
-            loads them into the definitive one.
+        """
+        Update/insert a dataframe into a table.
+
+        Converts the dataframe to CSV format, and uses odo bulk load
+        functionality to load it to a temporary table and then executing
+        a raw update or update/insert query from a text file which
+        extracts records from the temporary table and loads them into the
+        definitive one.
+
             Args:
                 tmp_table(Dataframe): dataframe with the data to load in a
                                       temporary table.
@@ -173,6 +193,7 @@ class MySQL:
             Returns:
                 db_table(Table): sqlalchemy table mapping the table with the
                                  inserted/updated records.
+
         """
         connection = self.engine.connect()
         db_table = Table()

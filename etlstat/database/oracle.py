@@ -30,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 
 class Oracle:
     """
-    Manages connections to Oracle databases.
+    Manage connections to Oracle databases.
 
         Oracle class offers some helper methods that encapsulate primitive
         logic to interactuate with the database: insert/upsert, execute,
@@ -45,7 +45,7 @@ class Oracle:
         Initialize the database connection and other relevant data.
 
             Args:
-                *conn_params: 5-tuple of the following connection parameters:
+                *conn_params: list with the following connection parameters:
                     user(string): database user to connect to the schema.
                     password(string): database password of the user.
                     host(string): database management system host.
@@ -53,6 +53,7 @@ class Oracle:
                     service_name(string): Oracle instance name.
                 encoding (string): Charset encoding.
         """
+        # connection string in sqlalchemy format
         self.conn_string = "oracle+cx_oracle://{0}:{1}@{2}:{3}/{4}".format(
             conn_params[0],
             conn_params[1],
@@ -153,7 +154,7 @@ class Oracle:
             [bad=bad_file]
 
         Args:
-            *conn_params: 5-tuple of the following connection parameters:
+            *conn_params: list of the following connection parameters:
                     user(string): database user to connect to the schema.
                     password(string): database password of the user.
                     host(string): database management system host.
