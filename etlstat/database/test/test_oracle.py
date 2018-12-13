@@ -5,7 +5,6 @@
 import os
 import unittest
 import pandas
-import time
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy import (select, func, Column, Integer, String, Boolean, Float,
                         DateTime)
@@ -210,8 +209,11 @@ class TestOracle(unittest.TestCase):
             os_ld_library_path=self.os_ld_library_path
         )
         self.assertTrue(os.path.isfile(data_file))
+        os.remove(data_file)
         self.assertTrue(os.path.isfile(control_file))
+        os.remove(control_file)
         self.assertTrue(os.path.isfile(log_file))
+        os.remove(log_file)
         self.assertFalse(os.path.isfile(bad_file))
 
 
