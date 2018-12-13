@@ -150,7 +150,7 @@ class MySQL:
         os.remove(csv_path)
         return db_table
 
-    def upsert(self, tmp_table, table_name, sql, csv_path='temp.csv',
+    def upsert(self, tmp_data, table_name, sql, csv_path='temp.csv',
                rm_tmp=True):
         """ Updates/inserts a dataframe into a table by converting it to CSV
             format, using odo bulk load functionality to load it to a temporary
@@ -158,7 +158,7 @@ class MySQL:
             text file which extracts records from the temporary table and
             loads them into the definitive one.
             Args:
-                tmp_table(Dataframe): dataframe with the data to load in a
+                tmp_data(Dataframe): dataframe with the data to load in a
                                       temporary table.
                 table_name(String): name of the table to be
                                     updated/inserted to.
@@ -176,14 +176,14 @@ class MySQL:
         """
         connection = self.engine.connect()
         db_table = Table()
-        if isinstance(tmp_table, pd.DataFrame):
-            aux = tmp_table.replace(np.NaN, "\\N")
+        if isinstance(tmp_data, pd.DataFrame):
+            aux = tmp_data.replace(np.NaN, "\\N")
             aux.to_csv(csv_path, index=False)
         else:
             raise TypeError("tmp_table must be a DataFrame.")
         try:
             tmp_table = odo(csv_path,
-                            f'''{self.conn_string}::{tmp_table.name}''',
+                            f'''{self.conn_string}::{tmp_data.name}''',
                             local='LOCAL', has_header=True)
             tmp_row_count = connection.engine.scalar(
                 select([func.count('*')]).select_from(tmp_table)
