@@ -36,7 +36,6 @@ class MySQL:
         to interactuate with the database: insert/upsert, execute, drop, etc.
         Some primitives are not included because they can be handled more
         properly with sqlalchemy.
-
     """
 
     def __init__(self, *conn_params):
@@ -52,12 +51,9 @@ class MySQL:
                     database(string): schema or database name.
         """
         # connection string in sqlalchemy format
-        self.conn_string = "mysql+mysqlconnector://{0}:{1}@{2}:{3}/{4}".format(
-            conn_params[0],
-            conn_params[1],
-            conn_params[2],
-            conn_params[3],
-            conn_params[4])
+        self.conn_string = f'''mysql+mysqlconnector://{conn_params[0]}:''' + \
+            '''{conn_params[1]}@{conn_params[2]}:''' + \
+            '''{conn_params[3]}/{conn_params[4]}'''
         self.engine = create_engine(self.conn_string)
         self.database = conn_params[4]
 

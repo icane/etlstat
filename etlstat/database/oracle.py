@@ -45,7 +45,7 @@ class Oracle:
         Initialize the database connection and other relevant data.
 
             Args:
-                *conn_params: list with the following connection parameters:
+                *conn_params: list of the following connection parameters:
                     user(string): database user to connect to the schema.
                     password(string): database password of the user.
                     host(string): database management system host.
@@ -54,12 +54,9 @@ class Oracle:
                 encoding (string): Charset encoding.
         """
         # connection string in sqlalchemy format
-        self.conn_string = "oracle+cx_oracle://{0}:{1}@{2}:{3}/{4}".format(
-            conn_params[0],
-            conn_params[1],
-            conn_params[2],
-            conn_params[3],
-            conn_params[4])
+        self.conn_string = f'''oracle+cx_oracle://{conn_params[0]}:''' + \
+            f'''{conn_params[1]}@{conn_params[2]}:''' + \
+            f'''{conn_params[3]}/{conn_params[4]}'''
         self.engine = create_engine(self.conn_string,
                                     encoding=encoding,
                                     coerce_to_unicode=True,
@@ -173,25 +170,23 @@ class Oracle:
         columns = ",".join(table.columns.values.tolist())
 
         # control file
-        ctl_file = open('{0}{1}.ctl'.format(output_path, table.name),
+        ctl_file = open(f'''{output_path}{table.name}.ctl''',
                         mode='w',
                         encoding='utf8')
-        ctl_header = """LOAD DATA\n""" + \
-                     """CHARACTERSET UTF8\n""" + \
-                     """INFILE '{0}{1}.dat'\n""".format(
-                         output_path, table.name) + \
-                     """{0}\n""".format(mode) + \
-                     """INTO TABLE {0}.{1}\n""".format(schema, table.name) + \
-                     """FIELDS TERMINATED BY ';' """ + \
-                     """OPTIONALLY ENCLOSED BY '\"'\n""" + \
-                     """TRAILING NULLCOLS\n""" + \
-                     """({0})""".format(columns)
+        ctl_header = f"""LOAD DATA
+                     CHARACTERSET UTF8
+                     INFILE '{output_path}{table.name}.dat'
+                     {mode}
+                     INTO TABLE {schema}.{table.name}
+                     FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '\"'
+                     TRAILING NULLCOLS
+                     ({columns})"""
 
         ctl_file.write(ctl_header)
         ctl_file.close()
 
         # data file
-        table.to_csv('{0}{1}.dat'.format(output_path, table.name),
+        table.to_csv(f'''{output_path}{table.name}.dat''',
                      sep=';',
                      header=False,
                      index=False,
@@ -205,12 +200,11 @@ class Oracle:
         env['PATH'] = os_path
         env['LD_LIBRARY_PATH'] = os_ld_library_path
         # generate SQL Loader arguments
-        os_command = "sqlldr {0}/{1}@{2}:{3}/{4} ".format(
-            conn_params[0], conn_params[1], conn_params[2],
-            conn_params[3], conn_params[4])
-        os_command += \
-            "control='{0}{1}.ctl' log='{0}{1}.log' bad='{0}{1}.bad'".format(
-                output_path, table.name)
+        os_command = f"""sqlldr {conn_params[0]}/{conn_params[1]}""" + \
+            f"""@{conn_params[2]}:{conn_params[3]}/{conn_params[4]} """ + \
+            f"""control='{output_path}{table.name}.ctl' """ + \
+            f"""log='{output_path}{table.name}.log' """ + \
+            f"""bad='{output_path}{table.name}.bad'"""
         args = shlex.split(os_command)
         # execution of Oracle SQL Loader
         try:
