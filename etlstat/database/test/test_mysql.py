@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-Unit tests for MySQL database module.
-"""
+"""Unit tests for MySQL database module."""
 
 import os
 import unittest
@@ -15,7 +13,8 @@ from etlstat.database.mysql import MySQL
 
 
 class TestMySQL(unittest.TestCase):
-    """Testing methods for MySQL class"""
+    """Testing methods for MySQL class."""
+
     user = 'test'
     password = 'password'
     host = '127.0.0.1'
@@ -25,7 +24,7 @@ class TestMySQL(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Sets up test variables"""
+        """Set up test variables."""
         user = 'root'
         password = 'admin'
         host = '127.0.0.1'
@@ -49,13 +48,13 @@ class TestMySQL(unittest.TestCase):
         my_conn.execute(ddl_file)
 
     def test_init(self):
-        """ Check connection with MySQL database"""
+        """Check connection with MySQL database."""
         self.assertEqual(str(MySQL(*self.conn_params).engine),
                          "Engine(mysql+mysqlconnector://test:***@127.0.0.1:"
                          "3306/test)")
 
     def test_get_table(self):
-        """ Check get table from the database using SqlAlchemy"""
+        """Check get table from the database using SqlAlchemy."""
         my_conn = MySQL(*self.conn_params)
         inf_schema = my_conn.get_table('inf_schema')  # GET TABLE example
         row_count = my_conn.engine.scalar(
@@ -70,7 +69,7 @@ class TestMySQL(unittest.TestCase):
         self.assertEqual(row_count, 295)
 
     def test_execute(self):
-        """ Check execute method launching arbitrary sql queries """
+        """Check execute method launching arbitrary sql queries."""
         my_conn = MySQL(*self.conn_params)
         sql = f'''CREATE TABLE table1 (id integer, column1 varchar(100),
                   column2 double)'''
@@ -98,7 +97,7 @@ class TestMySQL(unittest.TestCase):
         my_conn.drop('table1')
 
     def test_drop(self):
-        """ Check drop for an existing table """
+        """Check drop for an existing table."""
         my_conn = MySQL(*self.conn_params)
         sql = "CREATE TABLE table1 (id integer, column1 varchar(100), " \
             "column2 double)"
@@ -109,13 +108,14 @@ class TestMySQL(unittest.TestCase):
             my_conn.get_table('table1')
 
     def test_create(self):
-        """ Check create table using sqlalchemy """
+        """Check create table using sqlalchemy."""
         Base = declarative_base()
         my_conn = MySQL(*self.conn_params)
 
         # table creation can be done via execute() + raw SQL or using this:
         class Table2(Base):
-            """ Auxiliary sqlalchemy table model for the tests"""
+            """Auxiliary sqlalchemy table model for the tests."""
+
             __tablename__ = 'table2'
 
             column_int = Column(Integer)
@@ -132,7 +132,7 @@ class TestMySQL(unittest.TestCase):
         my_conn.drop('table2')
 
     def test_select(self):
-        """ Check select statement using sqlalchemy"""
+        """Check select statement using sqlalchemy."""
         my_conn = MySQL(*self.conn_params)
         table_name = "inf_schema"
         inf_schema = my_conn.get_table(table_name)
@@ -148,13 +148,13 @@ class TestMySQL(unittest.TestCase):
         self.assertGreaterEqual(len(table_df), 6)
 
     def test_insert(self):
-        """ Check that insert method inserts rows into a table."""
+        """Check that insert method inserts rows into a table."""
         my_conn = MySQL(*self.conn_params)
         Base = declarative_base()
         current_dir = os.path.dirname(os.path.abspath(__file__))
 
         class Pmh(Base):
-            """ Auxiliary sqlalchemy table model for the tests"""
+            """Auxiliary sqlalchemy table model for the tests."""
 
             __tablename__ = 'pmh'
 
@@ -181,14 +181,14 @@ class TestMySQL(unittest.TestCase):
         my_conn.drop('pmh')
 
     def test_upsert(self):
-        """ Check that upsert method inserts or updates rows in a table."""
+        """Check that upsert method inserts or updates rows in a table."""
         my_conn = MySQL(*self.conn_params)
         Base = declarative_base()
         current_dir = os.path.dirname(os.path.abspath(__file__))
 
         # IMPORTANT: table logic reuse pattern with mixins
         class PmhMixin(object):
-            """ Auxiliary sqlalchemy table model for the tests"""
+            """Auxiliary sqlalchemy table model for the tests."""
 
             __tablename__ = 'pmh'
 
@@ -204,11 +204,13 @@ class TestMySQL(unittest.TestCase):
             codigo_ine = Column(String(50))
 
         class Pmh(Base, PmhMixin):
-            """ Auxiliary sqlalchemy table model for the tests"""
+            """Auxiliary sqlalchemy table model for the tests."""
+
             __tablename__ = 'pmh'
 
         class PmhTmp(Base, PmhMixin):
-            """ Auxiliary sqlalchemy table model for the tests"""
+            """Auxiliary sqlalchemy table model for the tests."""
+
             __tablename__ = 'tmp_pmh'
 
         # table to update/insert
@@ -239,23 +241,23 @@ class TestMySQL(unittest.TestCase):
                   personas = tmp_pmh.personas,
                   codigo_ine = tmp_pmh.codigo_ine;'''
         expected = 76
-        current = original_table.loc[original_table['id']
-                                     == 5192]['personas'].tolist()[0]
+        current = original_table.loc[
+            original_table['id'] == 5192]['personas'].tolist()[0]
         self.assertEqual(current, expected)
         print(type(tmp_data))
         my_conn.upsert(tmp_data, data.name, sql)
         updated_table = pd.read_sql_table(data.name, my_conn.conn_string)
         expected = 9976
-        current = updated_table.loc[updated_table['id']
-                                    == 5192]['personas'].tolist()[0]
+        current = updated_table.loc[
+            updated_table['id'] == 5192]['personas'].tolist()[0]
         self.assertEqual(current, expected)
         expected = 46
-        current = updated_table.loc[updated_table['id']
-                                    == 30001]['cmun'].tolist()[0]
+        current = updated_table.loc[
+            updated_table['id'] == 30001]['cmun'].tolist()[0]
         my_conn.drop(data.name)
 
     def test_delete(self):
-        """ Check delete rows from table."""
+        """Check delete rows from table."""
         data_columns = ['column_int', 'column_string', 'column_float']
         data_values = [[1, 'string1', 456.956], [2, 'string2', 38.905]]
         data = pd.DataFrame(data_values, columns=data_columns)
