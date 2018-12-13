@@ -2,6 +2,7 @@
 
 """Unit tests for utils module."""
 import os
+import filecmp
 import unittest
 import pandas
 import etlstat.text.utils as utils
@@ -27,9 +28,15 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(df.columns[2], 'numero_de_trabajadores')
         self.assertEqual(df.columns[3], 'indice_de_variacion')
 
-    def bulk_replace_url_in_xml(self):
+    def test_bulk_replace_url_in_xml(self):
         """Check a URL replacement takes place in all files in a directory."""
         utils.bulk_replace_url_in_xml(f'''{self.current_dir}/data/''')
+        self.assertTrue(filecmp.cmp(f'''{self.current_dir}'''
+                                    f'''/data/jobs/TODAS_Uso de Comercio '''
+                                    f'''Electrónico.kjb''',
+                                    f'''{self.current_dir}'''
+                                    f'''/data/jobs/TODAS_Uso de Comercio '''
+                                    f'''Electrónico.kjb'''))
 
 
 if __name__ == '__main__':
