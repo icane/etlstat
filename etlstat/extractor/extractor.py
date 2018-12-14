@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Extractor module
+"""Extractor module: collection of functions for massively data extraction.
 
 This module offers several helping methods and functions to ease massively
 data extraction from different file formats. Support for XLS, CSV, PX, XML, SQL
@@ -24,9 +24,7 @@ from pyaxis import pyaxis
 
 def match_data_format(data_path, data_extension,
                       format_path, format_extension):
-    """
-    Matches format files(csv) with data files (txt) in a
-    directory for positional files. (Internal Method)
+    """Match format files(csv) with data files (txt) for positional files.
 
     Args:
         data_path (str): directory containing data files.
@@ -37,6 +35,7 @@ def match_data_format(data_path, data_extension,
     Returns:
         dict: Data filenames (TXT) as KEYS and format filenames (CSV) as
               VALUES.
+
     """
     assignation_map = {}
     # Contains data filenames
@@ -79,8 +78,9 @@ def match_data_format(data_path, data_extension,
 
 def xls(dir_path, sep=';', encoding='utf-8',
         data_extension='*.[xX][lL][sS]', na_values=None):
-    """
-    Reads excel files in a directory and generates a dict with xls names and
+    """Massively read XLS files from a directory.
+
+    Read excel files in a directory and generate a dict with xls names and
     sheetnames as keys and dataframes with the data as values.
 
     Args:
@@ -93,6 +93,7 @@ def xls(dir_path, sep=';', encoding='utf-8',
 
     Returns:
         dict: Excel name and sheet_names as KEYS and dataframe as VALUE.
+
     """
     os.chdir(dir_path)
     data = {}
@@ -120,8 +121,9 @@ def csv(
         sep=';',
         skipinitialspace=False
 ):
-    """
-    Reads csv files in a directory and generates a dict with csv names as keys
+    """Massively read CSV files from a directory.
+
+    Read csv files in a directory and generate a dict with csv names as keys
     and dataframes as values.
 
     Args:
@@ -136,6 +138,7 @@ def csv(
 
     Returns:
         dict: Csv name as KEY and dataframe as VALUE
+
     """
     os.chdir(dir_path)
     data = {}
@@ -152,16 +155,18 @@ def csv(
 
 
 def px(filename, sep=",", encoding='windows-1252'):
-    """
-    Reads and converts Pc-Axis files to dataframes from URIs listed in a CSV
-    file. Returns a dict with file names as keys and dataframes as values.
+    """Massively read PC-Axis files from a directory.
+
+    Read and convert PC-Axis files to dataframes from URIs listed in a CSV
+    file.
 
     Args:
         filename (str): CSV FILE with uris file path (including file name).
         sep (str): field separator.
         encoding (str): file encoding.
     Returns:
-        dict: px name as KEY and dataframe as VALUE
+        dict: file names as keys and dataframes as values.
+
     """
     uris = pd.read_csv(filename,
                        sep=sep,
@@ -176,11 +181,11 @@ def px(filename, sep=",", encoding='windows-1252'):
 def txt(dir_path, sep=';', encoding='windows-1252',
         format_extension='*.[cC][sS][vV]', data_extension='*.[tT][xX][tT]',
         na_values=None, format_path=None):
+    """Massively read positional text files from a directory.
 
-    """
-    Reads files in a directory, generates a correspondence between data and
-    format files and returns a dict. (MICRODATA). Also, calls
-    match_data_format() in order to generate the dataframe.
+    Read files in a directory, generate a correspondence between data and
+    format files and return a dict (MICRODATA). It uses match_data_format() in
+    order to generate the dataframe.
 
     Args:
         dir_path (str): directory containing data files.
@@ -196,6 +201,7 @@ def txt(dir_path, sep=';', encoding='windows-1252',
 
     Returns:
         dict: Name of data file as KEY and dataframe as VALUE.
+
     """
     conversion_map = {
         'STRING': str,
@@ -233,8 +239,9 @@ def txt(dir_path, sep=';', encoding='windows-1252',
 
 
 def xml(dir_path, pattern='*.[xXkK][mMtTjJ][lLrRbB]'):
-    """
-    Reads files in a directory filtered by regEx and generates a dict with xml
+    """Massively read XML files from a directory.
+
+    Read files in a directory filtered by regEx and generate a dict with xml
     file names as keys and etree objects as values.
 
     Args:
@@ -243,6 +250,7 @@ def xml(dir_path, pattern='*.[xXkK][mMtTjJ][lLrRbB]'):
 
     Returns:
         dict: XML name as KEY and etree object as VALUE.
+
     """
     xml_list = []
     os.chdir(dir_path)
@@ -259,8 +267,9 @@ def xml(dir_path, pattern='*.[xXkK][mMtTjJ][lLrRbB]'):
 
 
 def sql(dir_path):
-    """
-    Reads every SQL file in a directory and generates a dict with the file
+    """Massively read SQL files from a directory.
+
+    Read every SQL file in a directory and generates a dict with the file
     names as keys and the content of the files as values.
 
     Args:
@@ -268,6 +277,7 @@ def sql(dir_path):
 
     Returns:
         dict: query name  as KEY and query as VALUE.
+
     """
     files = {}
     os.chdir(dir_path)

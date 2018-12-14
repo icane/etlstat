@@ -33,27 +33,29 @@ class MySQL:
     Manage connections to MySQL databases.
 
     MySQL class offers some helper methods that encapsulate primitive logic
-        to interactuate with the database: insert/upsert, execute, drop, etc.
-        Some primitives are not included because they can be handled more
-        properly with sqlalchemy.
+    to interactuate with the database: insert/upsert, execute, drop, etc.
+    Some primitives are not included because they can be handled more
+    properly with sqlalchemy.
+
     """
 
     def __init__(self, *conn_params):
         """
         Initialize the database connection and other relevant data.
 
-            Args:
-                *conn_params: list with the following connection parameters:
-                    user(string): database user to connect to the schema.
-                    password(string): database password of the user.
-                    host(string): database management system host.
-                    port(string): tcp port where the database is listening.
-                    database(string): schema or database name.
+        Args:
+            *conn_params: list with the following connection parameters:
+                user(string): database user to connect to the schema.
+                password(string): database password of the user.
+                host(string): database management system host.
+                port(string): tcp port where the database is listening.
+                database(string): schema or database name.
+
         """
         # connection string in sqlalchemy format
         self.conn_string = f'''mysql+mysqlconnector://{conn_params[0]}:''' + \
-            '''{conn_params[1]}@{conn_params[2]}:''' + \
-            '''{conn_params[3]}/{conn_params[4]}'''
+            f'''{conn_params[1]}@{conn_params[2]}:''' + \
+            f'''{str(conn_params[3])}/{conn_params[4]}'''
         self.engine = create_engine(self.conn_string)
         self.database = conn_params[4]
 
@@ -61,14 +63,14 @@ class MySQL:
         """
         Get a database table into a sqlalchemy Table object.
 
-            Args:
-                table_name(string): name of the database table to map.
-                schema(string): name of the schema to which the table belongs.
-                            Defaults to the selected database in the
-                            connection.
-            Returns:
-                table(Table): sqlalchemy Table object referencing the specified
-                              database table.
+        Args:
+            table_name(string): name of the database table to map.
+            schema(string): name of the schema to which the table belongs.
+                        Defaults to the selected database in the
+                        connection.
+        Returns:
+            table(Table): sqlalchemy Table object referencing the specified
+                            database table.
 
         """
         meta = MetaData(bind=self.engine,
@@ -173,22 +175,22 @@ class MySQL:
         extracts records from the temporary table and loads them into the
         definitive one.
 
-            Args:
-                tmp_data(Dataframe): dataframe with the data to load in a
-                                      temporary table.
-                table_name(String): name of the table to be
-                                    updated/inserted to.
-                sql(string): string with the SQL update/insert query.
-                csv_path(string): path to the CSV temporal file which will be
-                                  loaded into the table.
-                                  Defaults to 'temp.csv'.
-                rm_tmp(Boolean): Defauls to True. Determines if the temporary
-                                 table should be dropped (expected behaviour)
-                                 or not (for debugging purposes).
+        Args:
+            tmp_data(Dataframe): dataframe with the data to load in a
+                                    temporary table.
+            table_name(String): name of the table to be
+                                updated/inserted to.
+            sql(string): string with the SQL update/insert query.
+            csv_path(string): path to the CSV temporal file which will be
+                                loaded into the table.
+                                Defaults to 'temp.csv'.
+            rm_tmp(Boolean): Defauls to True. Determines if the temporary
+                                table should be dropped (expected behaviour)
+                                or not (for debugging purposes).
 
-            Returns:
-                db_table(Table): sqlalchemy table mapping the table with the
-                                 inserted/updated records.
+        Returns:
+            db_table(Table): sqlalchemy table mapping the table with the
+                                inserted/updated records.
 
         """
         connection = self.engine.connect()

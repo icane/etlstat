@@ -28,8 +28,8 @@ Cx_Oracle requires [Oracle Instant Client](https://www.oracle.com/technetwork/da
 5. To use supplied binaries such as SQL*Plus, update your PATH environment variable.
 
 ```sh
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/opt/oracle/instantclient_12_2"
-export PATH=$PATH:"/opt/oracle/instantclient_12_2"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/opt/oracle/instantclient_18_3"
+export PATH=$PATH:"/opt/oracle/instantclient_18_3"
 ```
 
 + Test your Instant Client install by using "sqlplus" or "sqlplus64" to connect to the database.

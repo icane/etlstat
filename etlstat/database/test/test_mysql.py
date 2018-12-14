@@ -218,7 +218,10 @@ class TestMySQL(unittest.TestCase):
         data = pd.read_csv(f'''{current_dir}/pmh.csv''')
         data.name = 'pmh'
         my_conn.insert(data)
-        original_table = pd.read_sql_table(data.name, my_conn.conn_string)
+        # https://github.com/PyCQA/pylint/issues/1161
+        # there's an issue with pylint and pandas read methods.
+        original_table = pd.DataFrame(
+            pd.read_sql_table(data.name, my_conn.conn_string))
 
         # temporary table with data to update/insert
         PmhTmp.__table__.create(bind=my_conn.engine)
@@ -246,7 +249,8 @@ class TestMySQL(unittest.TestCase):
         self.assertEqual(current, expected)
         print(type(tmp_data))
         my_conn.upsert(tmp_data, data.name, sql)
-        updated_table = pd.read_sql_table(data.name, my_conn.conn_string)
+        updated_table = pd.DataFrame(
+            pd.read_sql_table(data.name, my_conn.conn_string))
         expected = 9976
         current = updated_table.loc[
             updated_table['id'] == 5192]['personas'].tolist()[0]
@@ -272,7 +276,8 @@ class TestMySQL(unittest.TestCase):
         self.assertEqual(current, expected)
 
         # delete from operation
-        table.delete().where(table.c.column_int == 2).execute()
+        # the None argument in delete DML is included to avoid pylint E1120
+        table.delete(None).where(table.c.column_int == 2).execute()
 
         expected = 1
         current = my_conn.engine.scalar(
