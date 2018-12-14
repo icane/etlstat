@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-Unit tests for etlstat.
-"""
-
+"""Unit tests for etlstat."""
 
 import os
 import unittest
@@ -12,17 +9,19 @@ import etlstat.extractor.extractor as extractor
 
 
 class TestExtractor(unittest.TestCase):
-    """ Unit tests for px. """
+    """Unit tests for px."""
 
     def setUp(self):
-        """ Sets initialization variables. """
-
+        """Set initialization variables."""
         self.base_path = os.path.dirname(os.path.abspath(__file__)) + '/data'
 
     def test_csv(self):
-        """csv_in() should read every csv file in a directory and generate a
-           dict with csv names as keys and dataframes as values."""
+        """Should massively read CSV files.
 
+        Should read every csv file in a directory and generate a
+        dict with csv names as keys and dataframes as values.
+
+        """
         dir_path = self.base_path + '/csv/'
         data = extractor.csv(dir_path, sep=";")
         agenv_head = ['NORDEN', 'QI11', 'QI121', 'QI122', 'QI131', 'QI132',
@@ -60,9 +59,12 @@ class TestExtractor(unittest.TestCase):
                          aloj_head)
 
     def test_txt(self):
-        """txt_in() should read positional txt files in a directory with
-           their formats in csv and return a dict"""
+        """Should massively read positional text files from a directory.
 
+        Should read positional txt files in a directory with their formats
+        in csv and return a dict.
+
+        """
         dir_path = self.base_path + '/positional/'
         data = extractor.txt(dir_path, format_path=dir_path + 'format/')
 
@@ -124,10 +126,12 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(list(data['TEC_SER_06_15.TXT'].dtypes), tec_type)
 
     def test_xls(self):
-        """xls_in() reads XLS files in a directory  and generates a dict with
-           xls and sheet names as keys and dataframes with the data
-           as values."""
+        """Should massively read XLS files from a directory.
 
+        Should read XLS files in a directory  and generate a dict with file and
+        sheet names as keys and dataframes with the data as values.
+
+        """
         dir_path = self.base_path + '/excel/'
         data = extractor.xls(dir_path)
 
@@ -143,9 +147,12 @@ class TestExtractor(unittest.TestCase):
                          pd.core.frame.DataFrame)
 
     def test_xml(self):
-        """xml() should read xml files in a directory and generate a dict
-           with the file names as keys and the etree objects as values."""
+        """Should massively read XML files from a directory.
 
+        Should massively read XML files in a directory and generate a dict with
+        the file names as keys and the etree objects as values.
+
+        """
         xml_dict = extractor.xml(self.base_path + '/xml/')
         self.assertEqual(len(xml_dict), 11)
         root = xml_dict['Comex.kjb'].getroot()
@@ -154,17 +161,24 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(root.tag, 'transformation')
 
     def test_sql(self):
-        """ sql() should read every SQL file in a given directory and generate
-            a dict with the file names as keys and the content of the files
-            as values."""
+        """Should massively read SQL files from a directory.
+
+        Should read every SQL file in a given directory and generate a dict
+        with the file names as keys and the content of the files as values.
+
+        """
         sql_data = extractor.sql(self.base_path + '/sql/')
         self.assertEqual(len(sql_data['afiliados']), 1582)
         self.assertEqual(len(sql_data['contratos']), 3023)
 
     def test_px(self):
-        """px() should read every px file from the URIs listed in an input
-           CSV file and generate a dict with the px name as key and a
-           dataframe with its data as value. """
+        """Should massively read PC-Axis files in a directory.
+
+        Should read every px file from the URIs listed in an input CSV file and
+        generate a dict with the px name as key and a dataframe with its data
+        as value.
+
+        """
         pc_axis_data = extractor.px(self.base_path + '/px/pcaxis_urls.csv')
         self.assertEqual(len(pc_axis_data), 3)
         self.assertEqual(type(pc_axis_data['px_01001']),

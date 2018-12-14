@@ -25,8 +25,8 @@ class TestOracle(unittest.TestCase):
     conn_params = [user, password, host, port, service_name]
     output_path = os.getcwd() + '/etlstat/database/test/'
     os_path = '/usr/local/bin:/usr/bin:/bin:' \
-        '/opt/oracle/instantclient_12_2'
-    os_ld_library_path = '/opt/oracle/instantclient_12_2'
+        '/opt/oracle/instantclient_18_3'
+    os_ld_library_path = '/opt/oracle/instantclient_18_3'
 
     @classmethod
     def setUpClass(cls):
@@ -168,7 +168,8 @@ class TestOracle(unittest.TestCase):
         )
         self.assertEqual(current, expected)
         # delete from operation
-        table.delete().where(table.c.column_int == 2).execute()
+        # the None argument in delete DML is included to avoid pylint E1120
+        table.delete(None).where(table.c.column_int == 2).execute()
         expected = 1
         current = ora_conn.engine.scalar(
             select([func.count('*')]).select_from(table)
