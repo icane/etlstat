@@ -54,3 +54,9 @@ docs/_build/
 .spyderfile
 .vscode
 .pylintrc
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
