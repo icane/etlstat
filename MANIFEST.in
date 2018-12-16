@@ -1,4 +1,6 @@
 include *.txt
+include README.rst
+include .pylintrc
 include .travis.yml
 include .coveragerc
 recursive-include docs *.puml
