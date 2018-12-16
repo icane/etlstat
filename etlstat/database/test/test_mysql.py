@@ -66,7 +66,7 @@ class TestMySQL(unittest.TestCase):
         # sqlalchemy.sql.expression.FromClause.select
         my_conn.engine.execute(
             select([inf_schema.c.table_name]).select_from(inf_schema))
-        self.assertEqual(row_count, 295)
+        self.assertEqual(row_count, 141)
 
     def test_execute(self):
         """Check execute method launching arbitrary sql queries."""
