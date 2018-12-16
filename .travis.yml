@@ -17,4 +17,4 @@ script:
   - python -m unittest etlstat/database/test/test_mysql.py
   - python -m unittest etlstat/extractor/test/test_extractor.py
   - python -m unittest etlstat/text/test/test_utils.py
-  - pylint --errors-only
+  - pylint --errors-only --rcfile .pylintrc etlstat
