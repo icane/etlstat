@@ -1,7 +1,0 @@
-{
-    "python.pythonPath": "venv/bin/python",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "python.linting.pydocstyleEnabled": false,
-    "python.linting.banditEnabled": false
-}
