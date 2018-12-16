@@ -31,7 +31,7 @@ class TestMySQL(unittest.TestCase):
         port = '3306'
         database = ''
         conn_params = [user, password, host, port, database]
-        ddl = "DROP DATABASE test"
+        ddl = "DROP DATABASE IF EXISTS test"
         my_conn = MySQL(*conn_params)
         my_conn.execute(ddl)
         ddl = "CREATE DATABASE test"
