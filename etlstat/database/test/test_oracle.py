@@ -6,6 +6,7 @@ import os
 import unittest
 import pandas
 from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.exc import DatabaseError
 from sqlalchemy import (select, func, Column, Integer, String, Boolean, Float,
                         DateTime)
 from sqlalchemy.ext.declarative import declarative_base
@@ -24,9 +25,6 @@ class TestOracle(unittest.TestCase):
     service_name = 'xe'
     conn_params = [user, password, host, port, service_name]
     output_path = os.getcwd() + '/etlstat/database/test/'
-    os_path = '/usr/local/bin:/usr/bin:/bin:' \
-        '/opt/oracle/instantclient_18_3'
-    os_ld_library_path = '/opt/oracle/instantclient_18_3'
 
     @classmethod
     def setUpClass(cls):
@@ -38,11 +36,12 @@ class TestOracle(unittest.TestCase):
         service_name = 'xe'
         conn_params = [user, password, host, port, service_name]
         ora_conn = Oracle(*conn_params)
-        sql = "DROP USER TEST CASCADE"
-        ora_conn.execute(sql)
-        sql = "CREATE USER test IDENTIFIED BY password " \
-              "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
-        ora_conn.execute(sql)
+        try:
+            sql = "CREATE USER test IDENTIFIED BY password " \
+                    "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
+            ora_conn.execute(sql)
+        except DatabaseError as dbe:
+            print(str(dbe))
         sql = "ALTER USER test QUOTA UNLIMITED ON USERS"
         ora_conn.execute(sql)
         sql = "GRANT CONNECT, RESOURCE TO test"

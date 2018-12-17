@@ -5,6 +5,7 @@
 import os
 import unittest
 import pandas
+from sqlalchemy.exc import DatabaseError
 from etlstat.database.oracle import Oracle
 
 os.environ['NLS_LANG'] = '.AL32UTF8'
@@ -34,11 +35,12 @@ class TestSqlLoader(unittest.TestCase):
         service_name = 'xe'
         conn_params = [user, password, host, port, service_name]
         ora_conn = Oracle(*conn_params)
-        sql = "DROP USER TEST CASCADE"
-        ora_conn.execute(sql)
-        sql = "CREATE USER test IDENTIFIED BY password " \
-              "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
-        ora_conn.execute(sql)
+        try:
+            sql = "CREATE USER test IDENTIFIED BY password " \
+                    "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
+            ora_conn.execute(sql)
+        except DatabaseError as dbe:
+            print(str(dbe))
         sql = "ALTER USER test QUOTA UNLIMITED ON USERS"
         ora_conn.execute(sql)
         sql = "GRANT CONNECT, RESOURCE TO test"
@@ -51,7 +53,10 @@ class TestSqlLoader(unittest.TestCase):
         sql = "CREATE TABLE {0} (id INTEGER, tipo_indicador " \
             "VARCHAR(100), nivel_educativo VARCHAR(100), valor NUMBER)". \
             format(table_name)
-        ora_conn.execute(sql)
+        try:
+            ora_conn.execute(sql)
+        except DatabaseError as dbe:
+            print(str(dbe))
         px_01001 = ora_conn.get_table(table_name)
         self.assertTrue(px_01001.exists)
         source_file = self.output_path + 'px_01001.csv'
