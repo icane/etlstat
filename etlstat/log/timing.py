@@ -18,17 +18,20 @@ import time
 import logging as log
 
 log.basicConfig(level=log.INFO)
-logger = log.getLogger(__name__)
+LOGGER = log.getLogger(__name__)
 
 
 def timeit(method):
+    """Execute a timer when a method starts.
 
+    Used as annotation, allows to log the time a method or function takes to
+    execute.
+    """
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
         te = time.time()
-
-        logger.info('[time] method: %r (%r, %r) %2.2f sec' % (method.__name__, args, kw, te-ts))
+        LOGGER.info('[time] method: %r (%r, %r) %2.2f sec' %
+                    (method.__name__, args, kw, te-ts))
         return result
-
     return timed

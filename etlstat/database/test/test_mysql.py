@@ -26,12 +26,12 @@ class TestMySQL(unittest.TestCase):
     def setUpClass(cls):
         """Set up test variables."""
         user = 'root'
-        password = 'admin'
+        password = ''
         host = '127.0.0.1'
         port = '3306'
         database = ''
         conn_params = [user, password, host, port, database]
-        ddl = "DROP DATABASE test"
+        ddl = "DROP DATABASE IF EXISTS test"
         my_conn = MySQL(*conn_params)
         my_conn.execute(ddl)
         ddl = "CREATE DATABASE test"
@@ -66,7 +66,7 @@ class TestMySQL(unittest.TestCase):
         # sqlalchemy.sql.expression.FromClause.select
         my_conn.engine.execute(
             select([inf_schema.c.table_name]).select_from(inf_schema))
-        self.assertEqual(row_count, 295)
+        self.assertEqual(row_count, 141)
 
     def test_execute(self):
         """Check execute method launching arbitrary sql queries."""

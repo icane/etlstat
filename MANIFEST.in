@@ -1,6 +1,7 @@
-include *.txt
+include .pylintrc
 include .travis.yml
 include .coveragerc
+include *.txt
 recursive-include docs *.puml
 recursive-include examples *.py
 recursive-include docs *.bat
@@ -18,3 +19,12 @@ recursive-include docs *.rst
 recursive-include docs *.txt
 recursive-include docs Makefile
 recursive-include pyjstat *.json
+recursive-include etlstat *.TXT
+recursive-include etlstat *.csv
+recursive-include etlstat *.kjb
+recursive-include etlstat *.ktr
+recursive-include etlstat *.rst
+recursive-include etlstat *.sql
+recursive-include etlstat *.txt
+recursive-include etlstat *.xls
+
