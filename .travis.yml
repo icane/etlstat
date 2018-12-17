@@ -6,23 +6,14 @@ python:
   - "3.6"
 
 services:
-  - docker
   - mysql
-
-before_install:
-  - docker pull sath89/oracle-xe-11g
-  - docker run --name orcldb -d -p 1521:1521 sath89/oracle-xe-11g
 
 install: 
   - pip install -r requirements.txt
   - pip install pylint
 
 script:
-  - python -m unittest etlstat/database/test/test_oracle.py
   - python -m unittest etlstat/database/test/test_mysql.py
   - python -m unittest etlstat/extractor/test/test_extractor.py
   - python -m unittest etlstat/text/test/test_utils.py
   - pylint --errors-only --rcfile .pylintrc etlstat
-
-after_script:
-  - docker rm -f orcldb
