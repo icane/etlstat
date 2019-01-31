@@ -26,7 +26,7 @@ class TestMySQL(unittest.TestCase):
     def setUpClass(cls):
         """Set up test variables."""
         user = 'root'
-        password = ''
+        password = 'admin'
         host = '127.0.0.1'
         port = '3306'
         database = ''
@@ -173,6 +173,7 @@ class TestMySQL(unittest.TestCase):
         data = pd.read_csv(f'''{current_dir}/pmh.csv''')
         data.name = 'pmh'
         my_conn.insert(data)
+        my_conn.execute(f'''alter table {data.name} add primary key(id)''')
         actual = my_conn.engine.scalar(
             select([func.count('*')]).select_from(Pmh)
         )
@@ -247,8 +248,8 @@ class TestMySQL(unittest.TestCase):
         current = original_table.loc[
             original_table['id'] == 5192]['personas'].tolist()[0]
         self.assertEqual(current, expected)
-        print(type(tmp_data))
-        my_conn.upsert(tmp_data, data.name, sql)
+        print("HERE")
+        my_conn.upsert(tmp_data, data.name, sql, rm_tmp=False)
         updated_table = pd.DataFrame(
             pd.read_sql_table(data.name, my_conn.conn_string))
         expected = 9976

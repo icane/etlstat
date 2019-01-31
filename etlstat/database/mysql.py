@@ -22,7 +22,7 @@ from sqlalchemy.exc import DatabaseError
 import pandas as pd
 import numpy as np
 from odo import odo
-
+import d6tstack
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
@@ -142,16 +142,15 @@ class MySQL:
         """
         connection = self.engine.connect()
         db_table = Table()
-
         if isinstance(data_table, pd.DataFrame):
             aux = data_table.replace(np.NaN, "\\N")
-            aux.to_csv(csv_path, index=False)
         else:
             raise TypeError("data_table must be a DataFrame.")
         try:
-            db_table = odo(csv_path,
-                           f'''{self.conn_string}::{data_table.name}''',
-                           local='LOCAL', has_header=True)
+            d6tstack.utils.pd_to_mysql(aux, self.conn_string,
+                                       data_table.name,
+                                       if_exists='replace')
+            db_table = self.get_table(data_table.name)
             row_count = connection.engine.scalar(
                 select([func.count('*')]).select_from(db_table)
             )
@@ -161,7 +160,6 @@ class MySQL:
             raise
         finally:
             connection.close()
-        os.remove(csv_path)
         return db_table
 
     def upsert(self, tmp_data, table_name, sql, csv_path='temp.csv',
@@ -194,22 +192,22 @@ class MySQL:
 
         """
         connection = self.engine.connect()
-        db_table = Table()
+        tmp_table = Table()
         if isinstance(tmp_data, pd.DataFrame):
             aux = tmp_data.replace(np.NaN, "\\N")
-            aux.to_csv(csv_path, index=False)
         else:
             raise TypeError("tmp_table must be a DataFrame.")
         try:
-            tmp_table = odo(csv_path,
-                            f'''{self.conn_string}::{tmp_data.name}''',
-                            local='LOCAL', has_header=True)
+            d6tstack.utils.pd_to_mysql(aux, self.conn_string,
+                                       tmp_data.name,
+                                       if_exists='replace')
+            tmp_table = self.get_table(tmp_data.name)
+            connection.execute(f'''alter table {tmp_data.name} add primary key(id)''')
             tmp_row_count = connection.engine.scalar(
                 select([func.count('*')]).select_from(tmp_table)
             )
             LOGGER.info('Number of temp table rows: %s', str(tmp_row_count))
-            os.remove(csv_path)  # remove temporary file
-            connection.execute(sql)  # update/insert query
+            # connection.execute(sql)  # update/insert query
             if rm_tmp:
                 self.drop(tmp_table.name)  # remove temporary table
             db_table = self.get_table(table_name)
