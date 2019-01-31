@@ -121,7 +121,7 @@ class MySQL:
         # Placeholders can only represent VALUES. You cannot use them for
         # sql keywords/identifiers.
 
-    def insert(self, data_table, primary_key='id'):
+    def insert(self, data_table, if_exists='fail'):
         """
         Insert a dataframe into a table.
 
@@ -130,8 +130,10 @@ class MySQL:
 
         Args:
           data_table(Dataframe): dataframe with the data to load.
-          primary_key(string): primary key column name. Defaults to 'id'.
-
+          if_exists(string): {‘fail’, ‘replace’, ‘append’}, default ‘fail’.
+                             See `pandas.to_sql()` for details. Warning: if
+                               replace is chosen, PKs will be deleted and will
+                               have to be recreated.
         Returns:
           db_table(Table): sqlalchemy table mapping the table with the inserted
                            records.
@@ -146,13 +148,11 @@ class MySQL:
         try:
             d6tstack.utils.pd_to_mysql(aux, self.conn_string,
                                        data_table.name,
-                                       if_exists='replace')
+                                       if_exists=if_exists)
             db_table = self.get_table(data_table.name)
             row_count = connection.engine.scalar(
                 select([func.count('*')]).select_from(db_table)
             )
-            connection.execute(f'''alter table {data_table.name}
-                                add primary key({primary_key})''')
             LOGGER.info('Number of inserted rows: %s', str(row_count))
         except Exception as exception:
             LOGGER.error(exception)
@@ -161,7 +161,7 @@ class MySQL:
             connection.close()
         return db_table
 
-    def upsert(self, tmp_data, table_name, sql, primary_key='id', rm_tmp=True):
+    def upsert(self, tmp_data, table_name, sql, if_exists='fail', rm_tmp=True):
         """
         Update/insert a dataframe into a table.
 
@@ -177,7 +177,10 @@ class MySQL:
             table_name(String): name of the table to be
                                 updated/inserted to.
             sql(string): string with the SQL update/insert query.
-            primary_key(string): primary key column name. Defaults to 'id'.
+            if_exists(string): {‘fail’, ‘replace’, ‘append’}, default ‘fail’.
+                               See `pandas.to_sql()` for details. Warning: if
+                               replace is chosen, PKs will be deleted and will
+                               have to be recreated.
             rm_tmp(Boolean): Defauls to True. Determines if the temporary
                                 table should be dropped (expected behaviour)
                                 or not (for debugging purposes).
@@ -188,25 +191,11 @@ class MySQL:
 
         """
         connection = self.engine.connect()
-        tmp_table = Table()
-        if isinstance(tmp_data, pd.DataFrame):
-            aux = tmp_data.replace(np.NaN, "\\N")
-        else:
-            raise TypeError("tmp_table must be a DataFrame.")
         try:
-            d6tstack.utils.pd_to_mysql(aux, self.conn_string,
-                                       tmp_data.name,
-                                       if_exists='replace')
-            tmp_table = self.get_table(tmp_data.name)
-            connection.execute(f'''alter table {tmp_data.name}
-                               add primary key({primary_key})''')
-            tmp_row_count = connection.engine.scalar(
-                select([func.count('*')]).select_from(tmp_table)
-            )
-            LOGGER.info('Number of temp table rows: %s', str(tmp_row_count))
+            self.insert(tmp_data, if_exists=if_exists)
             connection.execute(sql)  # update/insert query
             if rm_tmp:
-                self.drop(tmp_table.name)  # remove temporary table
+                self.drop(tmp_data.name)  # remove temporary table
             db_table = self.get_table(table_name)
             row_count = connection.engine.scalar(
                 select([func.count('*')]).select_from(db_table)

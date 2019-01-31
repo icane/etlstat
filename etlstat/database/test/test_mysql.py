@@ -172,7 +172,7 @@ class TestMySQL(unittest.TestCase):
         Pmh.__table__.create(bind=my_conn.engine)
         data = pd.read_csv(f'''{current_dir}/pmh.csv''')
         data.name = 'pmh'
-        my_conn.insert(data)
+        my_conn.insert(data, if_exists='append')
         # my_conn.execute(f'''alter table {data.name} add primary key(id)''')
         actual = my_conn.engine.scalar(
             select([func.count('*')]).select_from(Pmh)
@@ -218,7 +218,7 @@ class TestMySQL(unittest.TestCase):
         Pmh.__table__.create(bind=my_conn.engine)
         data = pd.read_csv(f'''{current_dir}/pmh.csv''')
         data.name = 'pmh'
-        my_conn.insert(data)
+        my_conn.insert(data, if_exists='append')
         # https://github.com/PyCQA/pylint/issues/1161
         # there's an issue with pylint and pandas read methods.
         original_table = pd.DataFrame(
@@ -248,7 +248,7 @@ class TestMySQL(unittest.TestCase):
         current = original_table.loc[
             original_table['id'] == 5192]['personas'].tolist()[0]
         self.assertEqual(current, expected)
-        my_conn.upsert(tmp_data, data.name, sql)
+        my_conn.upsert(tmp_data, data.name, sql, if_exists='append')
         updated_table = pd.DataFrame(
             pd.read_sql_table(data.name, my_conn.conn_string))
         expected = 9976
