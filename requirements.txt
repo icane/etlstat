@@ -1,7 +1,6 @@
 cx_Oracle
 mysql-connector==2.1.4
-SQLAlchemy==1.2.14
-odo==0.5.0
+SQLAlchemy==1.2.17
 Unidecode==1.0.22
 xlrd==1.1.0
 defusedxml==0.5.0

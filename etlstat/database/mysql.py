@@ -15,13 +15,11 @@ This module manages MySQL primitives.
 
 """
 
-import os
 import logging
 from sqlalchemy import create_engine, text, select, func, MetaData, Table
 from sqlalchemy.exc import DatabaseError
 import pandas as pd
 import numpy as np
-from odo import odo
 import d6tstack
 
 logging.basicConfig(level=logging.INFO)
@@ -123,7 +121,7 @@ class MySQL:
         # Placeholders can only represent VALUES. You cannot use them for
         # sql keywords/identifiers.
 
-    def insert(self, data_table, csv_path='temp.csv'):
+    def insert(self, data_table, primary_key='id'):
         """
         Insert a dataframe into a table.
 
@@ -132,8 +130,7 @@ class MySQL:
 
         Args:
           data_table(Dataframe): dataframe with the data to load.
-          csv_path(string): path to the CSV temporal file which will be loaded
-                            into the table.
+          primary_key(string): primary key column name. Defaults to 'id'.
 
         Returns:
           db_table(Table): sqlalchemy table mapping the table with the inserted
@@ -154,6 +151,8 @@ class MySQL:
             row_count = connection.engine.scalar(
                 select([func.count('*')]).select_from(db_table)
             )
+            connection.execute(f'''alter table {data_table.name}
+                                add primary key({primary_key})''')
             LOGGER.info('Number of inserted rows: %s', str(row_count))
         except Exception as exception:
             LOGGER.error(exception)
@@ -162,8 +161,7 @@ class MySQL:
             connection.close()
         return db_table
 
-    def upsert(self, tmp_data, table_name, sql, csv_path='temp.csv',
-               rm_tmp=True):
+    def upsert(self, tmp_data, table_name, sql, primary_key='id', rm_tmp=True):
         """
         Update/insert a dataframe into a table.
 
@@ -179,9 +177,7 @@ class MySQL:
             table_name(String): name of the table to be
                                 updated/inserted to.
             sql(string): string with the SQL update/insert query.
-            csv_path(string): path to the CSV temporal file which will be
-                                loaded into the table.
-                                Defaults to 'temp.csv'.
+            primary_key(string): primary key column name. Defaults to 'id'.
             rm_tmp(Boolean): Defauls to True. Determines if the temporary
                                 table should be dropped (expected behaviour)
                                 or not (for debugging purposes).
@@ -202,12 +198,13 @@ class MySQL:
                                        tmp_data.name,
                                        if_exists='replace')
             tmp_table = self.get_table(tmp_data.name)
-            connection.execute(f'''alter table {tmp_data.name} add primary key(id)''')
+            connection.execute(f'''alter table {tmp_data.name}
+                               add primary key({primary_key})''')
             tmp_row_count = connection.engine.scalar(
                 select([func.count('*')]).select_from(tmp_table)
             )
             LOGGER.info('Number of temp table rows: %s', str(tmp_row_count))
-            # connection.execute(sql)  # update/insert query
+            connection.execute(sql)  # update/insert query
             if rm_tmp:
                 self.drop(tmp_table.name)  # remove temporary table
             db_table = self.get_table(table_name)

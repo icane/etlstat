@@ -26,7 +26,7 @@ class TestMySQL(unittest.TestCase):
     def setUpClass(cls):
         """Set up test variables."""
         user = 'root'
-        password = 'admin'
+        password = ''
         host = '127.0.0.1'
         port = '3306'
         database = ''
@@ -173,7 +173,7 @@ class TestMySQL(unittest.TestCase):
         data = pd.read_csv(f'''{current_dir}/pmh.csv''')
         data.name = 'pmh'
         my_conn.insert(data)
-        my_conn.execute(f'''alter table {data.name} add primary key(id)''')
+        # my_conn.execute(f'''alter table {data.name} add primary key(id)''')
         actual = my_conn.engine.scalar(
             select([func.count('*')]).select_from(Pmh)
         )
@@ -248,8 +248,7 @@ class TestMySQL(unittest.TestCase):
         current = original_table.loc[
             original_table['id'] == 5192]['personas'].tolist()[0]
         self.assertEqual(current, expected)
-        print("HERE")
-        my_conn.upsert(tmp_data, data.name, sql, rm_tmp=False)
+        my_conn.upsert(tmp_data, data.name, sql)
         updated_table = pd.DataFrame(
             pd.read_sql_table(data.name, my_conn.conn_string))
         expected = 9976
@@ -263,7 +262,7 @@ class TestMySQL(unittest.TestCase):
 
     def test_delete(self):
         """Check delete rows from table."""
-        data_columns = ['column_int', 'column_string', 'column_float']
+        data_columns = ['id', 'column_string', 'column_float']
         data_values = [[1, 'string1', 456.956], [2, 'string2', 38.905]]
         data = pd.DataFrame(data_values, columns=data_columns)
         data.name = 'test_delete'
@@ -278,7 +277,7 @@ class TestMySQL(unittest.TestCase):
 
         # delete from operation
         # the None argument in delete DML is included to avoid pylint E1120
-        table.delete(None).where(table.c.column_int == 2).execute()
+        table.delete(None).where(table.c.id == 2).execute()
 
         expected = 1
         current = my_conn.engine.scalar(
