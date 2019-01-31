@@ -99,7 +99,7 @@ def bulk_replace_url_in_xml(input_data_path, output_data_path=None):
     for job_dir in job_dirs:
         if os.listdir(job_dir):  # check if directory is empty
             output_dir = output_data_path if output_data_path \
-                        else input_data_path + 'output/'
+                else input_data_path + 'output/'
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
             jobs = xml(job_dir)

@@ -38,7 +38,7 @@ class TestOracle(unittest.TestCase):
         ora_conn = Oracle(*conn_params)
         try:
             sql = "CREATE USER test IDENTIFIED BY password " \
-                    "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
+                  "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
             ora_conn.execute(sql)
         except DatabaseError as dbe:
             print(str(dbe))
