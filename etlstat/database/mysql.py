@@ -15,6 +15,7 @@ This module manages MySQL primitives.
 
 """
 
+import os
 import logging
 from sqlalchemy import create_engine, text, select, func, MetaData, Table
 from sqlalchemy.exc import DatabaseError
