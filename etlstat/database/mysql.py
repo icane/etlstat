@@ -15,7 +15,6 @@ This module manages MySQL primitives.
 
 """
 
-import os
 import logging
 from sqlalchemy import create_engine, text, select, func, MetaData, Table
 from sqlalchemy.exc import DatabaseError
@@ -121,12 +120,11 @@ class MySQL:
         # sql keywords/identifiers.
 
     def insert(self, data_table, if_exists='fail', tmpfile='tmp.csv',
-               sep=';', quotechar='"'):
+               sep=';', quotechar='"', line_terminated_by='\n'):
         r"""
         Insert a dataframe into a table.
 
-        Converts the dataframe to CSV format and uses odo
-        bulk load functionality.
+        Converts the dataframe to CSV format and bulk loads it.
 
         Args:
           data_table(Dataframe): dataframe with the data to load. Must contain
@@ -139,6 +137,8 @@ class MySQL:
                          tmp.csv
           sep (str): separator for temp file, eg ',' or '\t'. Defaults to ','.
           quotechar(str): string of length 1. Character used to quote fields.
+          line_terminated_by(str): termination character for file lines.
+                                   Defaults to '\n'.
         Returns:
           db_table(Table): sqlalchemy table mapping the table with the inserted
                            records.
@@ -153,11 +153,14 @@ class MySQL:
             raise TypeError("data_table must be a DataFrame.")
         try:
             LOGGER.info('creating %s ok', tmpfile)
-            data_table.to_csv(tmpfile, na_rep='\\N', index=False, sep=sep)
+            data_table.to_csv(tmpfile, na_rep='\\N', header=False,
+                              index=False, sep=sep, quotechar=quotechar)
             LOGGER.info('loading %s ok', tmpfile)
             sql_load = f'''LOAD DATA LOCAL INFILE '{tmpfile}' INTO TABLE
                            {data_table.name} FIELDS TERMINATED BY '{sep}'
-                           ENCLOSED BY '{quotechar}' IGNORE 1 LINES;'''
+                           OPTIONALLY ENCLOSED BY '{quotechar}' 
+                           LINES TERMINATED BY '{line_terminated_by}'
+                           ({', '.join(data_table.columns)});'''
             connection.execute(sql_load)
             os.remove(tmpfile)
             db_table = self.get_table(data_table.name)
@@ -176,11 +179,10 @@ class MySQL:
         r"""
         Update/insert a dataframe into a table.
 
-        Converts the dataframe to CSV format, and uses odo bulk load
-        functionality to load it to a temporary table and then executing
-        a raw update or update/insert query from a text file which
-        extracts records from the temporary table and loads them into the
-        definitive one.
+        Converts the dataframe to CSV format, and bulk loads it to a temporary
+        table and then executing a raw update or update/insert query from a
+        text file which extracts records from the temporary table and loads
+        them into the definitive one.
 
         Args:
             tmp_data(Dataframe): dataframe with the data to load in a
