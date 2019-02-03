@@ -19,7 +19,7 @@ MySQL Connector
 ...............
 
 Installation of MySQL connector for Python 3.
-If the version is not specified, the default attempts to install 2.2.3 and fails: [Unable to find Protobuf include directory](http://stackoverflow.com/questions/43029672/unable-to-find-protobuf-include-directory)
+If the version is not specified, pip attempts to install 2.2.3 and fails: [Unable to find Protobuf include directory](http://stackoverflow.com/questions/43029672/unable-to-find-protobuf-include-directory)
 
 :code:`sudo pip3 install mysql-connector==2.1.4`
 
