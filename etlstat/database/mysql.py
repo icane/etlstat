@@ -15,12 +15,11 @@ This module manages MySQL primitives.
 
 """
 
+import os
 import logging
 from sqlalchemy import create_engine, text, select, func, MetaData, Table
 from sqlalchemy.exc import DatabaseError
 import pandas as pd
-import numpy as np
-import d6tstack
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
@@ -121,19 +120,25 @@ class MySQL:
         # Placeholders can only represent VALUES. You cannot use them for
         # sql keywords/identifiers.
 
-    def insert(self, data_table, if_exists='fail'):
-        """
+    def insert(self, data_table, if_exists='fail', tmpfile='tmp.csv',
+               sep=';', quotechar='"'):
+        r"""
         Insert a dataframe into a table.
 
         Converts the dataframe to CSV format and uses odo
         bulk load functionality.
 
         Args:
-          data_table(Dataframe): dataframe with the data to load.
+          data_table(Dataframe): dataframe with the data to load. Must contain
+                                 the target table name in its name attribute.
           if_exists(string): {‘fail’, ‘replace’, ‘append’}, default ‘fail’.
                              See `pandas.to_sql()` for details. Warning: if
                                replace is chosen, PKs will be deleted and will
                                have to be recreated.
+          tmpfile (str): filename for temporary file to load from. Defaults to
+                         tmp.csv
+          sep (str): separator for temp file, eg ',' or '\t'. Defaults to ','.
+          quotechar(str): string of length 1. Character used to quote fields.
         Returns:
           db_table(Table): sqlalchemy table mapping the table with the inserted
                            records.
@@ -142,17 +147,22 @@ class MySQL:
         connection = self.engine.connect()
         db_table = Table()
         if isinstance(data_table, pd.DataFrame):
-            aux = data_table.replace(np.NaN, "\\N")
+            data_table[:0].to_sql(data_table.name, self.engine,
+                                  if_exists=if_exists, index=False)
         else:
             raise TypeError("data_table must be a DataFrame.")
         try:
-            d6tstack.utils.pd_to_mysql(aux, self.conn_string,
-                                       data_table.name,
-                                       if_exists=if_exists)
+            LOGGER.info('creating %s ok', tmpfile)
+            data_table.to_csv(tmpfile, na_rep='\\N', index=False, sep=sep)
+            LOGGER.info('loading %s ok', tmpfile)
+            sql_load = f'''LOAD DATA LOCAL INFILE '{tmpfile}' INTO TABLE
+                           {data_table.name} FIELDS TERMINATED BY '{sep}'
+                           ENCLOSED BY '{quotechar}' IGNORE 1 LINES;'''
+            connection.execute(sql_load)
+            os.remove(tmpfile)
             db_table = self.get_table(data_table.name)
             row_count = connection.engine.scalar(
-                select([func.count('*')]).select_from(db_table)
-            )
+                select([func.count('*')]).select_from(db_table))
             LOGGER.info('Number of inserted rows: %s', str(row_count))
         except Exception as exception:
             LOGGER.error(exception)
@@ -161,8 +171,9 @@ class MySQL:
             connection.close()
         return db_table
 
-    def upsert(self, tmp_data, table_name, sql, if_exists='fail', rm_tmp=True):
-        """
+    def upsert(self, tmp_data, table_name, sql, if_exists='fail',
+               tmpfile='tmp.csv', sep=';', quotechar='"', rm_tmp=True):
+        r"""
         Update/insert a dataframe into a table.
 
         Converts the dataframe to CSV format, and uses odo bulk load
@@ -181,9 +192,14 @@ class MySQL:
                                See `pandas.to_sql()` for details. Warning: if
                                replace is chosen, PKs will be deleted and will
                                have to be recreated.
+            tmpfile (str): filename for temporary file to load from. Defaults
+                           to tmp.csv
+            sep (str): separator for temp file, eg ',' or '\t'. Defaults to
+                       ','.
+            quotechar(str): string of length 1. Character used to quote fields.
             rm_tmp(Boolean): Defauls to True. Determines if the temporary
-                                table should be dropped (expected behaviour)
-                                or not (for debugging purposes).
+                             table should be dropped (expected behaviour)
+                             or not (for debugging purposes).
 
         Returns:
             db_table(Table): sqlalchemy table mapping the table with the
@@ -192,7 +208,8 @@ class MySQL:
         """
         connection = self.engine.connect()
         try:
-            self.insert(tmp_data, if_exists=if_exists)
+            self.insert(tmp_data, if_exists=if_exists, tmpfile=tmpfile,
+                        sep=sep, quotechar=quotechar)
             connection.execute(sql)  # update/insert query
             if rm_tmp:
                 self.drop(tmp_data.name)  # remove temporary table
