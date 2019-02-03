@@ -162,6 +162,7 @@ class MySQL:
                            OPTIONALLY ENCLOSED BY '{quotechar}' 
                            LINES TERMINATED BY '{line_terminated_by}'
                            ({', '.join(data_table.columns)});'''
+            # TODO: columns to load could be parametrized
             connection.execute(sql_load)
             os.remove(tmpfile)
             db_table = self.get_table(data_table.name)

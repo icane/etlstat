@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='etlstat',
-    version='0.4.0',
+    version='0.4.1',
     author='Instituto Cántabro de Estadística',
     author_email='icane@cantabria.es',
     packages=find_packages(),

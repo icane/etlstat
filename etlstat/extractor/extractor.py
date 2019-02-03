@@ -154,7 +154,9 @@ def csv(
     return data
 
 
-def px(filename, sep=",", encoding='windows-1252'):
+def px(filename, sep=",", encoding='windows-1252', timeout=10,
+       null_values=r'^"\."$', sd_values=r'"\.\."'):
+    # TODO: stop replicating arguments in nested calls. Refactor to args.
     """Massively read PC-Axis files from a directory.
 
     Read and convert PC-Axis files to dataframes from URIs listed in a CSV
@@ -162,8 +164,13 @@ def px(filename, sep=",", encoding='windows-1252'):
 
     Args:
         filename (str): CSV FILE with uris file path (including file name).
-        sep (str): field separator.
-        encoding (str): file encoding.
+        sep (str): field separator for the CSV files with the URLs.
+        encoding (str): file encoding for both the CSV and px file.
+        timeout (int): request timeout in seconds; optional
+        null_values(str): regex with the pattern for the null values in the px
+                          file. Defaults to '.'.
+        sd_values(str): regex with the pattern for the statistical disclosured
+                        values in the px file. Defaults to '..'.
     Returns:
         dict: file names as keys and dataframes as values.
 
@@ -171,9 +178,11 @@ def px(filename, sep=",", encoding='windows-1252'):
     uris = pd.read_csv(filename,
                        sep=sep,
                        encoding=encoding)
+    # TODO must the encoding be the same for the two files?
     data = {}
     uris['data'] = uris.apply(lambda row: pyaxis.parse(
-        row['url'], encoding)['DATA'], axis=1)
+        row['url'], encoding, timeout=timeout, null_values=null_values,
+        sd_values=sd_values)['DATA'], axis=1)
     data = pd.Series(uris['data'].values, index=uris['id']).to_dict()
     return data
 
