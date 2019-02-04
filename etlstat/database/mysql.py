@@ -121,7 +121,8 @@ class MySQL:
         # sql keywords/identifiers.
 
     def insert(self, data_table, if_exists='fail', tmpfile='tmp.csv',
-               sep=';', quotechar='"', line_terminated_by='\n'):
+               sep=';', quotechar='"', line_terminated_by='\n', 
+               columns=['*']):
         r"""
         Insert a dataframe into a table.
 
@@ -136,15 +137,22 @@ class MySQL:
                                have to be recreated.
           tmpfile (str): filename for temporary file to load from. Defaults to
                          tmp.csv
-          sep (str): separator for temp file, eg ',' or '\t'. Defaults to ','.
+          sep (str): separator for temp file, eg ',' or '\t'. Defaults to ';'.
           quotechar(str): string of length 1. Character used to quote fields.
           line_terminated_by(str): termination character for file lines.
                                    Defaults to '\n'.
+          columns(list): list of str containing the column names to load to a
+                         table. Defaults to ['*'] (all columns).
         Returns:
           db_table(Table): sqlalchemy table mapping the table with the inserted
                            records.
 
         """
+        if columns == ['*']:
+            columns = ', '.join(data_table.columns)
+        else:
+            columns = ', '.join(columns)
+        
         connection = self.engine.connect()
         db_table = Table()
         if isinstance(data_table, pd.DataFrame):
@@ -161,7 +169,7 @@ class MySQL:
                            {data_table.name} FIELDS TERMINATED BY '{sep}'
                            OPTIONALLY ENCLOSED BY '{quotechar}' 
                            LINES TERMINATED BY '{line_terminated_by}'
-                           ({', '.join(data_table.columns)});'''
+                           ({columns});'''
             # TODO: columns to load could be parametrized
             connection.execute(sql_load)
             os.remove(tmpfile)
@@ -177,7 +185,8 @@ class MySQL:
         return db_table
 
     def upsert(self, tmp_data, table_name, sql, if_exists='fail',
-               tmpfile='tmp.csv', sep=';', quotechar='"', rm_tmp=True):
+               tmpfile='tmp.csv', sep=';', quotechar='"',
+               line_terminated_by='\n', columns=['*'], rm_tmp=True):
         r"""
         Update/insert a dataframe into a table.
 
@@ -199,8 +208,12 @@ class MySQL:
             tmpfile (str): filename for temporary file to load from. Defaults
                            to tmp.csv
             sep (str): separator for temp file, eg ',' or '\t'. Defaults to
-                       ','.
+                       ';'.
             quotechar(str): string of length 1. Character used to quote fields.
+            line_terminated_by(str): termination character for file lines.
+                                   Defaults to '\n'.
+            columns(list): list of str containing the column names to load to a
+                         table. Defaults to ['*'] (all columns).
             rm_tmp(Boolean): Defauls to True. Determines if the temporary
                              table should be dropped (expected behaviour)
                              or not (for debugging purposes).
@@ -213,7 +226,8 @@ class MySQL:
         connection = self.engine.connect()
         try:
             self.insert(tmp_data, if_exists=if_exists, tmpfile=tmpfile,
-                        sep=sep, quotechar=quotechar)
+                        sep=sep, quotechar=quotechar,
+                        line_terminated_by=line_terminated_by, columns=columns)
             connection.execute(sql)  # update/insert query
             if rm_tmp:
                 self.drop(tmp_data.name)  # remove temporary table

@@ -28,7 +28,7 @@ class TestMySQL(unittest.TestCase):
     def setUpClass(cls):
         """Set up test variables."""
         user = 'root'
-        password = ''
+        password = 'admin'
         host = '127.0.0.1'
         port = '3306'
         database = ''
@@ -313,13 +313,46 @@ class TestMySQL(unittest.TestCase):
 
         Ipc.__table__.create(bind=my_conn.engine)
         my_conn.insert(table_data, if_exists='append')
-        # my_conn.execute(f'''alter table {data.name} add primary key(id)''')
         actual = my_conn.engine.scalar(
             select([func.count('*')]).select_from(Ipc)
         )
         expected = len(table_data.index)
         self.assertEqual(actual, expected)
-        # my_conn.drop('ipc')
+        my_conn.drop('ipc')
+
+    def test_insert_selected_columns(self):
+        """Check insert method only with selected columns."""
+        my_conn = MySQL(*self.conn_params)
+        Base = declarative_base()
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parsed_pcaxis = pyaxis.parse(current_dir + '/22350.px',
+                                     encoding='ISO-8859-2')
+        table_data = parsed_pcaxis['DATA']
+        table_data = utils.parse_df_columns(table_data)
+        table_data.name = 'ipc'
+
+        class Ipc(Base):
+            """Auxiliary sqlalchemy table model for the tests."""
+
+            __tablename__ = 'ipc'
+
+            id = Column(Integer, primary_key=True)
+            comunidades_y_ciudades_autonomas = Column(String(100))
+            grupos_ecoicop = Column(String(50))
+            tipo_de_dato = Column(String(50))
+            periodo = Column(String(50))
+            data = Column(Float)
+
+        Ipc.__table__.create(bind=my_conn.engine)
+        my_conn.insert(table_data, if_exists='append',
+                       columns=['periodo', 'data'])
+        actual = my_conn.engine.scalar(
+            select([func.count('*')]).select_from(Ipc)
+        )
+        expected = len(table_data.index)
+        self.assertEqual(actual, expected)
+        my_conn.drop('ipc')
 
 if __name__ == '__main__':
     unittest.main()
+
