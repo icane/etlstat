@@ -154,9 +154,9 @@ def csv(
     return data
 
 
-def px(filename, sep=",", encoding='windows-1252', timeout=10,
-       null_values=r'^"\."$', sd_values=r'"\.\."'):
-    # TODO: stop replicating arguments in nested calls. Refactor to args.
+def px(filename, sep=",", csv_encoding='windows-1252',
+       px_encoding='ISO-8859-2', timeout=10, null_values=r'^"\."$',
+       sd_values=r'"\.\."'):
     """Massively read PC-Axis files from a directory.
 
     Read and convert PC-Axis files to dataframes from URIs listed in a CSV
@@ -177,11 +177,10 @@ def px(filename, sep=",", encoding='windows-1252', timeout=10,
     """
     uris = pd.read_csv(filename,
                        sep=sep,
-                       encoding=encoding)
-    # TODO must the encoding be the same for the two files?
+                       encoding=csv_encoding)
     data = {}
     uris['data'] = uris.apply(lambda row: pyaxis.parse(
-        row['url'], encoding, timeout=timeout, null_values=null_values,
+        row['url'], px_encoding, timeout=timeout, null_values=null_values,
         sd_values=sd_values)['DATA'], axis=1)
     data = pd.Series(uris['data'].values, index=uris['id']).to_dict()
     return data
