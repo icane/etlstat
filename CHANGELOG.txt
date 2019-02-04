@@ -1,0 +1,1 @@
+v0.4.2: added support for parametrized columns load in bulk insert and upsert.
