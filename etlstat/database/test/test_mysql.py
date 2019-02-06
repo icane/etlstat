@@ -344,14 +344,17 @@ class TestMySQL(unittest.TestCase):
             data = Column(Float)
 
         Ipc.__table__.create(bind=my_conn.engine)
-        my_conn.insert(table_data, if_exists='append',
-                       columns=['periodo', 'data'])
+        insert_data = table_data[['grupos_ecoicop','data']]
+        insert_data.name = 'ipc'
+
+        my_conn.insert(insert_data, if_exists='append',
+                       columns=['grupos_ecoicop', 'data'])
         actual = my_conn.engine.scalar(
             select([func.count('*')]).select_from(Ipc)
         )
         expected = len(table_data.index)
         self.assertEqual(actual, expected)
-        my_conn.drop('ipc')
+        # my_conn.drop('ipc')
 
 if __name__ == '__main__':
     unittest.main()
