@@ -1,0 +1,2 @@
+v0.4.3: added different encodings for csv and px in extractor px.
+v0.4.2: added support for parametrized columns load in bulk insert and upsert.

@@ -344,18 +344,21 @@ class TestMySQL(unittest.TestCase):
             data = Column(Float)
 
         Ipc.__table__.create(bind=my_conn.engine)
-        insert_data = table_data[['grupos_ecoicop','data']]
+        insert_data = table_data[['grupos_ecoicop', 'data']]
         insert_data.name = 'ipc'
 
         my_conn.insert(insert_data, if_exists='append',
                        columns=['grupos_ecoicop', 'data'])
-        actual = my_conn.engine.scalar(
-            select([func.count('*')]).select_from(Ipc)
-        )
-        expected = len(table_data.index)
-        self.assertEqual(actual, expected)
-        # my_conn.drop('ipc')
+        result_data = pd.read_sql_query('select * from ipc',
+                                        con=my_conn.engine)
+        self.assertTrue(
+            result_data['comunidades_y_ciudades_autonomas'].isnull().all())
+        self.assertTrue(result_data['periodo'].isnull().all())
+        self.assertTrue(result_data['tipo_de_dato'].isnull().all())
+        self.assertFalse(result_data['grupos_ecoicop'].isnull().all())
+        self.assertFalse(result_data['data'].isnull().all())
+        my_conn.drop('ipc')
+
 
 if __name__ == '__main__':
     unittest.main()
-

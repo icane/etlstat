@@ -121,7 +121,7 @@ class MySQL:
         # sql keywords/identifiers.
 
     def insert(self, data_table, if_exists='fail', tmpfile='tmp.csv',
-               sep=';', quotechar='"', line_terminated_by='\n', 
+               sep=';', quotechar='"', line_terminated_by='\n',
                columns=['*']):
         r"""
         Insert a dataframe into a table.
@@ -152,7 +152,6 @@ class MySQL:
             columns = ', '.join(data_table.columns)
         else:
             columns = ', '.join(columns)
-        
         connection = self.engine.connect()
         db_table = Table()
         if isinstance(data_table, pd.DataFrame):
@@ -167,10 +166,9 @@ class MySQL:
             LOGGER.info('loading %s ok', tmpfile)
             sql_load = f'''LOAD DATA LOCAL INFILE '{tmpfile}' INTO TABLE
                            {data_table.name} FIELDS TERMINATED BY '{sep}'
-                           OPTIONALLY ENCLOSED BY '{quotechar}' 
+                           OPTIONALLY ENCLOSED BY '{quotechar}'
                            LINES TERMINATED BY '{line_terminated_by}'
                            ({columns});'''
-            # TODO: columns to load could be parametrized
             connection.execute(sql_load)
             os.remove(tmpfile)
             db_table = self.get_table(data_table.name)
