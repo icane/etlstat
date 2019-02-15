@@ -64,29 +64,31 @@ class TestSqlLoader(unittest.TestCase):
         control_file = self.output_path + 'px_01001.ctl'
         log_file = self.output_path + 'px_01001.log'
         bad_file = self.output_path + 'px_01001.bad'
-        data_columns = ['id', 'tipo_indicador', 'nivel_educativo', 'valor']
-        table_def = pandas.DataFrame(columns=data_columns)
-        table_def['id'] = table_def['id'].astype(int)
-        table_def['tipo_indicador'] = table_def['tipo_indicador'].astype(str)
-        table_def['nivel_educativo'] = table_def['nivel_educativo'].astype(str)
-        table_def['valor'] = table_def['valor'].astype(float)
-        table_def.name = table_name
-        data = pandas.read_csv(source_file, header=0, sep=';', encoding='utf8')
+        data = pandas.read_csv(
+            source_file,
+            sep=';',
+            encoding='utf8')
         data.name = table_name
+        print(data.columns)
+        print(data.columns.values)
         ora_conn.insert(
             *self.conn_params,
-            schema=self.conn_params[0],
-            table=data,
+            data_table=data,
             output_path=self.output_path,
             os_path=self.os_path,
-            os_ld_library_path=self.os_ld_library_path
+            os_ld_library_path=self.os_ld_library_path,
+            mode='APPEND',
+            columns=['*'],
+            schema=self.conn_params[0],
+            remove_data=False
         )
+
         self.assertTrue(os.path.isfile(data_file))
-        os.remove(data_file)
+        # os.remove(data_file)
         self.assertTrue(os.path.isfile(control_file))
-        os.remove(control_file)
+        # os.remove(control_file)
         self.assertTrue(os.path.isfile(log_file))
-        os.remove(log_file)
+        # os.remove(log_file)
         self.assertFalse(os.path.isfile(bad_file))
 
 

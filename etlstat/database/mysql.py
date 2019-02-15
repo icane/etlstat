@@ -70,8 +70,9 @@ class MySQL:
                             database table.
 
         """
-        meta = MetaData(bind=self.engine,
-                        schema=schema if schema else self.database)
+        if not schema:
+            schema = self.database
+        meta = MetaData(bind=self.engine, schema=schema)
         return Table(table_name, meta, autoload=True,
                      autoload_with=self.engine)
 
@@ -80,7 +81,8 @@ class MySQL:
         Execute a DDL or DML SQL statement.
 
         Args:
-            sql: SQL statement
+            sql (string): SQL statement
+            kwargs (dict): optional statement named parameters
         Returns:
             result_set(Dataframe):
 
@@ -103,38 +105,42 @@ class MySQL:
             connection.close()
         return result_set
 
-    def drop(self, table_name):
+    def drop(self, table_name, schema=None):
         """
         Drop a table from the database.
 
         Args:
           table_name(str): name of the table to drop.
+          schema (string): optional database name.
 
         Returns: nothing.
 
         """
-        db_table = self.get_table(table_name)
+        if not schema:
+            schema = self.database
+        db_table = self.get_table(table_name, schema)
         db_table.drop(self.engine, checkfirst=True)
-        LOGGER.info('Table %s successfully dropped.', table_name)
+        LOGGER.info('Table %s.%s successfully dropped.', schema, table_name)
 
         # Placeholders can only represent VALUES. You cannot use them for
         # sql keywords/identifiers.
 
     def insert(self, data_table, if_exists='fail', tmpfile='tmp.csv',
                sep=';', quotechar='"', line_terminated_by='\n',
-               columns=['*']):
+               columns=['*'], schema=None, rm_tmp=True):
         r"""
         Insert a dataframe into a table.
 
         Converts the dataframe to CSV format and bulk loads it.
 
         Args:
-          data_table(Dataframe): dataframe with the data to load. Must contain
-                                 the target table name in its name attribute.
+          data_table(Dataframe): dataframe with the data to load. 
+                                 Must contain the target table name in
+                                 its name attribute.
           if_exists(string): {‘fail’, ‘replace’, ‘append’}, default ‘fail’.
                              See `pandas.to_sql()` for details. Warning: if
-                               replace is chosen, PKs will be deleted and will
-                               have to be recreated.
+                             replace is chosen, PKs will be deleted and will
+                             have to be recreated.
           tmpfile (str): filename for temporary file to load from. Defaults to
                          tmp.csv
           sep (str): separator for temp file, eg ',' or '\t'. Defaults to ';'.
@@ -143,6 +149,10 @@ class MySQL:
                                    Defaults to '\n'.
           columns(list): list of str containing the column names to load to a
                          table. Defaults to ['*'] (all columns).
+          schema (string): name of the database that contains the
+                           destination table.
+          rm_tmp (bool): remove or not the temporary csv file. Defaults to
+                         True.
         Returns:
           db_table(Table): sqlalchemy table mapping the table with the inserted
                            records.
@@ -152,6 +162,10 @@ class MySQL:
             columns = ', '.join(data_table.columns)
         else:
             columns = ', '.join(columns)
+
+        if not schema:
+            schema = self.database
+
         connection = self.engine.connect()
         db_table = Table()
         if isinstance(data_table, pd.DataFrame):
@@ -165,12 +179,14 @@ class MySQL:
                               index=False, sep=sep, quotechar=quotechar)
             LOGGER.info('loading %s ok', tmpfile)
             sql_load = f'''LOAD DATA LOCAL INFILE '{tmpfile}' INTO TABLE
-                           {data_table.name} FIELDS TERMINATED BY '{sep}'
+                           {schema}.{data_table.name}
+                           FIELDS TERMINATED BY '{sep}'
                            OPTIONALLY ENCLOSED BY '{quotechar}'
                            LINES TERMINATED BY '{line_terminated_by}'
                            ({columns});'''
             connection.execute(sql_load)
-            os.remove(tmpfile)
+            if rm_tmp:
+                os.remove(tmpfile)
             db_table = self.get_table(data_table.name)
             row_count = connection.engine.scalar(
                 select([func.count('*')]).select_from(db_table))
@@ -184,7 +200,8 @@ class MySQL:
 
     def upsert(self, tmp_data, table_name, sql, if_exists='fail',
                tmpfile='tmp.csv', sep=';', quotechar='"',
-               line_terminated_by='\n', columns=['*'], rm_tmp=True):
+               line_terminated_by='\n', columns=['*'], rm_tmp=True,
+               schema=None):
         r"""
         Update/insert a dataframe into a table.
 
@@ -214,18 +231,24 @@ class MySQL:
                          table. Defaults to ['*'] (all columns).
             rm_tmp(Boolean): Defauls to True. Determines if the temporary
                              table should be dropped (expected behaviour)
-                             or not (for debugging purposes).
-
+                             or not (for debugging purposes). It affects to
+                             csv temporary file created by 'insert' method.
+            schema (string): name of the database that contains the
+                             destination table.
         Returns:
             db_table(Table): sqlalchemy table mapping the table with the
                                 inserted/updated records.
 
         """
+        if not schema:
+            schema = self.database
+
         connection = self.engine.connect()
         try:
             self.insert(tmp_data, if_exists=if_exists, tmpfile=tmpfile,
                         sep=sep, quotechar=quotechar,
-                        line_terminated_by=line_terminated_by, columns=columns)
+                        line_terminated_by=line_terminated_by, columns=columns,
+                        rm_tmp=rm_tmp, schema=schema)
             connection.execute(sql)  # update/insert query
             if rm_tmp:
                 self.drop(tmp_data.name)  # remove temporary table
