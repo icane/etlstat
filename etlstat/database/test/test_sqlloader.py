@@ -69,8 +69,6 @@ class TestSqlLoader(unittest.TestCase):
             sep=';',
             encoding='utf8')
         data.name = table_name
-        print(data.columns)
-        print(data.columns.values)
         ora_conn.insert(
             *self.conn_params,
             data_table=data,
@@ -84,11 +82,11 @@ class TestSqlLoader(unittest.TestCase):
         )
 
         self.assertTrue(os.path.isfile(data_file))
-        # os.remove(data_file)
+        os.remove(data_file)
         self.assertTrue(os.path.isfile(control_file))
-        # os.remove(control_file)
+        os.remove(control_file)
         self.assertTrue(os.path.isfile(log_file))
-        # os.remove(log_file)
+        os.remove(log_file)
         self.assertFalse(os.path.isfile(bad_file))
 
 

@@ -174,8 +174,6 @@ class TestMySQL(unittest.TestCase):
         Pmh.__table__.create(bind=my_conn.engine)
         data = pd.read_csv(f'''{current_dir}/pmh.csv''')
         data.name = 'pmh'
-        print(data.columns)
-        print(data.columns.values)
         my_conn.insert(data, if_exists='append')
         # my_conn.execute(f'''alter table {data.name} add primary key(id)''')
         actual = my_conn.engine.scalar(

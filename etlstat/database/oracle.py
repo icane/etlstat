@@ -212,7 +212,7 @@ class Oracle:
         # data file
         data_table.to_csv(
             f"""{output_path}{data_table.name}.dat""",
-            columns=columns,
+            columns=data_table.columns,
             sep=';',
             header=False,
             index=False,
