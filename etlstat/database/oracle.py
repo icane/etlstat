@@ -20,8 +20,10 @@ import logging
 import os
 import shlex
 import subprocess
+
 import pandas as pd
-from sqlalchemy import create_engine, text, MetaData, Table
+
+from sqlalchemy import MetaData, Table, create_engine, text
 from sqlalchemy.exc import DatabaseError
 
 logging.basicConfig(level=logging.INFO)

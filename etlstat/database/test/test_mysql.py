@@ -4,14 +4,18 @@
 
 import os
 import unittest
-import pandas as pd
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy import (select, func, Column, Integer, String, Boolean, Float,
-                        DateTime)
-from sqlalchemy.ext.declarative import declarative_base
-from pyaxis import pyaxis
-from etlstat.text import utils
+
 from etlstat.database.mysql import MySQL
+from etlstat.text import utils
+
+import pandas as pd
+
+from pyaxis import pyaxis
+
+from sqlalchemy import (Boolean, Column, DateTime, Float, Integer, String,
+                        func, select)
+from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.ext.declarative import declarative_base
 
 
 class TestMySQL(unittest.TestCase):

@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+mysql-connector = "==2.1.4"
+xlrd = "==1.1.0"
+defusedxml = "==0.5.0"
+pyaxis = "==0.2.0"
+numpy = "==1.15.4"
+pandas = "==0.23.4"
+cx-Oracle = "*"
+SQLAlchemy = "==1.2.17"
+Unidecode = "==1.0.22"
+python-Levenshtein = "==0.12.0"
+
+[requires]
+python_version = "3.7"
