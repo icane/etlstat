@@ -67,3 +67,9 @@ build
 !.vscode/extensions.json
 
 .pypirc
+
+# Test output
+*.dat
+*.log
+*.ctl
+*.bad
