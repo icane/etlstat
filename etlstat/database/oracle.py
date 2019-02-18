@@ -115,6 +115,24 @@ class Oracle:
             connection.close()
         return result_set
 
+    def execute_multiple(self, sql, eos=';'):
+        """
+        Execute multiple SQL statements contained in a single string.
+
+            Args:
+                sql (string): SQL statements
+                eos (string): end of statement character(s)
+            Returns:
+                result_sets(list of Dataframe):
+
+        """
+        result_sets = []
+        statements = sql.split(eos)
+        for statement in statements:
+            if statement.trim() != '':
+                result_sets.append(self.execute(statement))
+        return result_sets
+
     def drop(self, table_name, schema=None):
         """
         Drop a table from the database.
