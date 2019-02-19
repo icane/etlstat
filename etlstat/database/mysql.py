@@ -17,6 +17,7 @@ This module manages MySQL primitives.
 
 import os
 import logging
+import sqlparse
 from sqlalchemy import create_engine, text, select, func, MetaData, Table
 from sqlalchemy.exc import DatabaseError
 import pandas as pd
@@ -84,7 +85,8 @@ class MySQL:
             sql (string): SQL statement
             kwargs (dict): optional statement named parameters
         Returns:
-            result_set(Dataframe):
+            result_set(Dataframe): non-SELECT statements returns
+                an empty dataframe.
 
         """
         connection = self.engine.connect()
@@ -104,6 +106,24 @@ class MySQL:
         finally:
             connection.close()
         return result_set
+
+    def execute_multiple(self, sql):
+        """
+        Execute multiple SQL statements contained in a text string.
+
+        SQL statements must be terminated by a semicolon (;).
+
+            Args:
+                sql (string): SQL statements
+            Returns:
+                results(list): list of dataframes
+
+        """
+        results = []
+        statements = sqlparse.split(sql)
+        for statement in statements:
+            results.append(self.execute(statement.strip(';')))
+        return results
 
     def drop(self, table_name, schema=None):
         """

@@ -102,6 +102,23 @@ class TestMySQL(unittest.TestCase):
         self.assertEqual(expected, current)
         my_conn.drop('table1')
 
+    def test_execute_multiple(self):
+        """Check if multiple SQL statements are correctly executed."""
+        my_conn = MySQL(*self.conn_params)
+        sql = f"""CREATE TABLE table1 (id integer, column1 varchar(100),
+              column2 double);
+              INSERT INTO table1 (id, column1, column2)
+              VALUES (1, 'Varchar text; (100 char)',
+              123456789.012787648484859);
+              INSERT INTO table1 (id, column1, column2)
+              VALUES (2, 'Varchar text; (100 char)',
+              -789.0127876);
+              SELECT id, column2 FROM table1;"""
+        results = my_conn.execute_multiple(sql)
+        self.assertEqual(len(results), 4)
+        self.assertEqual(len(results[3].index), 2)
+        my_conn.drop('table1')
+
     def test_drop(self):
         """Check drop for an existing table."""
         my_conn = MySQL(*self.conn_params)

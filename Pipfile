@@ -16,6 +16,7 @@ cx-Oracle = "*"
 SQLAlchemy = "==1.2.17"
 Unidecode = "==1.0.22"
 python-Levenshtein = "==0.12.0"
+sqlparse = "*"
 
 [requires]
 python_version = "3.7"

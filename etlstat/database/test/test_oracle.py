@@ -83,17 +83,20 @@ class TestOracle(unittest.TestCase):
         ora_conn.drop('table1')
 
     def test_execute_multiple(self):
+        """Check if multiple SQL statements are correctly executed."""
         ora_conn = Oracle(*self.conn_params)
         sql = "CREATE TABLE table1 (id integer, column1 varchar2(100), " \
               "column2 number); " \
               "INSERT INTO table1 (id, column1, column2) " \
-              "VALUES (1, 'Varchar text (100 char)', " \
+              "VALUES (1, 'Varchar text; (100 char)', " \
               "123456789.012787648484859); " \
               "INSERT INTO table1 (id, column1, column2) " \
-              "VALUES (2, 'Varchar text (100 char)', " \
-              "-789.0127876); "
+              "VALUES (2, 'Varchar text; (100 char)', " \
+              "-789.0127876); " \
+              "SELECT id, column2 FROM table1;"
         results = ora_conn.execute_multiple(sql)
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 4)
+        self.assertEqual(len(results[3].index), 2)
         ora_conn.drop('table1')
 
     def test_select(self):

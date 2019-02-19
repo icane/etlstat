@@ -22,6 +22,7 @@ import shlex
 import subprocess
 
 import pandas as pd
+import sqlparse
 
 from sqlalchemy import MetaData, Table, create_engine, text
 from sqlalchemy.exc import DatabaseError
@@ -94,7 +95,8 @@ class Oracle:
                 sql (string): SQL statement
                 kwargs (dict): optional statement named parameters
             Returns:
-                result_set(Dataframe):
+                result_set(Dataframe): non-SELECT statements returns
+                    an empty dataframe.
 
         """
         connection = self.engine.connect()
@@ -109,29 +111,30 @@ class Oracle:
                 LOGGER.info('Number of returned rows: %s',
                             str(len(result_set.index)))
         except DatabaseError as db_error:
+            trans.rollback()
             LOGGER.error(db_error)
             raise
         finally:
             connection.close()
         return result_set
 
-    def execute_multiple(self, sql, eos=';'):
+    def execute_multiple(self, sql):
         """
-        Execute multiple SQL statements contained in a single string.
+        Execute multiple SQL statements contained in a text string.
+
+        SQL statements must be terminated by a semicolon (;).
 
             Args:
                 sql (string): SQL statements
-                eos (string): end of statement character(s)
             Returns:
-                result_sets(list of Dataframe):
+                results(list): list of dataframes
 
         """
-        result_sets = []
-        statements = sql.split(eos)
+        results = []
+        statements = sqlparse.split(sql)
         for statement in statements:
-            if statement.trim() != '':
-                result_sets.append(self.execute(statement))
-        return result_sets
+            results.append(self.execute(statement.strip(';')))
+        return results
 
     def drop(self, table_name, schema=None):
         """
