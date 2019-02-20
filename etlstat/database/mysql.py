@@ -81,48 +81,38 @@ class MySQL:
         """
         Execute a DDL or DML SQL statement.
 
-        Args:
-            sql (string): SQL statement
-            kwargs (dict): optional statement named parameters
-        Returns:
-            result_set(Dataframe): non-SELECT statements returns
-                an empty dataframe.
-
-        """
-        connection = self.engine.connect()
-        trans = connection.begin()
-        result_set = pd.DataFrame()
-        try:
-            result = connection.execute(text(sql), **kwargs)
-            trans.commit()
-            if result.returns_rows:
-                result_set = pd.DataFrame(result.fetchall())
-                result_set.columns = result.keys()
-                LOGGER.info('Number of returned rows: %s',
-                            str(len(result_set.index)))
-        except DatabaseError as db_error:
-            LOGGER.error(db_error)
-            raise
-        finally:
-            connection.close()
-        return result_set
-
-    def execute_multiple(self, sql):
-        """
-        Execute multiple SQL statements contained in a text string.
-
-        SQL statements must be terminated by a semicolon (;).
-
             Args:
-                sql (string): SQL statements
+                sql (string): SQL statement(s) separated by semicolons (;)
+                kwargs (dict): optional statement named parameters
             Returns:
-                results(list): list of dataframes
+                results (list): list of dataframes. Non-SELECT statements
+                    returns empty dataframes.
 
         """
         results = []
         statements = sqlparse.split(sql)
-        for statement in statements:
-            results.append(self.execute(statement.strip(';')))
+        connection = self.engine.connect()
+        # begin transaction
+        trans = connection.begin()
+        try:
+            for statement in statements:
+                result_set = pd.DataFrame()
+                result = connection.execute(
+                    text(statement.strip(';')), **kwargs)
+                if result.returns_rows:
+                    result_set = pd.DataFrame(result.fetchall())
+                    result_set.columns = result.keys()
+                    LOGGER.info('Number of returned rows: %s',
+                                str(len(result_set.index)))
+                results.append(result_set)
+            # end transaction
+            trans.commit()
+        except DatabaseError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        finally:
+            connection.close()
         return results
 
     def drop(self, table_name, schema=None):
@@ -153,7 +143,7 @@ class MySQL:
         Converts the dataframe to CSV format and bulk loads it.
 
         Args:
-          data_table(Dataframe): dataframe with the data to load. 
+          data_table(Dataframe): dataframe with the data to load.
                                  Must contain the target table name in
                                  its name attribute.
           if_exists(string): {‘fail’, ‘replace’, ‘append’}, default ‘fail’.

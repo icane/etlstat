@@ -4,11 +4,10 @@
 
 import os
 import unittest
+import pandas as pd
 
 from etlstat.database.mysql import MySQL
 from etlstat.text import utils
-
-import pandas as pd
 
 from pyaxis import pyaxis
 
@@ -42,7 +41,7 @@ class TestMySQL(unittest.TestCase):
         my_conn.execute(ddl)
         ddl = "CREATE DATABASE test"
         my_conn.execute(ddl)
-        sql = "CREATE TABLE test.inf_schema as " \
+        sql = "CREATE TABLE IF NOT EXISTS test.inf_schema as " \
               "SELECT table_name, avg_row_length, " \
               "table_collation, create_time " \
               "FROM information_schema.tables"
@@ -98,7 +97,7 @@ class TestMySQL(unittest.TestCase):
         query = 'select * from table1 order by id'
         result = my_conn.execute(query)
         expected = 1
-        current = len(result.index)
+        current = len(result[0].index)
         self.assertEqual(expected, current)
         my_conn.drop('table1')
 
@@ -114,7 +113,7 @@ class TestMySQL(unittest.TestCase):
               VALUES (2, 'Varchar; text; (100 char)',
               -789.0127876);
               SELECT id, column2 FROM table1;"""
-        results = my_conn.execute_multiple(sql)
+        results = my_conn.execute(sql)
         self.assertEqual(len(results), 4)
         self.assertEqual(len(results[3].index), 2)
         my_conn.drop('table1')

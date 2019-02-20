@@ -36,23 +36,21 @@ class TestSqlLoader(unittest.TestCase):
         conn_params = [user, password, host, port, service_name]
         ora_conn = Oracle(*conn_params)
         try:
-            sql = "CREATE USER test IDENTIFIED BY password " \
-                    "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
+            sql = f"""CREATE USER test IDENTIFIED BY password
+                DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;"""
             ora_conn.execute(sql)
         except DatabaseError as dbe:
             print(str(dbe))
-        sql = "ALTER USER test QUOTA UNLIMITED ON USERS"
-        ora_conn.execute(sql)
-        sql = "GRANT CONNECT, RESOURCE TO test"
+        sql = f"""ALTER USER test QUOTA UNLIMITED ON USERS;
+            GRANT CONNECT, RESOURCE TO test;"""
         ora_conn.execute(sql)
 
     def test_insert(self):
         """Check if a bulk insert with sql loader is correctly executed."""
         table_name = 'px_01001'
         ora_conn = Oracle(*self.conn_params)
-        sql = "CREATE TABLE {0} (id INTEGER, tipo_indicador " \
-            "VARCHAR(100), nivel_educativo VARCHAR(100), valor NUMBER)". \
-            format(table_name)
+        sql = f"""CREATE TABLE {table_name} (id INTEGER, tipo_indicador
+            VARCHAR(100), nivel_educativo VARCHAR(100), valor NUMBER)"""
         try:
             ora_conn.execute(sql)
         except DatabaseError as dbe:
@@ -82,11 +80,8 @@ class TestSqlLoader(unittest.TestCase):
         )
 
         self.assertTrue(os.path.isfile(data_file))
-        os.remove(data_file)
         self.assertTrue(os.path.isfile(control_file))
-        os.remove(control_file)
         self.assertTrue(os.path.isfile(log_file))
-        os.remove(log_file)
         self.assertFalse(os.path.isfile(bad_file))
 
 
