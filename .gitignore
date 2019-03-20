@@ -67,3 +67,4 @@ build
 
 .pypirc
 .pytest_cache/
+.venv
