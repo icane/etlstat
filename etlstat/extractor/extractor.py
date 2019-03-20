@@ -157,7 +157,7 @@ def csv(
 def px(filename, sep=",", csv_encoding='windows-1252',
        px_encoding='ISO-8859-2', timeout=10, null_values=r'^"\."$',
        sd_values=r'"\.\."'):
-    """Massively read PC-Axis files from a directory.
+    """Massively read PC-Axis files from a list of URLs in a CSV file.
 
     Read and convert PC-Axis files to dataframes from URIs listed in a CSV
     file.
