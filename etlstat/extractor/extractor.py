@@ -175,6 +175,43 @@ def px(filename, sep=",", csv_encoding='windows-1252',
         dict: file names as keys and dataframes as values.
 
     """
+    data = {}
+    if fnmatch.fnmatch(filename, '*.csv'):
+        data = _px_from_urls_in_csv(filename, sep=sep,
+                                    csv_encoding=csv_encoding,
+                                    px_encoding=px_encoding, timeout=timeout,
+                                    null_values=null_values,
+                                    sd_values=sd_values)
+    elif os.path.isdir(filename):
+        data = _px_from_path(filename, encoding=px_encoding, timeout=timeout,
+                             null_values=null_values, sd_values=sd_values)
+    else:
+        raise TypeError
+    return data
+
+
+def _px_from_urls_in_csv(filename, sep=",", csv_encoding='windows-1252',
+                         px_encoding='ISO-8859-2', timeout=10,
+                         null_values=r'^"\."$', sd_values=r'"\.\."'):
+    """Massively read PC-Axis files from a list of URLs in a CSV file.
+
+    Read and convert PC-Axis files to dataframes from URIs listed in a CSV
+    file.
+
+    Args:
+        filename (str): CSV FILE with uris file path (including file name).
+        sep (str): field separator for the CSV files with the URLs.
+        csv_encoding (str): file encoding for the CSV file.
+        px_encoding (str): file encoding for the px file.
+        timeout (int): request timeout in seconds; optional
+        null_values(str): regex with the pattern for the null values in the px
+                          file. Defaults to '.'.
+        sd_values(str): regex with the pattern for the statistical disclosured
+                        values in the px file. Defaults to '..'.
+    Returns:
+        dict: file names as keys and dataframes as values.
+
+    """
     uris = pd.read_csv(filename,
                        sep=sep,
                        encoding=csv_encoding)
@@ -184,6 +221,41 @@ def px(filename, sep=",", csv_encoding='windows-1252',
         sd_values=sd_values)['DATA'], axis=1)
     data = pd.Series(uris['data'].values, index=uris['id']).to_dict()
     return data
+
+
+def _px_from_path(dir_path, encoding='ISO-8859-2', timeout=10,
+                  null_values=r'^"\."$', sd_values=r'"\.\."'):
+    """Massively read PC-Axis files from a directory.
+
+    Read files in a directory, convert to dataframe and store in a dict.
+
+    Args:
+        dir_path (str): directory containing data files.
+        encoding (str): file encoding for both the px file.
+        timeout (int): request timeout in seconds; optional
+        null_values(str): regex with the pattern for the null values in the px
+                          file. Defaults to '.'.
+        sd_values(str): regex with the pattern for the statistical disclosured
+                        values in the px file. Defaults to '..'.
+
+
+    Returns:
+        dict: Name of px file as KEY and dataframe as VALUE.
+
+    """
+
+    files = {}
+    os.chdir(dir_path)
+    with ExitStack() as context_manager:
+        for filename in os.listdir('.'):
+            if fnmatch.fnmatch(filename, '*.px'):
+                px_file = context_manager.enter_context(open(filename, 'r'))
+                px_df = pyaxis.parse(px_file.read(), encoding,
+                                     timeout=timeout, null_values=null_values,
+                                     sd_values=sd_values)['DATA']
+                files[filename.split(dir_path, 1)[-1][:-3]] = px_df
+        context_manager.pop_all().close()
+    return files
 
 
 def txt(dir_path, sep=';', encoding='windows-1252',
@@ -281,7 +353,7 @@ def sql(dir_path):
     names as keys and the content of the files as values.
 
     Args:
-        dir_path (str): Path of DIR readed.
+        dir_path (str): Path of DIR read.
 
     Returns:
         dict: query name  as KEY and query as VALUE.
