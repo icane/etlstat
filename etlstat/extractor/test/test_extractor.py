@@ -172,7 +172,7 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(len(sql_data['contratos']), 3023)
 
     def test_px(self):
-        """Should massively read PC-Axis files in a directory.
+        """Should massively read PC-Axis files from a list of URLs in a CSV.
 
         Should read every px file from the URIs listed in an input CSV file and
         generate a dict with the px name as key and a dataframe with its data
@@ -187,6 +187,19 @@ class TestExtractor(unittest.TestCase):
             type(pc_axis_data['px_01002']), pd.core.frame.DataFrame)
         self.assertEqual(
             type(pc_axis_data['px_01006']), pd.core.frame.DataFrame)
+
+    def test_px_file(self):
+        """Should massively read PC-Axis files in a directory.
+
+        Should read every px file from a given path (directory).
+
+        """
+        pc_axis_data = extractor.px(self.base_path + '/px_file/')
+        self.assertEqual(len(pc_axis_data), 1)
+        self.assertEqual(len(pc_axis_data['27066']), 152064)
+        self.assertEqual(pc_axis_data['27066']['DATA'][29], '98.728')
+        self.assertEqual(
+            type(pc_axis_data['27066']), pd.core.frame.DataFrame)
 
 
 if __name__ == '__main__':

@@ -66,3 +66,4 @@ build
 !.vscode/extensions.json
 
 .pypirc
+.pytest_cache/

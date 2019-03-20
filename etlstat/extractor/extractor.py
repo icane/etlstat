@@ -249,8 +249,7 @@ def _px_from_path(dir_path, encoding='ISO-8859-2', timeout=10,
     with ExitStack() as context_manager:
         for filename in os.listdir('.'):
             if fnmatch.fnmatch(filename, '*.px'):
-                px_file = context_manager.enter_context(open(filename, 'r'))
-                px_df = pyaxis.parse(px_file.read(), encoding,
+                px_df = pyaxis.parse(filename, encoding,
                                      timeout=timeout, null_values=null_values,
                                      sd_values=sd_values)['DATA']
                 files[filename.split(dir_path, 1)[-1][:-3]] = px_df
