@@ -14,12 +14,18 @@ dataframe.
 import fnmatch
 import os
 from contextlib import ExitStack
-import defusedxml.ElementTree as ET
-import xlrd
-import numpy as np
-import pandas as pd
+
 import Levenshtein
+
+import defusedxml.ElementTree as ET
+
+import numpy as np
+
+import pandas as pd
+
 from pyaxis import pyaxis
+
+import xlrd
 
 
 def match_data_format(data_path, data_extension,
@@ -238,12 +244,10 @@ def _px_from_path(dir_path, encoding='ISO-8859-2', timeout=10,
         sd_values(str): regex with the pattern for the statistical disclosured
                         values in the px file. Defaults to '..'.
 
-
     Returns:
         dict: Name of px file as KEY and dataframe as VALUE.
 
     """
-
     files = {}
     os.chdir(dir_path)
     with ExitStack() as context_manager:

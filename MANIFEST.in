@@ -27,4 +27,7 @@ recursive-include etlstat *.rst
 recursive-include etlstat *.sql
 recursive-include etlstat *.txt
 recursive-include etlstat *.xls
+include *.lock
+include Pipfile
+recursive-include etlstat *.px
 

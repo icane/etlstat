@@ -4,8 +4,10 @@
 
 import os
 import unittest
-import pandas as pd
+
 import etlstat.extractor.extractor as extractor
+
+import pandas as pd
 
 
 class TestExtractor(unittest.TestCase):
