@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 venv/
+.venv/
 env/
 
 # Environment
@@ -68,3 +69,11 @@ build
 .pypirc
 .pytest_cache/
 .venv
+=======
+
+# Test output
+*.dat
+*.log
+*.ctl
+*.bad
+

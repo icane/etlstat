@@ -30,3 +30,4 @@ python_Levenshtein = {index = "pypi",version = "*"}
 
 [requires]
 python_version = "3.7.2"
+

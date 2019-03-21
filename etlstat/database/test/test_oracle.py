@@ -37,8 +37,8 @@ class TestOracle(unittest.TestCase):
         conn_params = [user, password, host, port, service_name]
         ora_conn = Oracle(*conn_params)
         try:
-            sql = "CREATE USER test IDENTIFIED BY password " \
-                  "DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"
+            sql = f"""CREATE USER test IDENTIFIED BY password
+                  DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"""
             ora_conn.execute(sql)
         except DatabaseError as dbe:
             print(str(dbe))
@@ -56,14 +56,14 @@ class TestOracle(unittest.TestCase):
     def test_execute(self):
         """Check if different queries are correctly executed."""
         ora_conn = Oracle(*self.conn_params)
-        sql = "CREATE TABLE table1 (id integer, column1 varchar2(100), " \
-              "column2 number)"
+        sql = f"""CREATE TABLE table1 (id integer, column1 varchar2(100),
+              column2 number)"""
         ora_conn.execute(sql)
         table1 = ora_conn.get_table('table1')
         self.assertEqual(table1.c.column1.name, 'column1')
-        sql = "INSERT INTO table1 (id, column1, column2) " \
-              "VALUES (1, 'Varchar text (100 char)', " \
-              "123456789.012787648484859)"
+        sql = f"""INSERT INTO table1 (id, column1, column2)
+              VALUES (1, 'Varchar text (100 char)',
+              123456789.012787648484859)"""
         ora_conn.execute(sql)  # EXECUTE example
         # The select.columns parameter is not available in the method form of
         # select(), e.g. FromClause.select().
@@ -75,11 +75,28 @@ class TestOracle(unittest.TestCase):
         current = results[0][0]
         # this returns a tuple inside a list and I dont know why
         self.assertEqual(expected, current)
-        query = 'select * from table1 order by id'
+        query = f"""select * from table1 order by id"""
         result = ora_conn.execute(query)
         expected = 1
-        current = len(result.index)
+        current = len(result[0].index)
         self.assertEqual(expected, current)
+        ora_conn.drop('table1')
+
+    def test_execute_multiple(self):
+        """Check if multiple SQL statements are correctly executed."""
+        ora_conn = Oracle(*self.conn_params)
+        sql = f"""CREATE TABLE table1 (id integer, column1 varchar2(100),
+              column2 number);
+              INSERT INTO table1 (id, column1, column2)
+              VALUES (1, 'Varchar; text; (100 char)',
+              123456789.012787648484859);
+              INSERT INTO table1 (id, column1, column2)
+              VALUES (2, 'Varchar; text; (100 char)',
+              -789.0127876);
+              SELECT id, column2 FROM table1;"""
+        results = ora_conn.execute(sql)
+        self.assertEqual(len(results), 4)
+        self.assertEqual(len(results[3].index), 2)
         ora_conn.drop('table1')
 
     def test_select(self):
@@ -151,15 +168,13 @@ class TestOracle(unittest.TestCase):
     def test_delete(self):
         """Check delete rows from table."""
         ora_conn = Oracle(*self.conn_params)
-        sql = "CREATE TABLE test_delete (column_int INTEGER," \
-            "column_string VARCHAR(100), column_float NUMBER)"
+        sql = f"""CREATE TABLE test_delete (column_int INTEGER,
+            column_string VARCHAR(100), column_float NUMBER);
+            INSERT INTO test_delete (column_int, column_string,
+            column_float) VALUES(2, 'string2', 456.956);
+            INSERT INTO test_delete (column_int, column_string,
+            column_float) VALUES(1, 'string1', 38.905);"""
         ora_conn.execute(sql)
-        sql1 = "INSERT INTO test_delete (column_int, column_string, " \
-            "column_float) VALUES(2, 'string2', 456.956)"
-        sql2 = "INSERT INTO test_delete (column_int, column_string, " \
-            "column_float) VALUES(1, 'string1', 38.905)"
-        ora_conn.execute(sql1)
-        ora_conn.execute(sql2)
         table = ora_conn.get_table('test_delete')
         expected = 2
         current = ora_conn.engine.scalar(

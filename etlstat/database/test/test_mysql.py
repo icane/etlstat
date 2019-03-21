@@ -5,13 +5,16 @@
 import os
 import unittest
 import pandas as pd
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy import (select, func, Column, Integer, String, Boolean, Float,
-                        DateTime)
-from sqlalchemy.ext.declarative import declarative_base
-from pyaxis import pyaxis
-from etlstat.text import utils
+
 from etlstat.database.mysql import MySQL
+from etlstat.text import utils
+
+from pyaxis import pyaxis
+
+from sqlalchemy import (Boolean, Column, DateTime, Float, Integer, String,
+                        func, select)
+from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.ext.declarative import declarative_base
 
 
 class TestMySQL(unittest.TestCase):
@@ -28,7 +31,7 @@ class TestMySQL(unittest.TestCase):
     def setUpClass(cls):
         """Set up test variables."""
         user = 'root'
-        password = ''
+        password = 'admin'
         host = '127.0.0.1'
         port = '3306'
         database = ''
@@ -38,7 +41,7 @@ class TestMySQL(unittest.TestCase):
         my_conn.execute(ddl)
         ddl = "CREATE DATABASE test"
         my_conn.execute(ddl)
-        sql = "CREATE TABLE test.inf_schema as " \
+        sql = "CREATE TABLE IF NOT EXISTS test.inf_schema as " \
               "SELECT table_name, avg_row_length, " \
               "table_collation, create_time " \
               "FROM information_schema.tables"
@@ -94,8 +97,25 @@ class TestMySQL(unittest.TestCase):
         query = 'select * from table1 order by id'
         result = my_conn.execute(query)
         expected = 1
-        current = len(result.index)
+        current = len(result[0].index)
         self.assertEqual(expected, current)
+        my_conn.drop('table1')
+
+    def test_execute_multiple(self):
+        """Check if multiple SQL statements are correctly executed."""
+        my_conn = MySQL(*self.conn_params)
+        sql = f"""CREATE TABLE table1 (id integer, column1 varchar(100),
+              column2 double);
+              INSERT INTO table1 (id, column1, column2)
+              VALUES (1, 'Varchar; text; (100 char)',
+              123456789.012787648484859);
+              INSERT INTO table1 (id, column1, column2)
+              VALUES (2, 'Varchar; text; (100 char)',
+              -789.0127876);
+              SELECT id, column2 FROM table1;"""
+        results = my_conn.execute(sql)
+        self.assertEqual(len(results), 4)
+        self.assertEqual(len(results[3].index), 2)
         my_conn.drop('table1')
 
     def test_drop(self):
