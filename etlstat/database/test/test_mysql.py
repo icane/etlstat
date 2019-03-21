@@ -31,7 +31,7 @@ class TestMySQL(unittest.TestCase):
     def setUpClass(cls):
         """Set up test variables."""
         user = 'root'
-        password = 'admin'
+        password = ''
         host = '127.0.0.1'
         port = '3306'
         database = ''
