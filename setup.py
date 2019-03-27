@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='etlstat',
-    version='0.4.4',
+    version='0.4.5',
     author='Instituto Cántabro de Estadística',
     author_email='icane@cantabria.es',
     packages=find_packages(),
@@ -13,9 +13,9 @@ setup(
     long_description=open('README.rst').read(),
     install_requires=[
         'cx_Oracle',
+        'sqlparse',
         'mysql-connector>=2.1.4',
         'SQLAlchemy>=1.2.14',
-        'd6tstack>=0.1.6',
         'Unidecode>=1.0.22',
         'xlrd>=1.1.0',
         'defusedxml>=0.5.0',
