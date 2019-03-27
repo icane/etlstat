@@ -169,7 +169,8 @@ def px(filename, sep=",", csv_encoding='windows-1252',
     file.
 
     Args:
-        filename (str): CSV FILE with uris file path (including file name).
+        filename (str): CSV FILE with uris file path (including file name) or
+                        directory containing data files.
         sep (str): field separator for the CSV files with the URLs.
         encoding (str): file encoding for both the CSV and px file.
         timeout (int): request timeout in seconds; optional
