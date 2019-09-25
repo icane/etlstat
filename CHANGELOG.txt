@@ -1,3 +1,4 @@
+v0.5.0: added limited support for Postgresql database.
 v0.4.5: fixed dependencies in setup.py.
 v0.4.4: added support for massively reading Px files from a given directory.
 v0.4.3: added different encodings for csv and px in extractor px.

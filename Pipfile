@@ -15,7 +15,6 @@ flake8-logging-format = {index = "pypi",version = "*"}
 flake8-docstrings = {index = "pypi",version = "*"}
 pyaxis = {index = "pypi",version = "*"}
 
-
 [packages]
 cx_Oracle = {index = "pypi",version = "*"}
 mysql-connector = {index = "pypi",version = "*"}
@@ -28,7 +27,7 @@ numpy = {index = "pypi",version = "*"}
 pandas = {index = "pypi",version = "*"}
 python_Levenshtein = {index = "pypi",version = "*"}
 sqlparse = {index = "pypi",version = "*"}
+psycopg2 = "*"
 
 [requires]
 python_version = "3.7.2"
-
