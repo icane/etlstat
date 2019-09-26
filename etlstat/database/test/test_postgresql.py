@@ -1,21 +1,11 @@
-"""Unit tests for Postgresql database module."""
+"""Unit tests for PostgreSQL database module."""
 
-import os
 import unittest
-import pandas as pd
 
-from etlstat.database.postgresql import Postgresql
-from etlstat.text import utils
-
-from pyaxis import pyaxis
-
-from sqlalchemy import (Boolean, Column, DateTime, Float, Integer, String,
-                        func, select)
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy.ext.declarative import declarative_base
+from etlstat.database.postgresql import PostgreSQL
 
 
-class TestPostgresql(unittest.TestCase):
+class TestPostgreSQL(unittest.TestCase):
     """Testing methods for Postgresql class."""
 
     user = 'test'
@@ -35,7 +25,7 @@ class TestPostgresql(unittest.TestCase):
         database = 'postgres'
         conn_params = [user, password, host, port, database]
         ddl = "DROP SCHEMA IF EXISTS test CASCADE"
-        pg_conn = Postgresql(*conn_params)
+        pg_conn = PostgreSQL(*conn_params)
         pg_conn.execute(ddl)
         ddl = "DROP USER IF EXISTS test"
         pg_conn.execute(ddl)
@@ -53,13 +43,13 @@ class TestPostgresql(unittest.TestCase):
 
     def test_init(self):
         """Check connection with Postgresql database."""
-        self.assertEqual(str(Postgresql(*self.conn_params).engine),
+        self.assertEqual(str(PostgreSQL(*self.conn_params).engine),
                          "Engine(postgresql://test:***@127.0.0.1:"
                          "5432/postgres)")
 
     def test_execute(self):
         """Check execute method launching arbitrary sql queries."""
-        pg_conn = Postgresql(*self.conn_params)
+        pg_conn = PostgreSQL(*self.conn_params)
         sql = f'''CREATE TABLE table1 (id integer, column1 varchar(100),
                   column2 float)'''
         pg_conn.execute(sql)
@@ -75,10 +65,9 @@ class TestPostgresql(unittest.TestCase):
         self.assertEqual(expected, current)
         pg_conn.execute('DROP TABLE table1')
 
-
     def test_execute_multiple(self):
         """Check if multiple SQL statements are correctly executed."""
-        pg_conn = Postgresql(*self.conn_params)
+        pg_conn = PostgreSQL(*self.conn_params)
         sql = f"""CREATE TABLE table1 (id integer, column1 varchar(100),
               column2 float);
               INSERT INTO table1 (id, column1, column2)

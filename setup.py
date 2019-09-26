@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='etlstat',
-    version='0.4.5',
+    version='0.5.0',
     author='Instituto Cántabro de Estadística',
     author_email='icane@cantabria.es',
     packages=find_packages(),
@@ -22,7 +22,8 @@ setup(
         'pyaxis>=0.2.0',
         'numpy>=1.15.4',
         'pandas>=0.23.4',
-        'python_Levenshtein>=0.12.0'
+        'python_Levenshtein>=0.12.0',
+        'psycopg2'
     ],
     test_suite='extractor.test, database.test, text.test',
     keywords=['etl', 'icane', 'statistics', 'utils'],
