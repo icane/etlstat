@@ -27,7 +27,7 @@ numpy = {index = "pypi",version = "*"}
 pandas = {index = "pypi",version = "*"}
 python_Levenshtein = {index = "pypi",version = "*"}
 sqlparse = {index = "pypi",version = "*"}
-psycopg2 = "*"
+psycopg2 = {index = "pypi",version = "*"}
 
 [requires]
 python_version = "3.7.2"

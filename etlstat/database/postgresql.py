@@ -1,5 +1,5 @@
 """
-This module manages Postgresql primitives.
+This module manages PostgreSQL primitives.
 
     Date:
         25/09/2019
@@ -14,10 +14,9 @@ This module manages Postgresql primitives.
 
 """
 
-import os
 import logging
 import sqlparse
-from sqlalchemy import create_engine, text, select, func, MetaData, Table
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import DatabaseError
 import pandas as pd
 
@@ -25,12 +24,13 @@ logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
 
-class Postgresql:
+class PostgreSQL:
     """
     Manage connections to Postgresql databases.
 
-    Postgresql class offers some helper methods that encapsulate primitive logic
-    to interactuate with the database: insert/upsert, execute, drop, etc.
+    Postgresql class offers some helper methods that encapsulate
+    primitive logic to interactuate with the database: insert/upsert,
+    execute, drop, etc.
     Some primitives are not included because they can be handled more
     properly with sqlalchemy.
 
