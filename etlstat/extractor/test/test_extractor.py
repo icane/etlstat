@@ -136,6 +136,7 @@ class TestExtractor(unittest.TestCase):
         """
         dir_path = self.base_path + '/excel/'
         data = extractor.xls(dir_path)
+        print(data)
 
         self.assertEqual(len(data['prueba_excel.xls']), 4)
         self.assertEqual(len(data['excel_prueba.xls']), 4)
@@ -146,6 +147,28 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(type(data['excel_prueba.xls']['Hoja1']),
                          pd.core.frame.DataFrame)
         self.assertEqual(type(data['excel_prueba.xls']['Hoja2']),
+                         pd.core.frame.DataFrame)
+
+    def test_xlsx(self):
+        """Should massively read XLSX files from a directory.
+
+        Should read XLSX files in a directory  and generate a dict
+        with file and sheet names as keys and dataframes with the data
+        as values.
+
+        """
+        dir_path = self.base_path + '/excel/'
+        data = extractor.xlsx(dir_path)
+
+        self.assertEqual(len(data['prueba_excel.xlsx']), 4)
+        self.assertEqual(len(data['excel_prueba.xlsx']), 4)
+        self.assertEqual(type(data['prueba_excel.xlsx']['Hoja1']),
+                         pd.core.frame.DataFrame)
+        self.assertEqual(type(data['prueba_excel.xlsx']['Hoja3']),
+                         pd.core.frame.DataFrame)
+        self.assertEqual(type(data['excel_prueba.xlsx']['Hoja1']),
+                         pd.core.frame.DataFrame)
+        self.assertEqual(type(data['excel_prueba.xlsx']['Hoja2']),
                          pd.core.frame.DataFrame)
 
     def test_xml(self):

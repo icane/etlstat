@@ -119,6 +119,29 @@ def xls(dir_path, sep=';', encoding='utf-8',
     return data
 
 
+def xlsx(dir_path, sep=';', encoding='utf-8',
+         data_extension='*.[xX][lL][sS][xX]', na_values=None):
+    """Massively read XLSX files from a directory.
+
+    Read excel files in a directory and generate a dict with xls names and
+    sheetnames as keys and dataframes with the data as values.
+
+    Args:
+        dir_path (str): directory containing Excel files.
+        sep (str): field separator.
+        encoding (str): file encoding.
+        data_extension (str): standard for data filenames extensions.
+        na_values (scalar, str, list-like, or dict) : Additional strings to
+                                                      recognize as NA/NaN.
+
+    Returns:
+        dict: Excel name and sheet_names as KEYS and dataframe as VALUE.
+
+    """
+    return xls(dir_path, sep=sep, encoding=encoding,
+               data_extension=data_extension, na_values=na_values)
+
+
 def csv(
         dir_path,
         data_extension='*.[cC][sS][vV]',
