@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 
-"""Unit tests for oracle database module."""
+"""Integration tests for oracle database module."""
 
 import os
 import unittest
-import pandas
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy.exc import DatabaseError
-from sqlalchemy import (select, func, Column, Integer, String, Boolean, Float,
-                        DateTime)
-from sqlalchemy.ext.declarative import declarative_base
+
 from etlstat.database.oracle import Oracle
+
+import pandas
+
+from sqlalchemy import (Boolean, Column, DateTime, Float, Integer, String,
+                        func, select)
+from sqlalchemy.exc import DatabaseError, InvalidRequestError
+from sqlalchemy.ext.declarative import declarative_base
+
 
 os.environ['NLS_LANG'] = '.AL32UTF8'
 
@@ -37,14 +40,13 @@ class TestOracle(unittest.TestCase):
         conn_params = [user, password, host, port, service_name]
         ora_conn = Oracle(*conn_params)
         try:
-            sql = f"""CREATE USER test IDENTIFIED BY password
+            sql = """CREATE USER test IDENTIFIED BY password
                   DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP"""
             ora_conn.execute(sql)
-        except DatabaseError as dbe:
-            print(str(dbe))
-        sql = "ALTER USER test QUOTA UNLIMITED ON USERS"
-        ora_conn.execute(sql)
-        sql = "GRANT CONNECT, RESOURCE TO test"
+        except DatabaseError:
+            pass
+        sql = """ALTER USER test QUOTA UNLIMITED ON USERS;
+                 GRANT CONNECT, RESOURCE TO test"""
         ora_conn.execute(sql)
 
     def test_init(self):
@@ -56,12 +58,12 @@ class TestOracle(unittest.TestCase):
     def test_execute(self):
         """Check if different queries are correctly executed."""
         ora_conn = Oracle(*self.conn_params)
-        sql = f"""CREATE TABLE table1 (id integer, column1 varchar2(100),
+        sql = """CREATE TABLE table1 (id integer, column1 varchar2(100),
               column2 number)"""
         ora_conn.execute(sql)
         table1 = ora_conn.get_table('table1')
         self.assertEqual(table1.c.column1.name, 'column1')
-        sql = f"""INSERT INTO table1 (id, column1, column2)
+        sql = """INSERT INTO table1 (id, column1, column2)
               VALUES (1, 'Varchar text (100 char)',
               123456789.012787648484859)"""
         ora_conn.execute(sql)  # EXECUTE example
@@ -85,7 +87,7 @@ class TestOracle(unittest.TestCase):
     def test_execute_multiple(self):
         """Check if multiple SQL statements are correctly executed."""
         ora_conn = Oracle(*self.conn_params)
-        sql = f"""CREATE TABLE table1 (id integer, column1 varchar2(100),
+        sql = """CREATE TABLE table1 (id integer, column1 varchar2(100),
               column2 number);
               INSERT INTO table1 (id, column1, column2)
               VALUES (1, 'Varchar; text; (100 char)',
@@ -105,8 +107,6 @@ class TestOracle(unittest.TestCase):
         table_name = "audit_actions"
         schema = "sys"
         audit_actions = ora_conn.get_table(table_name, schema=schema)
-        # SELECT * FROM sys.audit_actions
-        # WHERE name like 'CREATE%' AND action > 100
         results = ora_conn.engine.execute(
             select('*').where(
                 audit_actions.c.name.like('CREATE%')).where(

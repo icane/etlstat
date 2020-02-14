@@ -1,3 +1,7 @@
+v0.6.2:
+    - change subprocess calls, locking the execution until subprocess ends.
+    - fix error raised deleting SQL Loader output files.
+    - refactor integration tests for oracle class.
 v0.6.1: updated SQLAlchemy in requirements.txt to fix moderate security issues.
 v0.6.0: added support for xlsx extraction.
 v0.5.0: added limited support for Postgresql database.

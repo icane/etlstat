@@ -10,9 +10,6 @@ This module manages Oracle primitives.
 
     Version:
         0.1
-
-    Notes:
-
 """
 
 import csv
@@ -22,10 +19,11 @@ import shlex
 import subprocess
 
 import pandas as pd
-import sqlparse
 
 from sqlalchemy import MetaData, Table, create_engine, text
 from sqlalchemy.exc import DatabaseError
+
+import sqlparse
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
@@ -55,6 +53,7 @@ class Oracle:
                     port(string): tcp port where the database is listening.
                     service_name(string): Oracle instance name.
                 encoding (string): Charset encoding.
+
         """
         # connection string in sqlalchemy format
         self.conn_string = f"""oracle+cx_oracle://{conn_params[0]}:""" + \
@@ -196,6 +195,7 @@ class Oracle:
             schema (str): database schema. Defaults to connection 'user'.
             remove_data (bool): to remove or not the log and data files
                 generated. Defaults to True.
+
         """
         if columns == ['*']:
             columns = ', '.join(data_table.columns)
@@ -236,6 +236,7 @@ class Oracle:
         env = os.environ.copy()
         env['PATH'] = os_path
         env['LD_LIBRARY_PATH'] = os_ld_library_path
+
         # generate SQL Loader arguments
         os_command = f"""sqlldr {conn_params[0]}/{conn_params[1]}""" + \
             f"""@{conn_params[2]}:{conn_params[3]}/{conn_params[4]} """ + \
@@ -243,12 +244,18 @@ class Oracle:
             f"""log='{output_path}{data_table.name}.log' """ + \
             f"""bad='{output_path}{data_table.name}.bad'"""
         args = shlex.split(os_command)
+
         # execution of Oracle SQL Loader
         try:
-            subprocess.Popen(args, env=env)
-            if remove_data:
+            subprocess.call(args, env=env)
+        except subprocess.SubprocessError as sproc_error:
+            LOGGER.error(sproc_error)
+
+        # deleting output files
+        if remove_data:
+            try:
                 os.remove(f"""{output_path}{data_table.name}.dat""")
                 os.remove(f"""{output_path}{data_table.name}.log""")
                 os.remove(f"""{output_path}{data_table.name}.bad""")
-        except subprocess.SubprocessError as sproc_error:
-            LOGGER.error(sproc_error)
+            except FileNotFoundError:
+                pass
