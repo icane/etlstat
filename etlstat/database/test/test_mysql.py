@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Unit tests for MySQL database module."""
+"""Integration tests for MySQL database module."""
 
 import os
 import unittest
@@ -31,7 +31,7 @@ class TestMySQL(unittest.TestCase):
     def setUpClass(cls):
         """Set up test variables."""
         user = 'root'
-        password = ''
+        password = 'password'
         host = '127.0.0.1'
         port = '3306'
         database = ''

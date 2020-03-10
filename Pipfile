@@ -4,33 +4,32 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pep8 = "*"
+pylint = "*"
 autopep8 = {index = "pypi",version = "*"}
 bandit = {index = "pypi",version = "*"}
 flake8 = {index = "pypi",version = "*"}
-pytest = {index = "pypi",version = "*"}
-flake8-import-order = {index = "pypi",version = "*"}
 flake8-blind-except = {index = "pypi",version = "*"}
 flake8-builtins = {index = "pypi",version = "*"}
-flake8-logging-format = {index = "pypi",version = "*"}
 flake8-docstrings = {index = "pypi",version = "*"}
-pyaxis = {index = "pypi",version = "*"}
-pydocstyle = "*"
-pylint = "*"
-pep8 = "*"
+flake8-import-order = {index = "pypi",version = "*"}
+flake8-logging-format = {index = "pypi",version = "*"}
+more-itertools = {index = "pypi",version = "*"}
+pytest = {index = "pypi",version = "*"}
 
 [packages]
-cx_Oracle = {index = "pypi",version = "*"}
-mysql-connector = {index = "pypi",version = "*"}
 SQLAlchemy = {index = "pypi",version = "*"}
 Unidecode = {index = "pypi",version = "*"}
-xlrd = {index = "pypi",version = "*"}
+cx_Oracle = {index = "pypi",version = "*"}
 defusedxml = {index = "pypi",version = "*"}
-pyaxis = {index = "pypi",version = "*"}
+mysql-connector = {index = "pypi",version = "*"}
 numpy = {index = "pypi",version = "*"}
 pandas = {index = "pypi",version = "*"}
+psycopg2 = {index = "pypi",version = "*"}
+pyaxis = {index = "pypi","version >" = "0.3.0"}
 python_Levenshtein = {index = "pypi",version = "*"}
 sqlparse = {index = "pypi",version = "*"}
-psycopg2 = {index = "pypi",version = "*"}
+xlrd = {index = "pypi",version = "*"}
 
 [requires]
 python_version = "3.7.2"

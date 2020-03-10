@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name='etlstat',
-    version='0.6.2',
+    version='0.7.0',
     author='Instituto Cántabro de Estadística',
     author_email='icane@cantabria.es',
     packages=find_packages(),
@@ -19,7 +19,7 @@ setup(
         'Unidecode>=1.0.22',
         'xlrd>=1.1.0',
         'defusedxml>=0.5.0',
-        'pyaxis>=0.2.0',
+        'pyaxis>=0.3.0',
         'numpy>=1.15.4',
         'pandas>=0.23.4',
         'python_Levenshtein>=0.12.0',

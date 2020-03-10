@@ -1,4 +1,4 @@
-"""Unit tests for PostgreSQL database module."""
+"""Integration tests for PostgreSQL database module."""
 
 import unittest
 
