@@ -19,7 +19,7 @@ setup(
         'Unidecode>=1.0.22',
         'xlrd>=1.1.0',
         'defusedxml>=0.5.0',
-        'pyaxis>=0.3.0',
+        'pyaxis>=0.3.1',
         'numpy>=1.15.4',
         'pandas>=0.23.4',
         'python_Levenshtein>=0.12.0',
