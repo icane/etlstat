@@ -136,7 +136,6 @@ class TestExtractor(unittest.TestCase):
         """
         dir_path = self.base_path + '/excel/'
         data = extractor.xls(dir_path)
-        print(data)
 
         self.assertEqual(len(data['prueba_excel.xls']), 4)
         self.assertEqual(len(data['excel_prueba.xls']), 4)

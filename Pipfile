@@ -26,7 +26,7 @@ mysql-connector = {index = "pypi",version = "*"}
 numpy = {index = "pypi",version = "*"}
 pandas = {index = "pypi",version = "*"}
 psycopg2 = {index = "pypi",version = "*"}
-pyaxis = {index = "pypi","version >" = "0.3.0"}
+pyaxis = {index = "pypi","version >" = "0.3.1"}
 python_Levenshtein = {index = "pypi",version = "*"}
 sqlparse = {index = "pypi",version = "*"}
 xlrd = {index = "pypi",version = "*"}
