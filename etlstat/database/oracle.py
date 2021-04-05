@@ -58,7 +58,7 @@ class Oracle:
         # connection string in sqlalchemy format
         self.conn_string = f"""oracle+cx_oracle://{conn_params[0]}:""" + \
             f"""{conn_params[1]}@{conn_params[2]}:""" + \
-            f"""{conn_params[3]}/{conn_params[4]}"""
+            f"""{conn_params[3]}/?service_name={conn_params[4]}"""
         self.engine = create_engine(self.conn_string,
                                     encoding=encoding,
                                     coerce_to_unicode=True,
@@ -155,6 +155,7 @@ class Oracle:
             mode='INSERT',
             columns=['*'],
             schema=None,
+            errors='0',
             remove_data=True):
         """
         Insert a dataframe into a table via Oracle SQL Loader.
@@ -193,6 +194,8 @@ class Oracle:
             columns (list): list of str containing the column names to load to
                 a table. Defaults to ['*'] (all columns).
             schema (str): database schema. Defaults to connection 'user'.
+            errors (str): number of errors to allow. Defaults to 0 (no errors
+                allowed).
             remove_data (bool): to remove or not the log and data files
                 generated. Defaults to True.
 
@@ -242,7 +245,8 @@ class Oracle:
             f"""@{conn_params[2]}:{conn_params[3]}/{conn_params[4]} """ + \
             f"""control='{output_path}{data_table.name}.ctl' """ + \
             f"""log='{output_path}{data_table.name}.log' """ + \
-            f"""bad='{output_path}{data_table.name}.bad'"""
+            f"""bad='{output_path}{data_table.name}.bad' """ + \
+            f"""errors={errors}"""
         args = shlex.split(os_command)
 
         # execution of Oracle SQL Loader

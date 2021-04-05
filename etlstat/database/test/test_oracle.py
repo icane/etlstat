@@ -53,7 +53,7 @@ class TestOracle(unittest.TestCase):
         """Check connection with Oracle database."""
         self.assertEqual(
             str(Oracle(*self.conn_params).engine),
-            "Engine(oracle+cx_oracle://test:***@localhost:1521/xe)")
+            "Engine(oracle+cx_oracle://test:***@localhost:1521/?service_name=xe)")
 
     def test_execute(self):
         """Check if different queries are correctly executed."""
@@ -191,6 +191,34 @@ class TestOracle(unittest.TestCase):
         self.assertEqual(current, expected)
         ora_conn.drop('test_delete')
 
+    def test_insert(self):
+        """Check insert rows using SQL Loader."""
+        ora_conn = Oracle(*self.conn_params)
+        sql = f"""CREATE TABLE test_insert (ranking INTEGER,
+            nickname VARCHAR(100), score NUMBER)"""
+        ora_conn.execute(sql)
+        data = [[10, 'tom', 80.5], [20, 'nick', 15.3], [30, 'juli', 'x']]
+        df = pandas.DataFrame(data, columns=['ranking', 'nickname', 'score'])
+        df.name = 'test_insert'
+        ora_conn.insert(
+            *self.conn_params,
+            data_table=df,
+            output_path=self.output_path,
+            os_path='/opt/oracle/instantclient_18_3',
+            os_ld_library_path='/opt/oracle/instantclient_18_3',
+            mode='INSERT',
+            schema=self.user,
+            errors=1,
+            columns=['*'],
+            remove_data=False
+        )
+        table = ora_conn.get_table('test_insert')
+        expected = 2
+        current = ora_conn.engine.scalar(
+            select([func.count('*')]).select_from(table)
+        )
+        self.assertEqual(current, expected)
+        ora_conn.drop('test_insert')
 
 if __name__ == '__main__':
     unittest.main()
