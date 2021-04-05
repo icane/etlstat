@@ -82,7 +82,7 @@ def match_data_format(data_path, data_extension,
     return assignation_map
 
 
-def xls(dir_path, sep=';', encoding='utf-8',
+def xls(dir_path, sep=';',
         data_extension='*.[xX][lL][sS]', na_values=None):
     """Massively read XLS files from a directory.
 
@@ -110,7 +110,6 @@ def xls(dir_path, sep=';', encoding='utf-8',
             for sheet in book.sheet_names():
                 data[excel][sheet] = pd.read_excel(open(dir_path + excel,
                                                         'rb'),
-                                                   encoding=encoding,
                                                    sep=sep,
                                                    sheet_name=sheet,
                                                    na_values=na_values
@@ -119,8 +118,9 @@ def xls(dir_path, sep=';', encoding='utf-8',
     return data
 
 
-def xlsx(dir_path, sep=';', encoding='utf-8',
-         data_extension='*.[xX][lL][sS][xX]', na_values=None):
+def xlsx(dir_path, sep=';',
+         data_extension='*.[xX][lL][sS][xX]',
+         na_values=None):
     """Massively read XLSX files from a directory.
 
     Read excel files in a directory and generate a dict with xls names and
@@ -129,7 +129,6 @@ def xlsx(dir_path, sep=';', encoding='utf-8',
     Args:
         dir_path (str): directory containing Excel files.
         sep (str): field separator.
-        encoding (str): file encoding.
         data_extension (str): standard for data filenames extensions.
         na_values (scalar, str, list-like, or dict) : Additional strings to
                                                       recognize as NA/NaN.
@@ -138,7 +137,7 @@ def xlsx(dir_path, sep=';', encoding='utf-8',
         dict: Excel name and sheet_names as KEYS and dataframe as VALUE.
 
     """
-    return xls(dir_path, sep=sep, encoding=encoding,
+    return xls(dir_path, sep=sep,
                data_extension=data_extension, na_values=na_values)
 
 
