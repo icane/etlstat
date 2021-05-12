@@ -25,7 +25,6 @@ import pandas as pd
 
 from pyaxis import pyaxis
 
-import xlrd
 
 
 def match_data_format(data_path, data_extension,
