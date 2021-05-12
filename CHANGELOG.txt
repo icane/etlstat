@@ -1,3 +1,5 @@
+v0.7.3:
+    - fix extacting xlsx files (xldr decated support for xlsx).
 v0.7.2:
     - fix "(cx_Oracle.DatabaseError) ORA-12505: TNS:listener does not currently know of SID given in connect descriptor"
     - add parameter 'errors' to oracle.insert method
