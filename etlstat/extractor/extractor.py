@@ -25,7 +25,6 @@ import pandas as pd
 
 from pyaxis import pyaxis
 
-import xlrd
 
 
 def match_data_format(data_path, data_extension,
@@ -106,14 +105,12 @@ def xls(dir_path, sep=';',
     for excel in os.listdir('.'):
         if fnmatch.fnmatch(excel, data_extension):
             data[excel] = dict()
-            book = xlrd.open_workbook(dir_path + excel)
-            for sheet in book.sheet_names():
-                data[excel][sheet] = pd.read_excel(open(dir_path + excel,
+            data[excel] = pd.read_excel(open(dir_path + excel,
                                                         'rb'),
-                                                   sep=sep,
-                                                   sheet_name=sheet,
+                                                   sheet_name=None,
                                                    na_values=na_values
                                                    )
+            for sheet in data[excel]:
                 data[excel][sheet].name = sheet
     return data
 
@@ -137,7 +134,7 @@ def xlsx(dir_path, sep=';',
         dict: Excel name and sheet_names as KEYS and dataframe as VALUE.
 
     """
-    return xls(dir_path, sep=sep,
+    return xls(dir_path,
                data_extension=data_extension, na_values=na_values)
 
 

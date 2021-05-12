@@ -30,6 +30,8 @@ pyaxis = {index = "pypi","version >" = "0.3.1"}
 python_Levenshtein = {index = "pypi",version = "*"}
 sqlparse = {index = "pypi",version = "*"}
 xlrd = {index = "pypi",version = "*"}
+openpyxl = "*"
+
 
 [requires]
-python_version = "3.7.2"
+python_version = "3.9.5"
