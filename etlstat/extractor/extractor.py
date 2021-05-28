@@ -26,7 +26,6 @@ import pandas as pd
 from pyaxis import pyaxis
 
 
-
 def match_data_format(data_path, data_extension,
                       format_path, format_extension):
     """Match format files(csv) with data files (txt) for positional files.
@@ -81,7 +80,7 @@ def match_data_format(data_path, data_extension,
     return assignation_map
 
 
-def xls(dir_path, sep=';',
+def xls(dir_path, sep=';', encoding='utf-8',
         data_extension='*.[xX][lL][sS]', na_values=None):
     """Massively read XLS files from a directory.
 
@@ -90,8 +89,8 @@ def xls(dir_path, sep=';',
 
     Args:
         dir_path (str): directory containing Excel files.
-        sep (str): field separator.
-        encoding (str): file encoding.
+        sep (str): field separator. Unused. Keep for backwards compatibility.
+        encoding (str): file encoding. Unused. Keep for backwards compatibility.
         data_extension (str): standard for data filenames extensions.
         na_values (scalar, str, list-like, or dict) : Additional strings to
                                                       recognize as NA/NaN.
@@ -105,17 +104,16 @@ def xls(dir_path, sep=';',
     for excel in os.listdir('.'):
         if fnmatch.fnmatch(excel, data_extension):
             data[excel] = dict()
-            data[excel] = pd.read_excel(open(dir_path + excel,
-                                                        'rb'),
-                                                   sheet_name=None,
-                                                   na_values=na_values
-                                                   )
+            data[excel] = pd.read_excel(open(dir_path + excel, 'rb'),
+                                        sheet_name=None,
+                                        na_values=na_values
+                                        )
             for sheet in data[excel]:
                 data[excel][sheet].name = sheet
     return data
 
 
-def xlsx(dir_path, sep=';',
+def xlsx(dir_path, sep=';', encoding='utf-8',
          data_extension='*.[xX][lL][sS][xX]',
          na_values=None):
     """Massively read XLSX files from a directory.
@@ -125,7 +123,8 @@ def xlsx(dir_path, sep=';',
 
     Args:
         dir_path (str): directory containing Excel files.
-        sep (str): field separator.
+        sep (str): field separator. Unused. Keep for backwards compatibility.
+        encoding (str): file encoding. Unused. Keep for backwards compatibility.
         data_extension (str): standard for data filenames extensions.
         na_values (scalar, str, list-like, or dict) : Additional strings to
                                                       recognize as NA/NaN.
