@@ -89,8 +89,8 @@ def xls(dir_path, sep=';', encoding='utf-8',
 
     Args:
         dir_path (str): directory containing Excel files.
-        sep (str): field separator.
-        encoding (str): file encoding.
+        sep (str): field separator. Unused. Keep for backwards compatibility.
+        encoding (str): file encoding. Unused. Keep for backwards compatibility.
         data_extension (str): standard for data filenames extensions.
         na_values (scalar, str, list-like, or dict) : Additional strings to
                                                       recognize as NA/NaN.
@@ -123,7 +123,8 @@ def xlsx(dir_path, sep=';', encoding='utf-8',
 
     Args:
         dir_path (str): directory containing Excel files.
-        sep (str): field separator.
+        sep (str): field separator. Unused. Keep for backwards compatibility.
+        encoding (str): file encoding. Unused. Keep for backwards compatibility.
         data_extension (str): standard for data filenames extensions.
         na_values (scalar, str, list-like, or dict) : Additional strings to
                                                       recognize as NA/NaN.
