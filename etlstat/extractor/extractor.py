@@ -335,7 +335,8 @@ def txt(dir_path, sep=';', encoding='windows-1252',
                                                 dtype=conversion,
                                                 nwords=0,
                                                 encoding=encoding,
-                                                na_values=na_values)
+                                                na_values=na_values,
+                                                delimiter="\n\t")
         assignation_map[txt_file].name = txt_file
     return assignation_map
 
