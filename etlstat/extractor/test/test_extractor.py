@@ -70,6 +70,7 @@ class TestExtractor(unittest.TestCase):
         dir_path = self.base_path + '/positional/'
         data = extractor.txt(dir_path, format_path=dir_path + 'format/')
 
+
         post_head = ['NORDEN', 'PI1', 'PI2', 'PI2R', 'PI2N', 'PI21', 'PI31',
                      'PI41', 'PI42', 'PJ1', 'PJ11', 'PJ12', 'PJ13', 'PJ2',
                      'PJ21', 'PJ22', 'PJ3', 'PJ4', 'PJ5', 'PK11', 'PK121',
@@ -126,6 +127,7 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(list(data['POST_SER_06_15.TXT'].dtypes), post_type)
         self.assertEqual(list(data['TEC_SER_06_15.TXT'].columns), tec_head)
         self.assertEqual(list(data['TEC_SER_06_15.TXT'].dtypes), tec_type)
+        self.assertEqual(data['WHITE_SPACES.TXT']['COL_1'][1], ' a ')
 
     def test_xls(self):
         """Should massively read XLS files from a directory.
