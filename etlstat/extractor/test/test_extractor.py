@@ -205,14 +205,20 @@ class TestExtractor(unittest.TestCase):
         as value.
 
         """
+        line1 = 'id,url\n'
+        line2 = 'px_o20012,' + self.base_path + '/px/o20012.px\n'
+        line3 = 'px_o20013,' + self.base_path + '/px/o20013.px'
+        file = open(self.base_path + '/px/pcaxis_urls.csv', "w")
+        file.write(line1)
+        file.write(line2)
+        file.write(line3)
+        file.close()
         pc_axis_data = extractor.px(self.base_path + '/px/pcaxis_urls.csv')
-        self.assertEqual(len(pc_axis_data), 3)
-        self.assertEqual(type(pc_axis_data['px_01001']),
+        self.assertEqual(len(pc_axis_data), 2)
+        self.assertEqual(type(pc_axis_data['px_o20012']),
                          pd.core.frame.DataFrame)
         self.assertEqual(
-            type(pc_axis_data['px_01002']), pd.core.frame.DataFrame)
-        self.assertEqual(
-            type(pc_axis_data['px_01006']), pd.core.frame.DataFrame)
+            type(pc_axis_data['px_o20013']), pd.core.frame.DataFrame)
 
     def test_px_file(self):
         """Should massively read PC-Axis files in a directory.
