@@ -77,3 +77,6 @@ build
 *.ctl
 *.bad
 
+# Local file generated during the test execution
+etlstat/extractor/test/data/px/pcaxis_urls.csv
+
