@@ -17,6 +17,8 @@ from contextlib import ExitStack
 
 import Levenshtein
 
+from bs4 import BeautifulSoup
+
 import defusedxml.ElementTree as ET
 
 import numpy as np
@@ -391,3 +393,109 @@ def sql(dir_path):
                 files[filename.split(dir_path, 1)[-1][:-4]] = sql_file.read()
         context_manager.pop_all().close()
     return files
+
+
+def _html_table_file(path, encoding='windows-1252', na_values=None):
+    """Read a html file, find the first table and return it as a DataFrame.
+
+    Args:
+        path (str): path to the file.
+        encoding (str): file encoding.
+
+    Returns:
+        DataFrame.
+
+    """
+    data = []
+    headers = []
+
+    _soup = BeautifulSoup(
+        open(path, mode='r', encoding=encoding), 'html.parser')
+    _html_thead = _soup.find_all('table', limit=1)[0].find_all('th')
+    _row_headers = 0
+
+    # Case there are th tags (with or whitout colspan)
+    _extra_header_label = []
+    for index, column in enumerate(_html_thead):
+        _row_headers = 1
+        _value = column.get_text().strip()
+        try:
+            _colspan = int(column.attrs.get('colspan'))
+            if _colspan <= 1:
+                headers.append(_value)
+            else:
+                _extra_header_label.append(
+                    {'index': index, 'colspan': _colspan})
+        except TypeError:
+            headers.append(_value)
+
+    # Read _extra_header_label and build _new_labels (th and colspan)
+    _new_labels = []
+    _count_cols = 0
+    for item in _extra_header_label:
+        for _position in range(item.get('colspan')):
+            _new_label = _html_thead[item.get('index')].get_text() + '_' + \
+                headers[item.get('index')+_count_cols+_position]
+            _new_labels.append((_new_label,
+                                item.get(
+                                    'index') + _position + _count_cols))
+            _count_cols += _position
+
+    # Rename headers (th and colspan)
+    for label in _new_labels:
+        headers[label[1]] = label[0]
+
+    # Case there aren't th tags
+    _html_rows = _soup.find_all('table', limit=1)[0].find_all('tr')
+    if headers == []:
+        _num_columns = 0
+        for index, row in enumerate(_html_rows):
+            if len(row.find_all('td')) > _num_columns:
+                _num_columns = len(row.find_all('td'))
+                _row_headers = index
+        _html_header = _html_rows[_row_headers]
+        for column in _html_header:
+            try:
+                _value = column.get_text().strip()
+                if _value != '\n' and _value != '':
+                    headers.append(_value)
+            except Exception:
+                continue
+
+    # Add to data each _row
+    html_data = _html_rows[_row_headers+1:]
+    for row in html_data:
+        _row = []
+        for column in row:
+            try:
+                _value = column.get_text().strip()
+                if _value != '':
+                    _row.append(_value)
+            except Exception:
+                continue
+        data.append(_row)
+
+    # Build _dataframe
+    _dataframe = pd.DataFrame(data=data, columns=headers)
+    return _dataframe
+
+
+def html_table(dir_path, encoding='windows-1252',
+               data_extension='*.[hH][tT][mM][lL]'):
+    """Massively read positional html files from a directory.
+
+    Args:
+        dir_path (str): directory containing data files.
+        encoding (str): file encoding.
+        data_extension (str): standard for data name.
+
+    Returns:
+        dict: Name of data file as KEY and dataframe as VALUE.
+
+    """
+    os.chdir(dir_path)
+    data = {}
+    for file in os.listdir('.'):
+        if fnmatch.fnmatch(file, data_extension):
+            data[file] = _html_table_file(dir_path+file, encoding)
+    return data

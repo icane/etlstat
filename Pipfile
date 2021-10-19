@@ -31,7 +31,7 @@ python_Levenshtein = {index = "pypi",version = "*"}
 sqlparse = {index = "pypi",version = "*"}
 xlrd = {index = "pypi",version = "*"}
 openpyxl = "*"
-
+beautifulsoup4  = {index = "pypi","version >=" = "4.10.0"}
 
 [requires]
 python_version = "3.9.5"

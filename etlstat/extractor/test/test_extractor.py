@@ -70,7 +70,6 @@ class TestExtractor(unittest.TestCase):
         dir_path = self.base_path + '/positional/'
         data = extractor.txt(dir_path, format_path=dir_path + 'format/')
 
-
         post_head = ['NORDEN', 'PI1', 'PI2', 'PI2R', 'PI2N', 'PI21', 'PI31',
                      'PI41', 'PI42', 'PJ1', 'PJ11', 'PJ12', 'PJ13', 'PJ2',
                      'PJ21', 'PJ22', 'PJ3', 'PJ4', 'PJ5', 'PK11', 'PK121',
@@ -232,6 +231,31 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(pc_axis_data['27066']['DATA'][29], '98.728')
         self.assertEqual(
             type(pc_axis_data['27066']), pd.core.frame.DataFrame)
+
+    def test_html_table(self):
+        """Should massively read html files in a directory.
+
+        Should read every html file and generate a dict
+        with the name as key and the content as value.
+        """
+        html_table_data = extractor.html_table(
+            self.base_path + '/html_table/', encoding='utf-8')
+        self.assertEqual(type(html_table_data), dict)
+        self.assertEqual(len(html_table_data), 2)
+
+    def test_html_table_file(self):
+        """Should read an html file with a table, and loads the table."""
+        without_thead_df = extractor._html_table_file(
+            self.base_path + '/html_table/test.html', encoding='utf-8')
+        self.assertEqual(type(without_thead_df), pd.DataFrame)
+        self.assertEqual(without_thead_df['Savings'][1], '$200')
+        self.assertEqual(without_thead_df.shape, (2, 2))
+
+        with_thead_df = extractor._html_table_file(
+            self.base_path + '/html_table/icane_economy.html', encoding='utf-8')
+        self.assertEqual(type(with_thead_df), pd.DataFrame)
+        self.assertEqual(with_thead_df['Cantabria_Dato'][0], '96,9')
+        self.assertEqual(with_thead_df.shape, (15, 6))
 
 
 if __name__ == '__main__':
