@@ -1,3 +1,5 @@
+v0.8.1:
+    - fix dependencies.
 v0.8.0:
     - add support for table extraction from html file.
 v0.7.5:
