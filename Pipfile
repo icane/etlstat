@@ -23,7 +23,7 @@ Unidecode = {index = "pypi",version = "==1.1.1"}
 cx_Oracle = {index = "pypi",version = "==7.3.0"}
 defusedxml = {index = "pypi",version = "==0.6.0"}
 mysql-connector = {index = "pypi",version = "==2.2.9"}
-numpy = {index = "pypi",version = "==1.17.3"}
+numpy = {index = "pypi",version = "==1.22.0"}
 pandas = {index = "pypi",version = "==1.3.0"}
 psycopg2 = {index = "pypi",version = "==2.8.4"}
 pyaxis = {index = "pypi",version = "==0.3.4"}
