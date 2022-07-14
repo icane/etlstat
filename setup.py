@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='etlstat',
-    version='0.8.1',
+    version='0.8.2',
     author='Instituto Cántabro de Estadística',
     author_email='icane@cantabria.es',
     packages=find_packages(),
@@ -20,8 +20,8 @@ setup(
         'xlrd==2.0.1',
         'defusedxml==0.6.0',
         'pyaxis==0.3.4',
-        'numpy==1.17.3',
-        'pandas==1.3.0',
+        'numpy==1.23.0',
+        'pandas==1.4.3',
         'python_Levenshtein==0.12.0',
         'psycopg2==2.8.4',
         'openpyxl==3.0.9',

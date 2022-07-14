@@ -3,12 +3,12 @@ sudo: required
 language: python
 
 python:
-  - "3.9.5"
+  - "3.9.10"
 
 services:
   - mysql
 
-install: 
+install:
   - pip install -r requirements.txt
   - pip install pylint
 
