@@ -326,7 +326,7 @@ class TestMySQL(unittest.TestCase):
 
             id = Column(Integer, primary_key=True)
             comunidades_y_ciudades_autonomas = Column(String(100))
-            grupos_ecoicop = Column(String(50))
+            grupos_ecoicop = Column(String(100))
             tipo_de_dato = Column(String(50))
             periodo = Column(String(50))
             data = Column(Float)
@@ -358,7 +358,7 @@ class TestMySQL(unittest.TestCase):
 
             id = Column(Integer, primary_key=True)
             comunidades_y_ciudades_autonomas = Column(String(100))
-            grupos_ecoicop = Column(String(50))
+            grupos_ecoicop = Column(String(100))
             tipo_de_dato = Column(String(50))
             periodo = Column(String(50))
             data = Column(Float)

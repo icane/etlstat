@@ -17,7 +17,9 @@ This module manages PostgreSQL primitives.
 import logging
 import sqlparse
 from sqlalchemy import create_engine, text
-from sqlalchemy.exc import DatabaseError
+from sqlalchemy.exc import DatabaseError, InterfaceError, DataError,\
+    OperationalError,IntegrityError,InternalError,ProgrammingError,\
+    NotSupportedError
 import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
@@ -86,7 +88,35 @@ class PostgreSQL:
                 results.append(result_set)
             # end transaction
             trans.commit()
+        except InterfaceError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
         except DatabaseError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except DataError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except OperationalError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise        
+        except IntegrityError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except InternalError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except ProgrammingError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except NotSupportedError as db_error:
             trans.rollback()
             LOGGER.error(db_error)
             raise

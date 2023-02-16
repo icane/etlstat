@@ -21,7 +21,9 @@ import subprocess
 import pandas as pd
 
 from sqlalchemy import MetaData, Table, create_engine, text
-from sqlalchemy.exc import DatabaseError
+from sqlalchemy.exc import DatabaseError, InterfaceError, DataError,\
+    OperationalError,IntegrityError,InternalError,ProgrammingError,\
+    NotSupportedError
 
 import sqlparse
 
@@ -116,7 +118,35 @@ class Oracle:
                 results.append(result_set)
             # end transaction
             trans.commit()
+        except InterfaceError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
         except DatabaseError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except DataError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except OperationalError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise        
+        except IntegrityError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except InternalError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except ProgrammingError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except NotSupportedError as db_error:
             trans.rollback()
             LOGGER.error(db_error)
             raise

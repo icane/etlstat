@@ -25,8 +25,8 @@ class TestSqlLoader(unittest.TestCase):
     conn_params = [user, password, host, port, service_name]
     output_path = os.getcwd() + '/etlstat/database/test/'
     os_path = '/usr/local/bin:/usr/bin:/bin:' \
-        '/opt/oracle/instantclient_18_3'
-    os_ld_library_path = '/opt/oracle/instantclient_18_3'
+        '/opt/oracle/instantclient_21_4'
+    os_ld_library_path = '/opt/oracle/instantclient_21_4'
 
     @classmethod
     def setUpClass(cls):
