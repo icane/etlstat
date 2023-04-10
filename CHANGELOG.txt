@@ -1,3 +1,5 @@
+v0.9.1:
+    - Fix dependencies.
 v0.9.0:
     - Add management for database exceptions.
     - Update dependencies.
