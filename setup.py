@@ -1,9 +1,31 @@
 # -*- coding: utf-8 -*-
+import toml
+
 from setuptools import find_packages, setup
+
+
+def get_install_requirements():
+    try:
+        # read my pipfile
+        with open('Pipfile', 'r') as fh:
+            pipfile = fh.read()
+        # parse the toml
+        pipfile_toml = toml.loads(pipfile)
+    except FileNotFoundError:
+        return []  # if the package's key isn't there then just return an empty list
+    try:
+        required_packages = pipfile_toml['packages'].items()
+    except KeyError:
+        return []
+     # If a version/range is specified in the Pipfile honor it
+     # otherwise just list the package
+    return ["{0}{1}".format(pkg, ver) if ver != "*"
+            else pkg for pkg, ver in required_packages]
+
 
 setup(
     name='etlstat',
-    version='0.9.1',
+    version='0.9.2',
     author='Instituto Cántabro de Estadística',
     author_email='icane@cantabria.es',
     packages=find_packages(),
@@ -11,34 +33,7 @@ setup(
     license='Apache License 2.0',
     description='ETL utils for statistical offices data processing',
     long_description=open('README.rst').read(),
-    install_requires=[
-        'beautifulsoup4==4.12.2',
-        'certifi==2022.12.7',
-        'charset-normalizer==3.1.0',
-        'cx-oracle==7.3.0',
-        'defusedxml==0.6.0',
-        'et-xmlfile==1.1.0',
-        'greenlet==2.0.2',
-        'idna==3.4',
-        'mysql-connector==2.2.9',
-        'numpy==1.23.5',
-        'openpyxl==3.0.10',
-        'pandas==1.4.4',
-        'psycopg2==2.8.6',
-        'pyaxis==0.3.4',
-        'pyjstat==2.4.0',
-        'python-dateutil==2.8.2',
-        'python-levenshtein==0.12.2',
-        'pytz==2023.3',
-        'requests==2.28.2',
-        'six==1.16.0',
-        'soupsieve==2.4',
-        'sqlalchemy==1.4.47',
-        'sqlparse==0.3.1',
-        'unidecode==1.1.2',
-        'urllib3==1.26.15',
-        'xlrd==2.0.1'
-    ],
+    install_requires=get_install_requirements(),
     test_suite='extractor.test, database.test, text.test',
     keywords=['etl', 'icane', 'statistics', 'utils'],
     classifiers=[

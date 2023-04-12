@@ -16,22 +16,22 @@ flake8-import-order = {index = "pypi",version = "*"}
 flake8-logging-format = {index = "pypi",version = "*"}
 more-itertools = {index = "pypi",version = "*"}
 pytest = {index = "pypi",version = "*"}
+toml = {index = "pypi",version = "*"}
 
 [packages]
-SQLAlchemy = {index = "pypi",version = "==1.4.*"}
-Unidecode = {index = "pypi",version = "==1.1.*"}
-cx_Oracle = {index = "pypi",version = "==7.3.*"}
-defusedxml = {index = "pypi",version = "==0.6.*"}
-mysql-connector = {index = "pypi",version = "==2.2.*"}
-numpy = {index = "pypi",version = "==1.23.*"}
-pandas = {index = "pypi",version = "==1.4.*"}
-psycopg2 = {index = "pypi",version = "==2.8.*"}
-pyaxis = {index = "pypi",version = "==0.3.*"}
-python_Levenshtein = {index = "pypi",version = "==0.12.*"}
-sqlparse = {index = "pypi",version = "==0.3.*"}
-xlrd = {index = "pypi",version = "==2.0.*"}
+SQLAlchemy = "==1.4.*"
+Unidecode = "==1.1.*"
+cx_Oracle = "==7.3.*"
+defusedxml = "==0.6.*"
+mysql-connector = "==2.2.*"
+pandas = "==1.4.*"
+psycopg2 = "==2.8.*"
+pyaxis = "==0.3.*"
+python_Levenshtein = "==0.12.*"
+sqlparse = "==0.3.*"
+xlrd = "==2.0.*"
 openpyxl = "==3.0.*"
-beautifulsoup4  = {index = "pypi","version >=" = "4.10.*"}
+beautifulsoup4  = "==4.10.*"
 
 [requires]
 python_version = "3.9.*"
