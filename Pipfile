@@ -16,7 +16,6 @@ flake8-import-order = {index = "pypi",version = "*"}
 flake8-logging-format = {index = "pypi",version = "*"}
 more-itertools = {index = "pypi",version = "*"}
 pytest = {index = "pypi",version = "*"}
-toml = {index = "pypi",version = "*"}
 
 [packages]
 SQLAlchemy = "==1.4.*"

@@ -1,31 +1,10 @@
 # -*- coding: utf-8 -*-
-import toml
-
 from setuptools import find_packages, setup
-
-
-def get_install_requirements():
-    try:
-        # read my pipfile
-        with open('Pipfile', 'r') as fh:
-            pipfile = fh.read()
-        # parse the toml
-        pipfile_toml = toml.loads(pipfile)
-    except FileNotFoundError:
-        return []  # if the package's key isn't there then just return an empty list
-    try:
-        required_packages = pipfile_toml['packages'].items()
-    except KeyError:
-        return []
-     # If a version/range is specified in the Pipfile honor it
-     # otherwise just list the package
-    return ["{0}{1}".format(pkg, ver) if ver != "*"
-            else pkg for pkg, ver in required_packages]
 
 
 setup(
     name='etlstat',
-    version='0.9.2',
+    version='0.9.3',
     author='Instituto Cántabro de Estadística',
     author_email='icane@cantabria.es',
     packages=find_packages(),
@@ -33,7 +12,20 @@ setup(
     license='Apache License 2.0',
     description='ETL utils for statistical offices data processing',
     long_description=open('README.rst').read(),
-    install_requires=get_install_requirements(),
+    install_requires=[
+        'beautifulsoup4==4.*',
+        'defusedxml==0.6.*',
+        'pandas==1.4.*',
+        'pyaxis==0.3.*',
+        'python_Levenshtein==0.20.*',
+        'SQLAlchemy==1.4.*',
+        'sqlparse==0.3.*',
+        'Unidecode==1.1.*',
+        'cx_Oracle==7.3.*',
+        'mysql-connector==2.2.*',
+        'xlrd==2.0.*',
+        'openpyxl==3.0.*'
+    ],
     test_suite='extractor.test, database.test, text.test',
     keywords=['etl', 'icane', 'statistics', 'utils'],
     classifiers=[
