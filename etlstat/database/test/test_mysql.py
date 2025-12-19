@@ -314,7 +314,7 @@ class TestMySQL(unittest.TestCase):
         Base = declarative_base()
         current_dir = os.path.dirname(os.path.abspath(__file__))
         parsed_pcaxis = pyaxis.parse(current_dir + '/22350.px',
-                                     encoding='ISO-8859-2')
+                                     encoding='ISO-8859-1')
         table_data = parsed_pcaxis['DATA']
         table_data = utils.parse_df_columns(table_data)
         table_data.name = 'ipc'
@@ -326,8 +326,8 @@ class TestMySQL(unittest.TestCase):
 
             id = Column(Integer, primary_key=True)
             comunidades_y_ciudades_autonomas = Column(String(100))
-            grupos_ecoicop = Column(String(50))
-            tipo_de_dato = Column(String(50))
+            grupos_ecoicop = Column(String(100))
+            tipo_de_dato = Column(String(100))
             periodo = Column(String(50))
             data = Column(Float)
 
@@ -346,7 +346,7 @@ class TestMySQL(unittest.TestCase):
         Base = declarative_base()
         current_dir = os.path.dirname(os.path.abspath(__file__))
         parsed_pcaxis = pyaxis.parse(current_dir + '/22350.px',
-                                     encoding='ISO-8859-2')
+                                     encoding='ISO-8859-1')
         table_data = parsed_pcaxis['DATA']
         table_data = utils.parse_df_columns(table_data)
         table_data.name = 'ipc'
@@ -358,7 +358,7 @@ class TestMySQL(unittest.TestCase):
 
             id = Column(Integer, primary_key=True)
             comunidades_y_ciudades_autonomas = Column(String(100))
-            grupos_ecoicop = Column(String(50))
+            grupos_ecoicop = Column(String(100))
             tipo_de_dato = Column(String(50))
             periodo = Column(String(50))
             data = Column(Float)

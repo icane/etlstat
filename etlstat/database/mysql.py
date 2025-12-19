@@ -19,7 +19,9 @@ import os
 import logging
 import sqlparse
 from sqlalchemy import create_engine, text, select, func, MetaData, Table
-from sqlalchemy.exc import DatabaseError
+from sqlalchemy.exc import DatabaseError, InterfaceError, DataError,\
+    OperationalError,IntegrityError,InternalError,ProgrammingError,\
+    NotSupportedError
 import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
@@ -107,7 +109,35 @@ class MySQL:
                 results.append(result_set)
             # end transaction
             trans.commit()
+        except InterfaceError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
         except DatabaseError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except DataError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except OperationalError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise        
+        except IntegrityError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except InternalError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except ProgrammingError as db_error:
+            trans.rollback()
+            LOGGER.error(db_error)
+            raise
+        except NotSupportedError as db_error:
             trans.rollback()
             LOGGER.error(db_error)
             raise
@@ -177,7 +207,7 @@ class MySQL:
         connection = self.engine.connect()
         db_table = Table()
         if isinstance(data_table, pd.DataFrame):
-            data_table[:0].to_sql(data_table.name, self.engine,
+            data_table.to_sql(data_table.name, self.engine,
                                   if_exists=if_exists, index=False)
         else:
             raise TypeError("data_table must be a DataFrame.")
