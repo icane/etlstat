@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='etlstat',
-    version='0.9.3',
+    version='0.9.4',
     author='Instituto Cántabro de Estadística',
     author_email='icane@cantabria.es',
     packages=find_packages(),
@@ -19,7 +19,7 @@ setup(
         'pyaxis==0.3.*',
         'python_Levenshtein==0.20.*',
         'SQLAlchemy==1.4.*',
-        'sqlparse==0.3.*',
+        'sqlparse==0.5.5',
         'Unidecode==1.1.*',
         'cx_Oracle==7.3.*',
         'mysql-connector==2.2.*',
