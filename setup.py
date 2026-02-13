@@ -19,7 +19,7 @@ setup(
         'pyaxis==0.3.*',
         'python_Levenshtein==0.20.*',
         'SQLAlchemy==1.4.*',
-        'sqlparse==0.5.5',
+        'sqlparse==0.5.4',
         'Unidecode==1.1.*',
         'cx_Oracle==7.3.*',
         'mysql-connector==2.2.*',
